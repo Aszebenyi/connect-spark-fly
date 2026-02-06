@@ -1,44 +1,46 @@
 
 
-## Fix Your Account Setup and Grant Admin Access
+## Enable Google OAuth Sign-In
 
-Your signup was successful (I can see it in the auth logs), but the database trigger that should automatically create your profile didn't fire. I'll fix this by manually creating the required records.
+The error "provider is not enabled" occurs because the Google OAuth provider needs to be configured through Lovable Cloud's managed authentication system.
 
-### What I'll Do
+### The Problem
 
-1. **Create your profile** in the `profiles` table with your user details
-2. **Create your subscription** in the `subscriptions` table (free plan with 10 credits)
-3. **Grant admin access** by inserting a record into the `user_roles` table
+Your project is calling `supabase.auth.signInWithOAuth()` directly, but Lovable Cloud requires using the managed `lovable.auth.signInWithOAuth()` function which handles all the OAuth configuration automatically.
 
-### Database Changes
+### Solution
 
-I'll run SQL migrations to insert the following records:
+I will configure Google OAuth using Lovable Cloud's managed solution, which will:
+
+1. Generate the required authentication module at `src/integrations/lovable/`
+2. Install the `@lovable.dev/cloud-auth-js` package
+3. Update the Auth page to use `lovable.auth.signInWithOAuth()` instead of the direct Supabase call
+
+### Changes Required
+
+**1. Configure Social Auth (Tool Call)**
+- Use the social auth configuration tool to set up Google OAuth
+- This generates the necessary Lovable integration files
+
+**2. Update `src/pages/Auth.tsx`**
+- Import the Lovable auth module
+- Replace the current Google sign-in implementation:
 
 ```text
-profiles table:
-- user_id: ed18d141-2f19-4b3c-a267-c26048c64fa9
-- email: anthony.szebenyi@gmail.com
-- full_name: Anthony Szebenyi
+Current (broken):
+  supabase.auth.signInWithOAuth({ provider: 'google', ... })
 
-subscriptions table:
-- user_id: ed18d141-2f19-4b3c-a267-c26048c64fa9
-- plan_id: free
-- credits_limit: 10
-- credits_used: 0
-
-user_roles table:
-- user_id: ed18d141-2f19-4b3c-a267-c26048c64fa9
-- role: admin
+New (working):
+  lovable.auth.signInWithOAuth('google', { redirect_uri: window.location.origin })
 ```
+
+### Technical Details
+
+- Lovable Cloud provides managed Google OAuth credentials by default, so no additional API keys are needed
+- The managed solution automatically handles the OAuth flow, redirect URIs, and token exchange
+- If you prefer to use your own Google OAuth credentials for branding purposes, you can configure them in the Cloud Dashboard under Authentication Settings
 
 ### After Implementation
 
-Once approved, you'll be able to:
-- Access the admin dashboard at `/admin`
-- Manage users, view platform statistics, and configure settings
-- Use all admin-only features
-
-### Technical Note
-
-I'll also investigate why the `handle_new_user()` trigger didn't fire and fix it if needed, so future signups work correctly.
+You'll be able to sign in with Google immediately without any additional setup.
 
