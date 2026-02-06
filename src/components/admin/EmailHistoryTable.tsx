@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import DOMPurify from 'dompurify';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -327,7 +328,7 @@ export function EmailHistoryTable() {
                 <p className="text-sm text-muted-foreground mb-2">Email Content</p>
                 <div 
                   className="border rounded-lg p-4 bg-white max-h-[400px] overflow-y-auto"
-                  dangerouslySetInnerHTML={{ __html: selectedEmail.body_sent }}
+                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(selectedEmail.body_sent) }}
                 />
               </div>
             </div>

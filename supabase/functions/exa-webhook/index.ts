@@ -7,6 +7,23 @@ const corsHeaders = {
 
 const EXA_WEBSETS_BASE = 'https://api.exa.ai/websets/v0';
 
+// Helper function to verify HMAC signature
+async function verifySignature(payload: string, signature: string, secret: string): Promise<boolean> {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const signatureBytes = await crypto.subtle.sign('HMAC', key, encoder.encode(payload));
+  const expectedSignature = Array.from(new Uint8Array(signatureBytes))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+  return signature === expectedSignature || signature === `sha256=${expectedSignature}`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -18,7 +35,9 @@ Deno.serve(async (req) => {
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   try {
-    const payload = await req.json();
+    // Clone request to read body twice (once for signature, once for parsing)
+    const rawBody = await req.text();
+    const payload = JSON.parse(rawBody);
     
     console.log('Webhook received:', JSON.stringify(payload, null, 2));
 
@@ -38,7 +57,7 @@ Deno.serve(async (req) => {
       const websetId = data.id || data.websetId;
       console.log('Webset completed, fetching all items:', websetId);
       
-      // Get the webset search record to find campaign_id
+      // Get the webset search record to find campaign_id and webhook_secret
       const { data: searchRecord, error: searchError } = await supabase
         .from('webset_searches')
         .select('*, campaigns(user_id)')
@@ -47,6 +66,35 @@ Deno.serve(async (req) => {
 
       if (searchError) {
         console.error('Error fetching search record:', searchError);
+      }
+
+      // SECURITY: Verify webhook signature if secret is configured
+      const exaSignature = req.headers.get('x-exa-signature');
+      if (searchRecord?.webhook_secret) {
+        if (!exaSignature) {
+          console.error('Missing webhook signature');
+          return new Response(JSON.stringify({ error: 'Missing signature' }), {
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        
+        const isValid = await verifySignature(rawBody, exaSignature, searchRecord.webhook_secret);
+        if (!isValid) {
+          console.error('Invalid webhook signature');
+          return new Response(JSON.stringify({ error: 'Invalid signature' }), {
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        console.log('Webhook signature verified successfully');
+      } else if (!searchRecord) {
+        // No search record found - reject unknown webhooks
+        console.error('Unknown webset ID, rejecting webhook');
+        return new Response(JSON.stringify({ error: 'Unknown webset' }), {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
 
       // IDEMPOTENCY CHECK: Skip if already processed
