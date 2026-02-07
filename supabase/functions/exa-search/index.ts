@@ -17,19 +17,27 @@ Deno.serve(async (req) => {
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   try {
-    // Get authenticated user
+    // Require authentication to prevent unauthorized API usage
     const authHeader = req.headers.get('Authorization');
-    let userId: string | null = null;
-    
-    if (authHeader) {
-      const token = authHeader.replace('Bearer ', '');
-      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-      if (authError) {
-        console.error('Auth error:', authError);
-      } else {
-        userId = user?.id || null;
-      }
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claims, error: claimsError } = await supabase.auth.getClaims(token);
+    
+    if (claimsError || !claims?.claims?.sub) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid authentication token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const userId = claims.claims.sub as string;
+    console.log('Authenticated user:', userId);
 
     const { query, campaignId } = await req.json();
 
@@ -43,31 +51,29 @@ Deno.serve(async (req) => {
     }
 
     // Check credit limit before starting search
-    if (userId) {
-      const { data: subscription, error: subError } = await supabase
-        .from('subscriptions')
-        .select('credits_limit, credits_used')
-        .eq('user_id', userId)
-        .single();
+    const { data: subscription, error: subError } = await supabase
+      .from('subscriptions')
+      .select('credits_limit, credits_used')
+      .eq('user_id', userId)
+      .single();
 
-      if (subError) {
-        console.error('Error fetching subscription:', subError);
-      } else if (subscription) {
-        const availableCredits = subscription.credits_limit - (subscription.credits_used || 0);
-        console.log('Available credits:', availableCredits);
+    if (subError) {
+      console.error('Error fetching subscription:', subError);
+    } else if (subscription) {
+      const availableCredits = subscription.credits_limit - (subscription.credits_used || 0);
+      console.log('Available credits:', availableCredits);
 
-        if (availableCredits <= 0) {
-          return new Response(JSON.stringify({
-            success: false,
-            error: 'NO_CREDITS',
-            message: 'You have used all your credits. Please upgrade your plan.',
-            credits_used: subscription.credits_used,
-            credits_limit: subscription.credits_limit,
-          }), { 
-            status: 402, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          });
-        }
+      if (availableCredits <= 0) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'NO_CREDITS',
+          message: 'You have used all your credits. Please upgrade your plan.',
+          credits_used: subscription.credits_used,
+          credits_limit: subscription.credits_limit,
+        }), { 
+          status: 402, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        });
       }
     }
 
