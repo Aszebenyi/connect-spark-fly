@@ -74,13 +74,52 @@ Deno.serve(async (req) => {
     }
 
     // Parse request body
-    const { to, subject, html, replyTo } = await req.json();
+    const reqBody = await req.json();
+    const { to, subject, html, replyTo } = reqBody;
 
     if (!to || !subject || !html) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields: to, subject, html' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // Validate email recipients
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const recipients = Array.isArray(to) ? to : [to];
+    for (const email of recipients) {
+      if (typeof email !== 'string' || !emailRegex.test(email) || email.length > 254) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid recipient email address' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // Validate subject length
+    if (typeof subject !== 'string' || subject.length === 0 || subject.length > 200) {
+      return new Response(
+        JSON.stringify({ error: 'Subject must be between 1 and 200 characters' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate HTML body length
+    if (typeof html !== 'string' || html.length === 0 || html.length > 100000) {
+      return new Response(
+        JSON.stringify({ error: 'HTML body must be between 1 and 100000 characters' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate replyTo if provided
+    if (replyTo !== undefined && replyTo !== null) {
+      if (typeof replyTo !== 'string' || !emailRegex.test(replyTo) || replyTo.length > 254) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid reply-to email address' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     logStep('Sending email', { to, subject });

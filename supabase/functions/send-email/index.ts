@@ -136,12 +136,53 @@ serve(async (req) => {
       );
     }
 
-    const body = await req.json();
-    const { leadId, to, subject, emailBody, campaignId } = body;
+    const reqBody = await req.json();
+    const { leadId, to, subject, emailBody, campaignId } = reqBody;
 
+    // Validate required fields
     if (!to || !subject || !emailBody) {
       return new Response(
         JSON.stringify({ error: "Missing required fields: to, subject, emailBody" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (typeof to !== 'string' || !emailRegex.test(to) || to.length > 254) {
+      return new Response(
+        JSON.stringify({ error: "Invalid recipient email address" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate subject length
+    if (typeof subject !== 'string' || subject.length === 0 || subject.length > 200) {
+      return new Response(
+        JSON.stringify({ error: "Subject must be between 1 and 200 characters" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate email body length
+    if (typeof emailBody !== 'string' || emailBody.length === 0 || emailBody.length > 50000) {
+      return new Response(
+        JSON.stringify({ error: "Email body must be between 1 and 50000 characters" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate UUID formats if provided
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (leadId !== undefined && leadId !== null && (typeof leadId !== 'string' || !uuidRegex.test(leadId))) {
+      return new Response(
+        JSON.stringify({ error: "Invalid lead ID format" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    if (campaignId !== undefined && campaignId !== null && (typeof campaignId !== 'string' || !uuidRegex.test(campaignId))) {
+      return new Response(
+        JSON.stringify({ error: "Invalid campaign ID format" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

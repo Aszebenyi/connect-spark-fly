@@ -39,15 +39,48 @@ Deno.serve(async (req) => {
     const userId = claims.claims.sub as string;
     console.log('Authenticated user:', userId);
 
-    const { query, campaignId } = await req.json();
+    const body = await req.json();
+    
+    // Input validation with length limits
+    const query = body.query;
+    const campaignId = body.campaignId;
+
+    if (!query || typeof query !== 'string') {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Search query is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const trimmedQuery = query.trim();
+    if (trimmedQuery.length === 0) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Search query cannot be empty' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (trimmedQuery.length > 500) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Search query must be 500 characters or less' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate campaignId format if provided
+    if (campaignId !== undefined && campaignId !== null) {
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (typeof campaignId !== 'string' || !uuidRegex.test(campaignId)) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'Invalid campaign ID format' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
 
     const EXA_API_KEY = Deno.env.get('EXA_API_KEY');
     if (!EXA_API_KEY) {
       throw new Error('EXA_API_KEY is not configured');
-    }
-
-    if (!query || typeof query !== 'string' || query.trim().length === 0) {
-      throw new Error('Search query is required');
     }
 
     // Check credit limit before starting search
@@ -77,8 +110,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const searchQuery = query.trim();
-    console.log('Creating Webset with query:', searchQuery);
+    console.log('Creating Webset with query:', trimmedQuery);
 
     // Get the webhook URL - this is our edge function URL
     const webhookUrl = `${supabaseUrl}/functions/v1/exa-webhook`;
@@ -118,7 +150,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         search: {
-          query: searchQuery,
+          query: trimmedQuery,
           count: 10,
         },
         enrichments: [
@@ -144,7 +176,7 @@ Deno.serve(async (req) => {
     const { error: insertError } = await supabase.from('webset_searches').insert({
       webset_id: webset.id,
       campaign_id: campaignId || null,
-      query: searchQuery,
+      query: trimmedQuery,
       status: 'processing',
       webhook_secret: webhook.secret || null,
     });
