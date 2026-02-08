@@ -31,7 +31,18 @@ export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinde
   const creditsRemaining = (subscription?.credits_limit || 0) - (subscription?.credits_used || 0);
   const hasCredits = creditsRemaining > 0;
 
+  const { user } = useAuth();
+
   const handleSearch = async () => {
+    if (!user) {
+      toast({
+        title: 'Sign in required',
+        description: 'Please sign in to search for leads.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (!query.trim()) {
       toast({
         title: 'Enter a search query',

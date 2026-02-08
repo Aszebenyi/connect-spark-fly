@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBrandConfig } from '@/hooks/useBrandConfig';
-import { supabase } from '@/integrations/supabase/client';
+import { lovable } from '@/integrations/lovable/index';
 import { Loader2, ArrowRight, Zap, Target, TrendingUp, Mail, Lock, User, Eye, EyeOff, Star, Shield, Sparkles } from 'lucide-react';
 import { InlineAlert, FieldError } from '@/components/ui/inline-alert';
 import { mapAuthError } from '@/hooks/useInlineError';
@@ -95,11 +95,8 @@ export default function Auth() {
     setFormError(null);
     
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`,
-        },
+      const { error } = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
       });
       
       if (error) {
