@@ -34,8 +34,7 @@ serve(async (req) => {
     logStep("Function started");
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
-
+    
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       logStep("No authorization header provided");
@@ -69,6 +68,59 @@ serve(async (req) => {
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
+
+    // If Stripe is not configured, return subscription data from database only
+    if (!stripeKey) {
+      logStep("STRIPE_SECRET_KEY not configured, using database-only mode");
+      
+      const { data: existingSub } = await supabaseClient
+        .from('subscriptions')
+        .select('plan_id, status, credits_limit, credits_used')
+        .eq('user_id', user.id)
+        .single();
+
+      if (existingSub) {
+        const planNames: Record<string, string> = {
+          'free': 'Free',
+          'starter': 'Starter', 
+          'growth': 'Growth',
+          'scale': 'Scale'
+        };
+        
+        return new Response(JSON.stringify({
+          subscribed: existingSub.plan_id !== 'free',
+          plan_id: existingSub.plan_id,
+          plan_name: planNames[existingSub.plan_id] || 'Free',
+          credits_limit: existingSub.credits_limit,
+          credits_used: existingSub.credits_used || 0,
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+
+      // No subscription record, create free tier
+      await supabaseClient
+        .from('subscriptions')
+        .upsert({
+          user_id: user.id,
+          plan_id: 'free',
+          status: 'active',
+          credits_limit: 10,
+          credits_used: 0,
+        }, { onConflict: 'user_id' });
+
+      return new Response(JSON.stringify({
+        subscribed: false,
+        plan_id: 'free',
+        plan_name: 'Free',
+        credits_limit: 10,
+        credits_used: 0,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
