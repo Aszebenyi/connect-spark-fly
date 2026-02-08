@@ -1,109 +1,179 @@
 
-## What’s happening (based on your screenshots + code)
+# Fix Google Login and Lead Search Errors
 
-### 1) Google login error
-Your screenshot shows this backend response:
+## Problem Analysis
 
-- `code: 400`
-- `error_code: "validation_failed"`
-- `msg: "Unsupported provider: provider is not enabled"`
+### Issue 1: Google Login Error
+**Error:** `"Unsupported provider: provider is not enabled"` (status 400)
 
-That means **Google sign-in is not enabled in your backend authentication settings**. The frontend is correctly sending the user to the backend OAuth authorize URL, but the backend rejects it because the Google provider is disabled.
+**Root Cause:** The code in `src/pages/Auth.tsx` (line 98-103) uses the native Supabase OAuth method:
+```typescript
+await supabase.auth.signInWithOAuth({
+  provider: 'google',
+  options: { redirectTo: `${window.location.origin}/dashboard` }
+});
+```
 
-### 2) Lead search error (“Edge Function returned a non‑2xx status code”)
-Your lead search calls the backend function `exa-search`:
+However, this project uses **Lovable Cloud** which requires using the `lovable.auth.signInWithOAuth()` method instead of the direct Supabase client.
 
-- Frontend: `src/lib/api.ts` → `supabase.functions.invoke('exa-search', { body })`
-- Backend: `supabase/functions/exa-search/index.ts` now **requires a Bearer token** and returns **401** if missing/invalid (or **500** if token validation fails).
+### Issue 2: Lead Search Error
+**Error:** `"Edge Function returned a non-2xx status code"`
 
-Because Google login is failing, you’re very likely **not actually authenticated**, so lead search hits the new auth requirement and fails with a non‑2xx.
+**Root Cause:** The `exa-search` edge function requires authentication (lines 21-37), but the frontend `searchLeadsWithExa` function in `src/lib/api.ts` (lines 57-59) does not explicitly pass the Authorization header:
+```typescript
+const { data, error } = await supabase.functions.invoke('exa-search', {
+  body: params,
+});
+```
 
-There’s also a secondary risk: `exa-search` currently validates the token using `supabase.auth.getClaims(token)` on a client created with the service key; in other functions you validate via `auth.getUser()` using an anon-key client with the user’s Authorization header. Unifying this avoids subtle token-validation failures.
-
----
-
-## Plan to fix both issues
-
-### A) Enable Google provider in backend auth settings (fixes Google login)
-1. Open Lovable Cloud Backend (the project’s backend UI).
-2. Go to **Users / Authentication settings** → **Sign-in methods**.
-3. **Enable Google** as a provider.
-4. Configure redirect/callback URLs:
-   - Add your **published domain** (and preview domain if you want Google login to work in preview).
-   - Ensure the redirect URL you’re using in code is allowed:
-     - Code uses: `redirectTo: ${window.location.origin}/dashboard` in `src/pages/Auth.tsx`
-5. If you’re using “bring your own Google OAuth credentials”:
-   - Add the **Client ID** and **Client Secret** in that same Google provider panel.
-   - In Google Cloud Console, ensure the authorized redirect URIs match the backend’s required callback URL(s).
-
-**Expected result:** clicking “Continue with Google” opens Google and successfully returns to your app with a valid session.
+The SDK may auto-attach headers in some cases, but for reliability (especially after the security hardening), explicit headers should be passed. Additionally, without being able to log in via Google, the user may not have a valid session at all.
 
 ---
 
-### B) Make lead search reliably authenticated + show a real error message (fixes lead search)
-We’ll make this robust in two layers:
+## Implementation Plan
 
-#### 1) Frontend: explicitly pass the user token to authenticated backend functions
-Update `src/lib/api.ts` so `searchLeadsWithExa`, `generateOutreach`, and `enrichLeadWithLinkedIn` do:
+### Step 1: Configure Google OAuth for Lovable Cloud
+Use the `supabase--configure-social-auth` tool to generate the proper Lovable Cloud authentication module. This will:
+- Create/update the `src/integrations/lovable` folder with the managed OAuth client
+- Install the `@lovable.dev/cloud-auth-js` package if needed
 
-- `const { data: { session } } = await supabase.auth.getSession()`
-- If no session: return `{ success:false, error:'Authentication required' }`
-- Call `supabase.functions.invoke(..., { headers: { Authorization: `Bearer ${session.access_token}` }, body })`
+### Step 2: Update Auth.tsx to use Lovable OAuth
+Replace the native Supabase OAuth call with the Lovable Cloud method:
 
-This removes any ambiguity about whether the SDK auto-attaches the token.
+**Current code (lines 93-113):**
+```typescript
+const handleGoogleSignIn = async () => {
+  setGoogleLoading(true);
+  setFormError(null);
+  
+  try {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
+    // ...
+  }
+};
+```
 
-#### 2) Frontend: parse backend error bodies so the toast isn’t generic
-In `searchLeadsWithExa` (and any other invoke wrapper), if `error` is present:
-- Try reading `error.context?.body` and JSON-parse it.
-- Prefer `body.error` (or `body.message`) over the generic “non‑2xx status code”.
-This will produce actionable UI errors like:
-- “Authentication required”
-- “NO_CREDITS”
-- “EXA_API_KEY not configured”
-- etc.
+**Updated code:**
+```typescript
+import { lovable } from "@/integrations/lovable/index";
 
-#### 3) UI guardrail: don’t allow searching while logged out
-In `src/components/LeadFinder.tsx`:
-- Read `user` from `useAuth()`
-- If user is missing, show a toast and route them to `/auth` (or disable the button with “Sign in to search”)
-This prevents the confusing “search failed” state when login is broken.
+const handleGoogleSignIn = async () => {
+  setGoogleLoading(true);
+  setFormError(null);
+  
+  try {
+    const { error } = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin,
+    });
+    
+    if (error) {
+      setFormError(mapAuthError(error));
+      setGoogleLoading(false);
+    }
+  } catch (err) {
+    setFormError('Failed to connect with Google. Please try again.');
+    setGoogleLoading(false);
+  }
+};
+```
+
+### Step 3: Update API Functions to Explicitly Pass Auth Headers
+Modify `src/lib/api.ts` to ensure all authenticated edge function calls include the Authorization header:
+
+**Functions to update:**
+1. `searchLeadsWithExa` (lines 53-67)
+2. `generateOutreach` (lines 69-84)
+3. `enrichLeadWithLinkedIn` (lines 262-345) - specifically the `apify-scrape` invocation
+
+**Pattern to apply:**
+```typescript
+export async function searchLeadsWithExa(params: {
+  query?: string;
+  campaignId?: string;
+}): Promise<...> {
+  // Get current session for auth header
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  if (!session) {
+    return { success: false, error: 'Authentication required. Please sign in.' };
+  }
+
+  const { data, error } = await supabase.functions.invoke('exa-search', {
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+    },
+    body: params,
+  });
+
+  if (error) {
+    console.error('Exa search error:', error);
+    // Parse backend error for better messages
+    try {
+      const errorBody = error.context?.body ? JSON.parse(error.context.body) : null;
+      return { success: false, error: errorBody?.error || errorBody?.message || error.message };
+    } catch {
+      return { success: false, error: error.message };
+    }
+  }
+
+  return data;
+}
+```
+
+### Step 4: Add UI Guardrail in LeadFinder
+Update `src/components/LeadFinder.tsx` to check for authentication before allowing searches:
+
+**Add check in handleSearch:**
+```typescript
+const { user } = useAuth();
+
+const handleSearch = async () => {
+  if (!user) {
+    toast({
+      title: 'Sign in required',
+      description: 'Please sign in to search for leads.',
+      variant: 'destructive',
+    });
+    return;
+  }
+  // ... existing logic
+};
+```
 
 ---
 
-### C) Backend: standardize token validation in `exa-search` to avoid false failures
-Update `supabase/functions/exa-search/index.ts` to follow the same pattern as other secured functions:
+## Files to Modify
 
-1. Require `Authorization: Bearer ...`
-2. Create a **user-scoped client** with `SUPABASE_ANON_KEY` and `global.headers.Authorization = authHeader`
-3. Validate session via `await userClient.auth.getUser()`
-4. Use a separate **admin client** (service key) for DB reads/writes
-
-This avoids relying on `getClaims()` with a service client and makes behavior consistent across functions.
-
-**Expected result:** once logged in, lead search returns 200 and begins the webset search workflow.
+| File | Changes |
+|------|---------|
+| `src/pages/Auth.tsx` | Import lovable module, update `handleGoogleSignIn` to use `lovable.auth.signInWithOAuth()` |
+| `src/lib/api.ts` | Add explicit Authorization headers and improved error parsing to `searchLeadsWithExa`, `generateOutreach`, and `enrichLeadWithLinkedIn` |
+| `src/components/LeadFinder.tsx` | Add authentication check before search |
 
 ---
 
-## Testing checklist (end-to-end)
-1. From `/auth`, click **Continue with Google**
-   - Confirm you are redirected back and stay logged in (you land in `/dashboard`).
-2. Go to Lead Finder, run a query
-   - Confirm you get “Search started!” (or a clear error like “No credits”).
-3. While logged out (open an incognito tab), attempt to access lead search UI
-   - Confirm you’re redirected to sign in or the button is disabled with a clear message.
-4. Optional sanity checks:
-   - Verify `generate-outreach` and LinkedIn enrichment still work (they also require auth now).
+## Technical Details
+
+### Why explicit headers are needed
+The Supabase JS client may auto-attach auth headers in some scenarios, but:
+1. After security hardening, edge functions strictly validate tokens
+2. Explicit headers ensure consistent behavior across all environments
+3. Better error handling when session is missing
+
+### Why Lovable OAuth is required
+This project runs on Lovable Cloud, which manages OAuth providers through its own authentication layer. The native `supabase.auth.signInWithOAuth()` bypasses this and results in the "provider not enabled" error because the backend expects requests through the Lovable auth system.
 
 ---
 
-## Files that will be changed (once you approve this plan)
-- `src/pages/Auth.tsx` (optional small tweaks to redirect handling / UX)
-- `src/lib/api.ts` (attach Authorization header + improved error parsing)
-- `src/components/LeadFinder.tsx` (guardrail when logged out)
-- `supabase/functions/exa-search/index.ts` (token validation refactor to userClient + adminClient)
-
----
-
-## Notes / risks
-- Google login cannot be fixed purely in code if the provider is disabled; it must be enabled in backend auth settings.
-- Enabling Google for both **preview** and **published** environments requires adding both domains to the allowed redirect configuration (recommended during development).
+## Testing Checklist
+After implementation:
+1. Click "Continue with Google" on the login page - should open Google consent screen
+2. After selecting Google account, should redirect back and land on `/dashboard`
+3. Go to Lead Finder, run a search query - should show "Search started!" or clear error (e.g., "No credits")
+4. While logged out, attempt to search - should show "Sign in required" toast
+5. Verify outreach generation still works for existing leads
