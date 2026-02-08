@@ -251,7 +251,12 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log('Searching with query:', trimmedQuery);
+    // Calculate how many leads we can save
+    const availableCredits = subscription 
+      ? subscription.credits_limit - (subscription.credits_used || 0) 
+      : 10; // Default for users without subscription
+    
+    console.log('Searching with query:', trimmedQuery, '| Available credits:', availableCredits);
 
     // Update campaign status to 'searching'
     if (campaignId) {
@@ -311,11 +316,17 @@ Deno.serve(async (req) => {
     
     console.log(`Exa returned ${results.length} results`);
 
-    // Parse and filter results
+    // Parse and filter results - limit to available credits
     let savedCount = 0;
     let skippedCount = 0;
 
     for (const result of results) {
+      // Stop if we've reached the credit limit
+      if (savedCount >= availableCredits) {
+        console.log(`Credit limit reached (${availableCredits}), stopping lead processing`);
+        break;
+      }
+
       const parsed = parseLeadFromResult(result);
       if (!parsed) {
         skippedCount++;
