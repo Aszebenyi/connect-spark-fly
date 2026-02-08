@@ -54,13 +54,29 @@ export async function searchLeadsWithExa(params: {
   query?: string;
   campaignId?: string;
 }): Promise<{ success: boolean; leads?: Lead[]; websetId?: string; status?: string; message?: string; error?: string }> {
+  // Get current session for auth header
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  if (!session) {
+    return { success: false, error: 'Authentication required. Please sign in.' };
+  }
+
   const { data, error } = await supabase.functions.invoke('exa-search', {
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+    },
     body: params,
   });
 
   if (error) {
     console.error('Exa search error:', error);
-    return { success: false, error: error.message };
+    // Parse backend error for better messages
+    try {
+      const errorBody = error.context?.body ? JSON.parse(error.context.body) : null;
+      return { success: false, error: errorBody?.error || errorBody?.message || error.message };
+    } catch {
+      return { success: false, error: error.message };
+    }
   }
 
   return data;
@@ -71,13 +87,28 @@ export async function generateOutreach(params: {
   campaignGoal?: string;
   tone?: 'professional' | 'casual' | 'friendly' | 'formal';
 }): Promise<{ success: boolean; outreach?: GeneratedOutreach; error?: string }> {
+  // Get current session for auth header
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  if (!session) {
+    return { success: false, error: 'Authentication required. Please sign in.' };
+  }
+
   const { data, error } = await supabase.functions.invoke('generate-outreach', {
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+    },
     body: params,
   });
 
   if (error) {
     console.error('Generate outreach error:', error);
-    return { success: false, error: error.message };
+    try {
+      const errorBody = error.context?.body ? JSON.parse(error.context.body) : null;
+      return { success: false, error: errorBody?.error || errorBody?.message || error.message };
+    } catch {
+      return { success: false, error: error.message };
+    }
   }
 
   return data;
@@ -265,14 +296,29 @@ export async function enrichLeadWithLinkedIn(
 ): Promise<{ success: boolean; profile?: LinkedInProfile; error?: string }> {
   console.log('Enriching lead with LinkedIn:', leadId, linkedinUrl);
 
+  // Get current session for auth header
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  if (!session) {
+    return { success: false, error: 'Authentication required. Please sign in.' };
+  }
+
   // Call the apify-scrape edge function
   const { data, error } = await supabase.functions.invoke('apify-scrape', {
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+    },
     body: { linkedinUrl },
   });
 
   if (error) {
     console.error('LinkedIn enrichment error:', error);
-    return { success: false, error: error.message };
+    try {
+      const errorBody = error.context?.body ? JSON.parse(error.context.body) : null;
+      return { success: false, error: errorBody?.error || errorBody?.message || error.message };
+    } catch {
+      return { success: false, error: error.message };
+    }
   }
 
   if (!data?.success || !data?.profile) {
