@@ -241,16 +241,16 @@ export default function Landing() {
     { visual: MagnetPull, title: "AI-Powered Candidate Search", description: "Describe the role in plain language. MediLead finds nurses with the right certifications, experience, and location." },
     { visual: CircuitLines, title: "Instant Profile Enrichment", description: "Get verified email addresses and phone numbers for every candidate — instantly." },
     { visual: DataFlow, title: "Smart Job Openings", description: "Organize candidates by job opening. Track who you've contacted, who responded, and where every candidate stands." },
-    { visual: StackedBars, title: "Personalized Email Outreach", description: "Connect your Gmail and send personalized recruitment emails directly from MediLead — no copy-pasting needed." },
+    { visual: StackedBars, title: "Personalized Email Outreach", description: "AI reads each candidate's LinkedIn profile, skills, and career history — then writes a unique recruitment email. Send it via Gmail without leaving MediLead." },
     { visual: TargetRings, title: "License Verification", description: "AI verifies nursing licenses, certifications, and credentials automatically so you only see qualified candidates." },
-    { visual: SparkBurst, title: "Complete Workflow", description: "From candidate search to outreach to tracking responses — everything in one place. No spreadsheets required." },
+    { visual: SparkBurst, title: "Complete Workflow", description: "Search, enrich, personalize, send, and track responses — all without leaving MediLead. No spreadsheets, no copy-pasting." },
   ];
   
   const steps = [
     { title: "Describe Who You Need", description: "Type the role, location, and requirements in plain language. MediLead understands what you're looking for." },
     { title: "AI Searches LinkedIn", description: "MediLead automatically searches LinkedIn, finds matching profiles, and ranks the best candidates for your role." },
     { title: "Get Verified Contact Info", description: "Instantly get verified email addresses and phone numbers for every qualified candidate." },
-    { title: "Send Personalized Emails", description: "Connect Gmail and send AI-generated, personalized recruitment emails — then track opens and replies." },
+    { title: "Send Personalized Emails", description: "AI writes a unique email for each candidate based on their real profile. Send via Gmail and track opens and replies — all inside MediLead." },
   ];
   
   const pricing = [
@@ -554,7 +554,7 @@ export default function Landing() {
             <span className="gradient-text">3x faster?</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-10">
-            Start your 7-day free trial. No credit card required. Find your first batch of qualified candidates in 2 minutes.
+            Join healthcare recruiters who fill roles 3x faster with AI that finds candidates and writes personalized outreach from their real profiles.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button onClick={() => navigate('/auth')} size="lg" className="apple-button h-14 px-10 text-lg gap-2">
