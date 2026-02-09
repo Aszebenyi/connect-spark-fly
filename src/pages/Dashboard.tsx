@@ -417,21 +417,6 @@ export default function Index() {
               </div>
             </div>
 
-            {/* Recent Leads */}
-            {convertedLeads.length > 0 && (
-              <div className="mb-6 animate-fade-in stagger-5">
-                <div className="section-header">
-                  <h2 className="section-title">Recent Candidates</h2>
-                  <Button variant="outline" size="sm" onClick={() => setActiveTab('leads')} className="rounded-xl">
-                    View All →
-                  </Button>
-                </div>
-                <LeadTable 
-                  leads={convertedLeads.slice(0, 5)} 
-                  onLeadClick={(lead) => setSelectedLead(lead)}
-                />
-              </div>
-            )}
 
             {/* Active Campaigns */}
             {campaigns.length > 0 && (

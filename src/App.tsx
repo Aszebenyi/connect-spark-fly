@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { SEO } from "@/components/SEO";
+import { ThemeProvider } from "next-themes";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
@@ -22,6 +23,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <ErrorBoundary>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>
@@ -46,6 +48,7 @@ const App = () => (
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
+    </ThemeProvider>
   </ErrorBoundary>
 );
 
