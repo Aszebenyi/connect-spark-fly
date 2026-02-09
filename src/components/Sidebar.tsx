@@ -5,6 +5,8 @@ import { useBrandConfig } from '@/hooks/useBrandConfig';
 import { PLANS, PlanId } from '@/lib/plans';
 import { Button } from './ui/button';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from 'next-themes';
+import { Sun, Moon } from 'lucide-react';
 
 interface SidebarProps {
   activeTab: string;
@@ -75,6 +77,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
   const { user, subscription, subscriptionLoading, signOut } = useAuth();
   const { appName, tagline } = useBrandConfig();
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
 
   const currentPlan = PLANS[subscription?.plan_id as PlanId] || PLANS.free;
   const creditsUsed = subscription?.credits_used || 0;
@@ -132,6 +135,15 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
 
       {/* Footer */}
       <div className="p-5 border-t border-sidebar-border space-y-4">
+        {/* Theme Toggle */}
+        <button
+          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-300"
+        >
+          {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+        </button>
+
         {/* Low Credit Warning */}
         {!subscriptionLoading && creditsLimit > 0 && (creditsLimit - creditsUsed) / creditsLimit <= 0.1 && (
           <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-destructive/10 border border-destructive/20">
