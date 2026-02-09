@@ -12,6 +12,7 @@ import { useSubscriptionRealtime } from '@/hooks/useSubscriptionRealtime';
 import { PricingPlans } from '@/components/PricingPlans';
 import { PLANS, PlanId } from '@/lib/plans';
 import { EmailConnectionCard } from '@/components/EmailConnectionCard';
+import { CompanyProfileTab } from '@/components/CompanyProfileTab';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -413,7 +414,16 @@ export function SettingsPage() {
           </p>
         </SettingsSection>
 
-        {/* Notifications Section */}
+        {/* Company Profile / Product Identity */}
+        <SettingsSection 
+          title="Company Profile" 
+          description="Define your company identity for AI-generated candidate outreach"
+          className="animate-fade-in stagger-3"
+        >
+          <CompanyProfileTab />
+        </SettingsSection>
+
+        {/* Notifications Section - moved down */}
         <SettingsSection 
           title="Notifications" 
           description="Control how and when you receive updates"
