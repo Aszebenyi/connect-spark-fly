@@ -26,7 +26,7 @@ export function useEmailConnection() {
 
     try {
       const { data, error } = await supabase
-        .from('email_connections')
+        .from('email_connections_safe')
         .select('id, provider, email, is_active, created_at')
         .eq('user_id', user.id)
         .eq('provider', 'gmail')
