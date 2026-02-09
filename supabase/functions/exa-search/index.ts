@@ -69,7 +69,7 @@ Rules:
   }
 }
 
-// Score candidates against job requirements using AI
+// Score candidates against job requirements using AI (uses tool calling for reliable JSON)
 async function scoreLeadsAgainstRequirements(
   leads: Array<{ id: string; name: string; title: string | null; certifications: string | null; licenses: string | null; specialty: string | null; location: string | null; text: string }>,
   originalQuery: string,
@@ -77,7 +77,6 @@ async function scoreLeadsAgainstRequirements(
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY || leads.length === 0) return {};
 
-  // Build candidate summaries for batch scoring
   const candidateSummaries = leads.map((l, i) => 
     `[${i}] ${l.name} | Title: ${l.title || 'N/A'} | Location: ${l.location || 'N/A'} | Certs: ${l.certifications || 'N/A'} | Licenses: ${l.licenses || 'N/A'} | Specialty: ${l.specialty || 'N/A'} | Profile: ${l.text.substring(0, 300)}`
   ).join('\n');
@@ -97,21 +96,52 @@ async function scoreLeadsAgainstRequirements(
             content: `You are a healthcare recruitment qualification engine. Score each candidate against the job requirements.
 
 Scoring criteria (100 points total):
-- LICENSE MATCH (30 pts): Does candidate have the required license type (RN, LPN, PT, OT, RT, etc.)? Is it the right state? Is it compact if required?
-- CERTIFICATION MATCH (20 pts): Has required certs? BLS required for almost all nursing. ACLS for ICU/ER/Critical Care. PALS for pediatric/NICU. Specialty certs (CCRN, CEN, NRP, TNCC, etc.) are bonus.
-- EXPERIENCE MATCH (30 pts): Years in the SPECIFIC specialty (ICU, ER, OR, etc.), not just total experience. 
-- LOCATION MATCH (20 pts): Correct location or indication of willingness to relocate/travel.
+- LICENSE MATCH (30 pts): Does candidate have the required license type? Right state?
+- CERTIFICATION MATCH (20 pts): Has required certs? BLS required for almost all nursing. ACLS for ICU/ER.
+- EXPERIENCE MATCH (30 pts): Years in the SPECIFIC specialty, not just total experience.
+- LOCATION MATCH (20 pts): Correct location or willingness to relocate.
 
-If information is missing or unclear, give partial credit (e.g., if license type matches but state unknown, give 15/30).
-
-You MUST respond with ONLY a valid JSON object, no markdown, no explanation. Format:
-{"results":[{"index":0,"match_score":85,"license_match":true,"cert_match":true,"experience_match":true,"location_match":false,"notes":"RN license found, BLS/ACLS verified, 5yr ICU, location mismatch"}]}`
+If information is missing, give partial credit.`
           },
           {
             role: 'user',
             content: `JOB REQUIREMENTS:\n${originalQuery}\n\nCANDIDATES:\n${candidateSummaries}`,
           },
         ],
+        tools: [
+          {
+            type: 'function',
+            function: {
+              name: 'submit_scores',
+              description: 'Submit qualification scores for all candidates',
+              parameters: {
+                type: 'object',
+                properties: {
+                  results: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        index: { type: 'number', description: 'Candidate index from the list' },
+                        match_score: { type: 'number', description: 'Overall score 0-100' },
+                        license_match: { type: 'boolean' },
+                        cert_match: { type: 'boolean' },
+                        experience_match: { type: 'boolean' },
+                        location_match: { type: 'boolean' },
+                        notes: { type: 'string', description: 'Brief scoring rationale' },
+                      },
+                      required: ['index', 'match_score', 'license_match', 'cert_match', 'experience_match', 'location_match', 'notes'],
+                      additionalProperties: false,
+                    },
+                  },
+                },
+                required: ['results'],
+                additionalProperties: false,
+              },
+            },
+          },
+        ],
+        tool_choice: { type: 'function', function: { name: 'submit_scores' } },
       }),
     });
 
@@ -121,12 +151,15 @@ You MUST respond with ONLY a valid JSON object, no markdown, no explanation. For
     }
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content?.trim();
-    if (!content) return {};
-
-    // Parse JSON, handling potential markdown wrapping
-    const jsonStr = content.replace(/^```json?\s*/, '').replace(/\s*```$/, '');
-    const parsed = JSON.parse(jsonStr);
+    
+    // Extract from tool call response
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    if (!toolCall?.function?.arguments) {
+      console.error('No tool call in scoring response');
+      return {};
+    }
+    
+    const parsed = JSON.parse(toolCall.function.arguments);
     
     const scoreMap: Record<string, any> = {};
     for (const r of (parsed.results || [])) {
@@ -151,6 +184,74 @@ You MUST respond with ONLY a valid JSON object, no markdown, no explanation. For
   }
 }
 
+// Extract healthcare credentials from profile text using regex
+function extractHealthcareData(text: string): { certifications: string | null; licenses: string | null; specialty: string | null } {
+  if (!text) return { certifications: null, licenses: null, specialty: null };
+  
+  const textUpper = text.toUpperCase();
+  
+  // Known certifications
+  const certPatterns = ['BLS', 'ACLS', 'PALS', 'NRP', 'TNCC', 'CCRN', 'CEN', 'CNOR', 'ONS', 'NIHSS', 'STABLE', 'ENPC', 'TCRN', 'RNC', 'OCN', 'CPEN', 'CMC', 'CSC', 'PCCN'];
+  const foundCerts = certPatterns.filter(c => {
+    // Match as whole word (surrounded by non-alphanumeric or start/end)
+    const regex = new RegExp(`(?:^|[^A-Z])${c}(?:[^A-Z]|$)`);
+    return regex.test(textUpper);
+  });
+  
+  // Known licenses
+  const licensePatterns = [
+    { pattern: /\bRN\b/, label: 'RN' },
+    { pattern: /\bBSN\b/, label: 'BSN' },
+    { pattern: /\bMSN\b/, label: 'MSN' },
+    { pattern: /\bLPN\b/, label: 'LPN' },
+    { pattern: /\bLVN\b/, label: 'LVN' },
+    { pattern: /\bNP\b/, label: 'NP' },
+    { pattern: /\bCRNA\b/, label: 'CRNA' },
+    { pattern: /\bCNA\b/, label: 'CNA' },
+    { pattern: /\bPA[-\s]?C\b/i, label: 'PA-C' },
+    { pattern: /\bPT\b/, label: 'PT' },
+    { pattern: /\bOT\b/, label: 'OT' },
+    { pattern: /\bRT\b/, label: 'RT' },
+    { pattern: /\bSLP\b/, label: 'SLP' },
+    { pattern: /\bPharmD\b/i, label: 'PharmD' },
+    { pattern: /\bMD\b/, label: 'MD' },
+    { pattern: /\bDO\b/, label: 'DO' },
+  ];
+  const foundLicenses = licensePatterns
+    .filter(l => l.pattern.test(text))
+    .map(l => l.label);
+  
+  // Specialties
+  const specialtyPatterns = [
+    { pattern: /\b(?:ICU|Intensive Care)\b/i, label: 'ICU' },
+    { pattern: /\b(?:ER|Emergency Room|Emergency Department|Emergency Medicine)\b/i, label: 'Emergency' },
+    { pattern: /\b(?:OR|Operating Room|Surgical|Surgery)\b/i, label: 'Surgical' },
+    { pattern: /\bNICU\b/i, label: 'NICU' },
+    { pattern: /\bPICU\b/i, label: 'PICU' },
+    { pattern: /\b(?:Med[\s-]?Surg|Medical[\s-]?Surgical)\b/i, label: 'Med-Surg' },
+    { pattern: /\b(?:L&D|Labor (?:and|&) Delivery|Labor\/Delivery)\b/i, label: 'L&D' },
+    { pattern: /\bPACU\b/i, label: 'PACU' },
+    { pattern: /\b(?:Cath Lab|Cardiac Catheterization)\b/i, label: 'Cath Lab' },
+    { pattern: /\b(?:Tele|Telemetry)\b/i, label: 'Telemetry' },
+    { pattern: /\b(?:PCU|Progressive Care)\b/i, label: 'PCU' },
+    { pattern: /\b(?:Psych|Behavioral Health|Psychiatric)\b/i, label: 'Behavioral Health' },
+    { pattern: /\bOncology\b/i, label: 'Oncology' },
+    { pattern: /\bPediatric/i, label: 'Pediatrics' },
+    { pattern: /\bRehab/i, label: 'Rehab' },
+    { pattern: /\bCardio/i, label: 'Cardiovascular' },
+    { pattern: /\bNeuro/i, label: 'Neuro' },
+  ];
+  const foundSpecialties = specialtyPatterns
+    .filter(s => s.pattern.test(text))
+    .map(s => s.label);
+  
+  return {
+    certifications: foundCerts.length > 0 ? foundCerts.join(', ') : null,
+    licenses: foundLicenses.length > 0 ? foundLicenses.join(', ') : null,
+    specialty: foundSpecialties.length > 0 ? foundSpecialties.join(', ') : null,
+  };
+}
+
 // Parse lead data from Exa search result
 function parseLeadFromResult(result: any): {
   name: string;
@@ -165,7 +266,6 @@ function parseLeadFromResult(result: any): {
 } | null {
   const url = result.url || '';
   const text = result.text || '';
-  const properties = result.properties || {};
   
   // Skip non-LinkedIn profile URLs
   if (!url.toLowerCase().includes('linkedin.com/in/')) {
@@ -176,63 +276,39 @@ function parseLeadFromResult(result: any): {
   let title = '';
   let company = '';
   let location: string | null = null;
-  let certifications: string | null = null;
-  let licenses: string | null = null;
-  let specialty: string | null = null;
-  // Try structured summary first (if we requested JSON schema)
-  if (result.summary) {
-    try {
-      const summaryData = typeof result.summary === 'string' 
-        ? JSON.parse(result.summary) 
-        : result.summary;
-      
-      name = summaryData.name || summaryData.fullName || '';
-      title = summaryData.jobTitle || summaryData.title || summaryData.position || '';
-      company = summaryData.company || summaryData.companyName || '';
-      location = summaryData.location || null;
-      certifications = summaryData.certifications || null;
-      licenses = summaryData.licenses || null;
-      specialty = summaryData.specialty || null;
-    } catch (e) {
-      // Summary parsing failed, continue with other methods
-    }
-  }
   
-  // Try properties.person (structured data from Exa)
-  if (!name && properties.type === 'person' && properties.person) {
-    name = properties.person.name || '';
-    location = properties.person.location || location;
-    title = properties.person.position || title;
-    if (properties.person.company) {
-      company = properties.person.company.name || company;
-    }
-  }
+  // Parse from title string: "Name | Title at Company | LinkedIn" or "Name - Title at Company"
+  const titleStr = result.title || '';
+  // Remove LinkedIn suffix
+  const cleanTitle = titleStr.replace(/\s*[|·]\s*LinkedIn.*$/i, '').trim();
   
-  // Parse from title string: "Name - Title at Company | LinkedIn"
-  if (!name) {
-    const titleStr = result.title || '';
-    const cleanTitle = titleStr.replace(/\s*[|]\s*LinkedIn.*$/i, '').trim();
+  // Split on | first, then on - 
+  const pipesParts = cleanTitle.split(/\s*[|]\s*/);
+  if (pipesParts.length >= 2) {
+    name = pipesParts[0]?.trim() || '';
+    const secondPart = pipesParts[1]?.trim() || '';
+    const atMatch = secondPart.match(/^(.+?)\s+(?:at|@)\s+(.+)$/i);
+    if (atMatch) {
+      title = atMatch[1]?.trim() || '';
+      company = atMatch[2]?.trim() || '';
+    } else {
+      title = secondPart;
+    }
+  } else {
+    // Fallback: split on dash
     const parts = cleanTitle.split(/\s*[-–]\s*/);
-    
-    if (parts.length >= 1) {
-      name = parts[0]?.trim() || '';
-    }
-    
-    if (parts.length >= 2 && !title) {
+    if (parts.length >= 1) name = parts[0]?.trim() || '';
+    if (parts.length >= 2) {
       const secondPart = parts[1]?.trim() || '';
       const atMatch = secondPart.match(/^(.+?)\s+(?:at|@)\s+(.+)$/i);
-      
       if (atMatch) {
         title = atMatch[1]?.trim() || '';
-        company = atMatch[2]?.trim() || company;
+        company = atMatch[2]?.trim() || '';
       } else {
         title = secondPart;
       }
     }
-    
-    if (parts.length >= 3 && !company) {
-      company = parts[2]?.trim() || '';
-    }
+    if (parts.length >= 3 && !company) company = parts[2]?.trim() || '';
   }
   
   // Fallback: extract name from LinkedIn URL slug
@@ -240,40 +316,24 @@ function parseLeadFromResult(result: any): {
     const urlMatch = url.match(/linkedin\.com\/in\/([^\/\?]+)/);
     if (urlMatch) {
       let slug = urlMatch[1];
-      // Remove trailing hash (e.g., "john-doe-a1b2c3")
       slug = slug.replace(/-[a-f0-9]{6,}$/i, '');
-      // Convert dashes to spaces and capitalize
-      name = slug
-        .replace(/-/g, ' ')
-        .split(' ')
-        .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-        .join(' ');
+      name = slug.replace(/-/g, ' ').split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
     }
   }
   
   // Skip invalid results
-  if (!name || name.length < 2) {
-    return null;
-  }
-  
-  // Skip if name looks like a search query or error page
+  if (!name || name.length < 2) return null;
   const nameLower = name.toLowerCase();
-  if (nameLower.includes('job') || 
-      nameLower.includes('search') || 
-      nameLower.includes('result') ||
-      nameLower.includes("couldn't find") ||
-      nameLower.includes('linkedin')) {
+  if (nameLower.includes('job') || nameLower.includes('search') || nameLower.includes('result') || nameLower.includes("couldn't find") || nameLower.includes('linkedin')) {
     return null;
   }
   
-  // Extract location from text if not found
+  // Extract location from text
   if (!location) {
     const locationPatterns = [
       /(?:based in|located in|from|📍)\s*([^|\n,]+(?:,\s*[^|\n]+)?)/i,
       /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?,\s*(?:[A-Z]{2}|[A-Z][a-z]+))\s*(?:\||·|area|$)/,
-      /(Netherlands|Amsterdam|Rotterdam|The Hague|Utrecht|Germany|Berlin|Munich|France|Paris|United Kingdom|UK|London|USA|United States|New York|San Francisco|Los Angeles|Canada|Toronto|Vancouver|Australia|Sydney|Melbourne|India|Bangalore|Mumbai)/i,
     ];
-    
     for (const pattern of locationPatterns) {
       const match = text.match(pattern);
       if (match && match[1] && match[1].length < 50) {
@@ -286,9 +346,10 @@ function parseLeadFromResult(result: any): {
   // Extract email from text
   let email: string | null = null;
   const emailMatch = text.match(/[\w.-]+@[\w.-]+\.\w{2,}/);
-  if (emailMatch) {
-    email = emailMatch[0];
-  }
+  if (emailMatch) email = emailMatch[0];
+  
+  // Extract healthcare credentials from text
+  const healthcareData = extractHealthcareData(text + ' ' + titleStr);
   
   return {
     name: name.substring(0, 60),
@@ -297,9 +358,9 @@ function parseLeadFromResult(result: any): {
     location,
     linkedin_url: url,
     email,
-    certifications,
-    licenses,
-    specialty,
+    certifications: healthcareData.certifications,
+    licenses: healthcareData.licenses,
+    specialty: healthcareData.specialty,
   };
 }
 
@@ -444,25 +505,7 @@ Deno.serve(async (req) => {
         category: 'people', // Targets LinkedIn profiles
         numResults: 20,
         contents: {
-          text: { maxCharacters: 1500 },
-          summary: {
-            query: "Extract the person's professional healthcare information including certifications and licenses",
-            schema: {
-              "$schema": "http://json-schema.org/draft-07/schema#",
-              "title": "Healthcare Professional Profile",
-              "type": "object",
-              "properties": {
-                "name": { "type": "string", "description": "Full name of the person" },
-                "jobTitle": { "type": "string", "description": "Current job title or role (e.g., ICU Nurse, Physical Therapist)" },
-                "company": { "type": "string", "description": "Current employer (hospital, clinic, staffing agency)" },
-                "location": { "type": "string", "description": "City and/or state" },
-                "certifications": { "type": "string", "description": "Certifications like BLS, ACLS, PALS, CCRN, etc." },
-                "licenses": { "type": "string", "description": "Professional licenses like RN, LPN, PT, OT, etc." },
-                "specialty": { "type": "string", "description": "Clinical specialty like ICU, ER, OR, NICU, Med-Surg, etc." }
-              },
-              "required": ["name"]
-            }
-          }
+          text: { maxCharacters: 2000 },
         },
       }),
     });
@@ -496,7 +539,7 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      console.log('Valid lead found:', parsed.name, '-', parsed.title);
+      console.log('Valid lead found:', parsed.name, '| Title:', parsed.title, '| Certs:', parsed.certifications, '| Licenses:', parsed.licenses, '| Specialty:', parsed.specialty);
 
       // Check for duplicate in same campaign
       let existingLead = null;
