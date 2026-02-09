@@ -305,7 +305,7 @@ export default function Index() {
     <div className="min-h-screen bg-background">
       <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
       
-      <main className="ml-72 p-10">
+      <main className="ml-72 p-6">
         {activeTab === 'dashboard' && (
           <div className="animate-fade-in">
             <div className="page-header">
@@ -322,7 +322,7 @@ export default function Index() {
             />
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <StatCard
                   title="Total Candidates"
                   value={stats.totalLeads}
@@ -358,36 +358,36 @@ export default function Index() {
             </div>
 
             {/* Quick Actions */}
-            <div className="mb-12">
+            <div className="mb-6">
               <div className="section-header">
                 <h2 className="section-title">Quick Actions</h2>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <button onClick={() => setShowCreateCampaign(true)} className="action-card text-left">
                   <div className="relative z-10">
-                    <div className="visual-badge visual-badge-lg mb-5">
-                      <SparkBurst className="w-10 h-10" />
+                    <div className="visual-badge visual-badge-lg mb-3">
+                      <SparkBurst className="w-8 h-8" />
                     </div>
-                    <h3 className="font-semibold text-foreground text-xl mb-2">New Job Opening</h3>
-                    <p className="text-muted-foreground">Create job opening with candidates</p>
+                    <h3 className="font-semibold text-foreground text-base mb-1">New Job Opening</h3>
+                    <p className="text-muted-foreground text-sm">Create job opening with candidates</p>
                   </div>
                 </button>
                 <button onClick={() => setActiveTab('leads')} className="action-card text-left">
                   <div className="relative z-10">
-                    <div className="visual-badge visual-badge-lg mb-5">
-                      <TargetRings className="w-10 h-10" />
+                    <div className="visual-badge visual-badge-lg mb-3">
+                      <TargetRings className="w-8 h-8" />
                     </div>
-                    <h3 className="font-semibold text-foreground text-xl mb-2">View Candidates</h3>
-                    <p className="text-muted-foreground">{dbLeads.length} in your pipeline</p>
+                    <h3 className="font-semibold text-foreground text-base mb-1">View Candidates</h3>
+                    <p className="text-muted-foreground text-sm">{dbLeads.length} in your pipeline</p>
                   </div>
                 </button>
                 <button onClick={() => setActiveTab('campaigns')} className="action-card text-left">
                   <div className="relative z-10">
-                    <div className="visual-badge visual-badge-lg mb-5">
-                      <DataFlow className="w-10 h-10" />
+                    <div className="visual-badge visual-badge-lg mb-3">
+                      <DataFlow className="w-8 h-8" />
                     </div>
-                    <h3 className="font-semibold text-foreground text-xl mb-2">Manage Openings</h3>
-                    <p className="text-muted-foreground">{campaigns.length} job openings</p>
+                    <h3 className="font-semibold text-foreground text-base mb-1">Manage Openings</h3>
+                    <p className="text-muted-foreground text-sm">{campaigns.length} job openings</p>
                   </div>
                 </button>
               </div>
@@ -395,7 +395,7 @@ export default function Index() {
 
             {/* Recent Leads */}
             {convertedLeads.length > 0 && (
-              <div className="mb-12 animate-fade-in stagger-5">
+              <div className="mb-6 animate-fade-in stagger-5">
                 <div className="section-header">
                   <h2 className="section-title">Recent Candidates</h2>
                   <Button variant="outline" size="sm" onClick={() => setActiveTab('leads')} className="rounded-xl">
@@ -418,7 +418,7 @@ export default function Index() {
                     View All →
                   </Button>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {campaigns.slice(0, 4).map((campaign, index) => (
                     <CampaignCard 
                       key={campaign.id} 
@@ -555,12 +555,27 @@ export default function Index() {
             ) : (
               <div className="empty-state">
                 <div className="relative z-10">
-                  <div className="visual-badge visual-badge-lg mx-auto mb-8">
-                    <DataFlow className="w-12 h-12" />
+                  <div className="visual-badge visual-badge-lg mx-auto mb-6">
+                    <DataFlow className="w-10 h-10" />
                   </div>
-                   <h3 className="text-2xl font-bold text-foreground mb-3">No job openings yet</h3>
-                   <p className="text-muted-foreground mb-6">Create a job opening to find and organize candidates</p>
-                   <Button onClick={() => setShowCreateCampaign(true)} size="lg" className="rounded-xl">
+                   <h3 className="text-2xl font-bold text-foreground mb-2">No job openings yet</h3>
+                   <p className="text-muted-foreground mb-3 max-w-md mx-auto">Job openings help you organize candidates by role. Create your first job opening to get started.</p>
+                   
+                   {/* Ghost preview cards */}
+                   <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto mb-6 opacity-40 pointer-events-none">
+                     <div className="rounded-xl border border-border/50 p-3 text-left bg-muted/10">
+                       <p className="text-xs font-semibold text-foreground mb-1">ICU Nurse</p>
+                       <p className="text-[11px] text-muted-foreground">Los Angeles, CA</p>
+                       <p className="text-[11px] text-muted-foreground mt-1">0 candidates</p>
+                     </div>
+                     <div className="rounded-xl border border-border/50 p-3 text-left bg-muted/10">
+                       <p className="text-xs font-semibold text-foreground mb-1">Travel ER Nurse</p>
+                       <p className="text-[11px] text-muted-foreground">Phoenix, AZ</p>
+                       <p className="text-[11px] text-muted-foreground mt-1">0 candidates</p>
+                     </div>
+                   </div>
+
+                   <Button onClick={() => setShowCreateCampaign(true)} size="lg" className="apple-button rounded-xl px-8">
                      + Create Job Opening
                   </Button>
                 </div>

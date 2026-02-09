@@ -145,7 +145,7 @@ export function OnboardingChecklist({
               <div
                 key={step.id}
                 className={cn(
-                  'flex items-center gap-4 p-4 rounded-xl transition-all',
+                  'flex items-center gap-4 p-3 rounded-xl transition-all',
                   step.completed
                     ? 'bg-success/5 border border-success/20'
                     : 'bg-muted/5 border border-border hover:border-primary/30 hover:bg-primary/5'

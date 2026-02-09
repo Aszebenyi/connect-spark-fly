@@ -66,8 +66,8 @@ export function StatCard({
     <div className={cn('stat-card group', className)}>
       <div className="relative z-10 flex items-start justify-between">
         <div className="flex-1">
-          <p className="text-sm font-medium text-muted-foreground mb-3">{title}</p>
-          <p className="text-5xl font-bold text-foreground tracking-tight leading-none">{value}</p>
+          <p className="text-sm font-medium text-muted-foreground mb-1">{title}</p>
+          <p className="text-3xl font-bold text-foreground tracking-tight leading-none">{value}</p>
           {change && (
             <div className="flex items-center gap-2 mt-4">
               <div className={cn(
