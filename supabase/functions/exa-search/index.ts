@@ -6,6 +6,68 @@ const corsHeaders = {
 };
 
 const EXA_SEARCH_URL = 'https://api.exa.ai/search';
+const LOVABLE_AI_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
+
+// Use AI to expand a healthcare job description into an optimized search query
+async function expandHealthcareQuery(rawQuery: string): Promise<string> {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  if (!LOVABLE_API_KEY) {
+    console.log('LOVABLE_API_KEY not set, using raw query');
+    return rawQuery;
+  }
+
+  try {
+    const response = await fetch(LOVABLE_AI_URL, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash-lite',
+        messages: [
+          {
+            role: 'system',
+            content: `You are a healthcare recruitment search query optimizer. Given a job description or search query, produce a single optimized search string for finding matching healthcare professionals on LinkedIn.
+
+Rules:
+- Output ONLY the optimized search string, nothing else
+- Keep it under 200 characters
+- Include role synonyms (e.g., ICU Nurse → Intensive Care Nurse, Critical Care Nurse)
+- Include location variations (e.g., Los Angeles → LA, Greater Los Angeles)
+- Recognize and include healthcare license types: RN, LPN/LVN, NP, PA, PT, OT, RT, SLP, PharmD, MD, DO, CNA, CRNA, BSN, MSN
+- Recognize and include certifications: BLS, ACLS, PALS, NRP, TNCC, CCRN, CEN, CNOR, ONS, NIHSS, STABLE
+- Recognize specialties and their abbreviations: ICU/Intensive Care, ER/Emergency Room/Emergency Department, OR/Operating Room/Surgical, NICU/Neonatal ICU, Med-Surg/Medical-Surgical, L&D/Labor and Delivery, PACU/Post-Anesthesia, Cath Lab, Tele/Telemetry, PCU/Progressive Care, Psych/Behavioral Health, Oncology, Pediatrics/PICU, Rehab
+- Focus on LinkedIn profile language that healthcare professionals actually use
+- Do NOT add quotes or formatting, just the plain search text`
+          },
+          {
+            role: 'user',
+            content: rawQuery,
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('AI query expansion failed:', response.status);
+      return rawQuery;
+    }
+
+    const data = await response.json();
+    const expanded = data.choices?.[0]?.message?.content?.trim();
+
+    if (expanded && expanded.length > 5 && expanded.length < 300) {
+      console.log('Expanded query:', expanded);
+      return expanded;
+    }
+
+    return rawQuery;
+  } catch (e) {
+    console.error('AI query expansion error:', e);
+    return rawQuery;
+  }
+}
 
 // Parse lead data from Exa search result
 function parseLeadFromResult(result: any): {
@@ -15,6 +77,9 @@ function parseLeadFromResult(result: any): {
   location: string | null;
   linkedin_url: string | null;
   email: string | null;
+  certifications: string | null;
+  licenses: string | null;
+  specialty: string | null;
 } | null {
   const url = result.url || '';
   const text = result.text || '';
@@ -29,7 +94,9 @@ function parseLeadFromResult(result: any): {
   let title = '';
   let company = '';
   let location: string | null = null;
-  
+  let certifications: string | null = null;
+  let licenses: string | null = null;
+  let specialty: string | null = null;
   // Try structured summary first (if we requested JSON schema)
   if (result.summary) {
     try {
@@ -41,6 +108,9 @@ function parseLeadFromResult(result: any): {
       title = summaryData.jobTitle || summaryData.title || summaryData.position || '';
       company = summaryData.company || summaryData.companyName || '';
       location = summaryData.location || null;
+      certifications = summaryData.certifications || null;
+      licenses = summaryData.licenses || null;
+      specialty = summaryData.specialty || null;
     } catch (e) {
       // Summary parsing failed, continue with other methods
     }
@@ -145,6 +215,9 @@ function parseLeadFromResult(result: any): {
     location,
     linkedin_url: url,
     email,
+    certifications,
+    licenses,
+    specialty,
   };
 }
 
@@ -258,6 +331,10 @@ Deno.serve(async (req) => {
     
     console.log('Searching with query:', trimmedQuery, '| Available credits:', availableCredits);
 
+    // Expand the query using AI for better healthcare search results
+    const expandedQuery = await expandHealthcareQuery(trimmedQuery);
+    console.log('Using search query:', expandedQuery);
+
     // Update campaign status to 'searching'
     if (campaignId) {
       const { error: updateError } = await supabase
@@ -280,23 +357,26 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        query: trimmedQuery,
+        query: expandedQuery,
         type: 'neural',
         category: 'people', // Targets LinkedIn profiles
         numResults: 20,
         contents: {
           text: { maxCharacters: 1500 },
           summary: {
-            query: "Extract the person's professional information",
+            query: "Extract the person's professional healthcare information including certifications and licenses",
             schema: {
               "$schema": "http://json-schema.org/draft-07/schema#",
-              "title": "Person Profile",
+              "title": "Healthcare Professional Profile",
               "type": "object",
               "properties": {
                 "name": { "type": "string", "description": "Full name of the person" },
-                "jobTitle": { "type": "string", "description": "Current job title or role" },
-                "company": { "type": "string", "description": "Current company or employer" },
-                "location": { "type": "string", "description": "City and/or country" }
+                "jobTitle": { "type": "string", "description": "Current job title or role (e.g., ICU Nurse, Physical Therapist)" },
+                "company": { "type": "string", "description": "Current employer (hospital, clinic, staffing agency)" },
+                "location": { "type": "string", "description": "City and/or state" },
+                "certifications": { "type": "string", "description": "Certifications like BLS, ACLS, PALS, CCRN, etc." },
+                "licenses": { "type": "string", "description": "Professional licenses like RN, LPN, PT, OT, etc." },
+                "specialty": { "type": "string", "description": "Clinical specialty like ICU, ER, OR, NICU, Med-Surg, etc." }
               },
               "required": ["name"]
             }
@@ -358,16 +438,22 @@ Deno.serve(async (req) => {
         existingLead = data;
       }
 
+      // Separate healthcare fields from parsed data to store in profile_data
+      const { certifications: certs, licenses: lics, specialty: spec, ...parsedCore } = parsed;
+
       const leadData = {
-        ...parsed,
+        ...parsedCore,
         campaign_id: campaignId || null,
         user_id: userId,
         status: 'new',
-        industry: null,
+        industry: spec || null,
         profile_data: {
           source: 'exa_search_direct',
           exa_id: result.id,
           exa_score: result.score,
+          certifications: certs || null,
+          licenses: lics || null,
+          specialty: spec || null,
         },
       };
 
