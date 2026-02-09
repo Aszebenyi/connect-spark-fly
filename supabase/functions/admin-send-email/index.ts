@@ -122,6 +122,22 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Validate HTML body for dangerous patterns
+    const dangerousPatterns = [
+      /<script[^>]*>[\s\S]*?<\/script>/gi,
+      /<iframe[^>]*>[\s\S]*?<\/iframe>/gi,
+      /javascript:/gi,
+      /on\w+\s*=/gi,
+    ];
+    for (const pattern of dangerousPatterns) {
+      if (pattern.test(html)) {
+        return new Response(
+          JSON.stringify({ error: 'Prohibited HTML content detected' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     logStep('Sending email', { to, subject });
 
     // Fetch email settings from platform_settings
