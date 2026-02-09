@@ -138,15 +138,26 @@ export async function saveLeads(leads: Lead[], campaignId?: string): Promise<{ s
     user_id: user.id,
   }));
 
-  const { error } = await supabase.from('leads').insert(leadsWithCampaign);
+  const { data: insertedLeads, error } = await supabase.from('leads').insert(leadsWithCampaign).select('id');
 
   if (error) {
     console.error('Save leads error:', error);
     return { success: false, error: error.message };
   }
 
-  // Update campaign lead_count if campaign_id provided
-  if (campaignId) {
+  // Auto-assign to junction table if campaignId provided
+  if (campaignId && insertedLeads && insertedLeads.length > 0) {
+    const assignments = insertedLeads.map(lead => ({
+      lead_id: lead.id,
+      campaign_id: campaignId,
+      assigned_by: user.id,
+    }));
+    const { error: assignError } = await supabase
+      .from('lead_campaign_assignments')
+      .insert(assignments);
+    if (assignError) {
+      console.error('Auto-assign to junction table error:', assignError);
+    }
     await updateCampaignLeadCount(campaignId);
   }
 
