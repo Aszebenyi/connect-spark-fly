@@ -69,6 +69,88 @@ Rules:
   }
 }
 
+// Score candidates against job requirements using AI
+async function scoreLeadsAgainstRequirements(
+  leads: Array<{ id: string; name: string; title: string | null; certifications: string | null; licenses: string | null; specialty: string | null; location: string | null; text: string }>,
+  originalQuery: string,
+): Promise<Record<string, { match_score: number; license_match: boolean; cert_match: boolean; experience_match: boolean; location_match: boolean; scoring_notes: string }>> {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  if (!LOVABLE_API_KEY || leads.length === 0) return {};
+
+  // Build candidate summaries for batch scoring
+  const candidateSummaries = leads.map((l, i) => 
+    `[${i}] ${l.name} | Title: ${l.title || 'N/A'} | Location: ${l.location || 'N/A'} | Certs: ${l.certifications || 'N/A'} | Licenses: ${l.licenses || 'N/A'} | Specialty: ${l.specialty || 'N/A'} | Profile: ${l.text.substring(0, 300)}`
+  ).join('\n');
+
+  try {
+    const response = await fetch(LOVABLE_AI_URL, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'system',
+            content: `You are a healthcare recruitment qualification engine. Score each candidate against the job requirements.
+
+Scoring criteria (100 points total):
+- LICENSE MATCH (30 pts): Does candidate have the required license type (RN, LPN, PT, OT, RT, etc.)? Is it the right state? Is it compact if required?
+- CERTIFICATION MATCH (20 pts): Has required certs? BLS required for almost all nursing. ACLS for ICU/ER/Critical Care. PALS for pediatric/NICU. Specialty certs (CCRN, CEN, NRP, TNCC, etc.) are bonus.
+- EXPERIENCE MATCH (30 pts): Years in the SPECIFIC specialty (ICU, ER, OR, etc.), not just total experience. 
+- LOCATION MATCH (20 pts): Correct location or indication of willingness to relocate/travel.
+
+If information is missing or unclear, give partial credit (e.g., if license type matches but state unknown, give 15/30).
+
+You MUST respond with ONLY a valid JSON object, no markdown, no explanation. Format:
+{"results":[{"index":0,"match_score":85,"license_match":true,"cert_match":true,"experience_match":true,"location_match":false,"notes":"RN license found, BLS/ACLS verified, 5yr ICU, location mismatch"}]}`
+          },
+          {
+            role: 'user',
+            content: `JOB REQUIREMENTS:\n${originalQuery}\n\nCANDIDATES:\n${candidateSummaries}`,
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('AI scoring failed:', response.status);
+      return {};
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content?.trim();
+    if (!content) return {};
+
+    // Parse JSON, handling potential markdown wrapping
+    const jsonStr = content.replace(/^```json?\s*/, '').replace(/\s*```$/, '');
+    const parsed = JSON.parse(jsonStr);
+    
+    const scoreMap: Record<string, any> = {};
+    for (const r of (parsed.results || [])) {
+      const lead = leads[r.index];
+      if (lead) {
+        scoreMap[lead.id] = {
+          match_score: Math.min(100, Math.max(0, r.match_score || 0)),
+          license_match: !!r.license_match,
+          cert_match: !!r.cert_match,
+          experience_match: !!r.experience_match,
+          location_match: !!r.location_match,
+          scoring_notes: r.notes || '',
+        };
+      }
+    }
+    
+    console.log(`Scored ${Object.keys(scoreMap).length} leads`);
+    return scoreMap;
+  } catch (e) {
+    console.error('AI scoring error:', e);
+    return {};
+  }
+}
+
 // Parse lead data from Exa search result
 function parseLeadFromResult(result: any): {
   name: string;
@@ -399,6 +481,7 @@ Deno.serve(async (req) => {
     // Parse and filter results - limit to available credits
     let savedCount = 0;
     let skippedCount = 0;
+    const savedLeadsForScoring: Array<{ id: string; name: string; title: string | null; certifications: string | null; licenses: string | null; specialty: string | null; location: string | null; text: string }> = [];
 
     for (const result of results) {
       // Stop if we've reached the credit limit
@@ -469,11 +552,14 @@ Deno.serve(async (req) => {
         } else {
           console.log('Lead updated:', parsed.name);
           savedCount++;
+          savedLeadsForScoring.push({ id: existingLead.id, name: parsed.name, title: parsed.title, certifications: certs, licenses: lics, specialty: spec, location: parsed.location, text: result.text || '' });
         }
       } else {
-        const { error: insertError } = await supabase
+        const { data: insertedLead, error: insertError } = await supabase
           .from('leads')
-          .insert(leadData);
+          .insert(leadData)
+          .select('id')
+          .single();
         
         if (insertError) {
           console.error('Error inserting lead:', insertError);
@@ -481,7 +567,48 @@ Deno.serve(async (req) => {
         } else {
           console.log('Lead inserted:', parsed.name);
           savedCount++;
+          if (insertedLead) {
+            savedLeadsForScoring.push({ id: insertedLead.id, name: parsed.name, title: parsed.title, certifications: certs, licenses: lics, specialty: spec, location: parsed.location, text: result.text || '' });
+          }
         }
+      }
+    }
+
+    // Score saved leads against job requirements using AI
+    if (savedLeadsForScoring.length > 0) {
+      try {
+        const scores = await scoreLeadsAgainstRequirements(savedLeadsForScoring, trimmedQuery);
+        
+        // Update each lead's profile_data with match scores
+        for (const [leadId, scoreData] of Object.entries(scores)) {
+          const { data: currentLead } = await supabase
+            .from('leads')
+            .select('profile_data')
+            .eq('id', leadId)
+            .maybeSingle();
+          
+          const existingData = (currentLead?.profile_data && typeof currentLead.profile_data === 'object')
+            ? currentLead.profile_data as Record<string, any>
+            : {};
+          
+          await supabase
+            .from('leads')
+            .update({
+              profile_data: {
+                ...existingData,
+                match_score: scoreData.match_score,
+                license_match: scoreData.license_match,
+                cert_match: scoreData.cert_match,
+                experience_match: scoreData.experience_match,
+                location_match: scoreData.location_match,
+                scoring_notes: scoreData.scoring_notes,
+              },
+            })
+            .eq('id', leadId);
+        }
+        console.log('Lead scoring complete');
+      } catch (scoreError) {
+        console.error('Lead scoring failed (non-fatal):', scoreError);
       }
     }
 
