@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { SparkBurst, RingLoader, AbstractBlob } from '@/components/ui/visual-elements';
+import { RingLoader, AbstractBlob } from '@/components/ui/visual-elements';
+import medileadLogo from '@/assets/medilead-logo.png';
 import { searchLeadsWithExa, saveLeads, Lead } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { LeadResultCard } from './LeadResultCard';
@@ -17,7 +18,7 @@ const suggestions = [
   'ICU Nurse - Los Angeles, CA - 3+ years, BLS/ACLS required',
   'Travel ER Nurse - Phoenix, AZ',
   'Physical Therapist - Austin, TX',
-  'OR Nurse - Miami, FL - 2+ years, BLS/ACLS/PALS certified',
+  'Nurse - Miami, FL - 2+ years, BLS/ACLS/PALS certified',
 ];
 
 export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinderProps) {
@@ -196,12 +197,7 @@ export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinde
       {/* Hero Section */}
       <div className="text-center mb-6 animate-fade-in">
         <div className="relative inline-block mb-4">
-          <div className="absolute -inset-8 opacity-30">
-            <AbstractBlob className="w-full h-full animate-morph" />
-          </div>
-          <div className="relative visual-badge visual-badge-lg animate-pulse-glow">
-            <SparkBurst className="w-12 h-12" />
-          </div>
+          <img src={medileadLogo} alt="MediLead" className="w-16 h-16 object-contain" />
         </div>
         <h2 className="text-2xl font-bold text-foreground mb-2 tracking-tight">
           {campaignId ? `Find Candidates for "${campaignName}"` : 'Find Your Next Placement'}
@@ -209,7 +205,7 @@ export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinde
         <p className="text-muted-foreground text-base max-w-md mx-auto">
           {campaignId 
             ? 'Add more candidates to your job opening'
-            : 'Paste a job description or describe who you need'}
+            : 'Paste a full job description or describe the role, location, and requirements. Be as specific as possible.'}
         </p>
       </div>
 
@@ -236,20 +232,15 @@ export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinde
             />
           </div>
 
-          {/* Helper text */}
-          <p className="text-sm text-muted-foreground mt-2 mb-2">
-            Be as specific as possible. Paste a full job description or describe the role, location, and requirements.
-          </p>
-
           {/* Examples */}
-          <div className="mt-2">
+          <div className="mt-3">
             <p className="text-xs font-medium text-muted-foreground mb-2">Examples:</p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-wrap gap-2">
               {suggestions.map((suggestion) => (
                 <button
                   key={suggestion}
                   onClick={() => setQuery(suggestion)}
-                  className="text-xs px-3 py-1.5 rounded-full bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-300 border border-transparent hover:border-border text-left truncate"
+                  className="text-xs px-3 py-1.5 rounded-full bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-300 border border-transparent hover:border-border text-left"
                 >
                   {suggestion}
                 </button>
