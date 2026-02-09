@@ -238,19 +238,19 @@ export default function Landing() {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
   
   const features = [
-    { visual: MagnetPull, title: "AI-Powered Candidate Search", description: "Paste a job description and AI finds nurses with the exact certifications, experience, and location you need." },
-    { visual: CircuitLines, title: "Verified Qualifications", description: "AI checks licenses, certifications, and experience so you only see qualified candidates." },
-    { visual: TargetRings, title: "Contact Info Included", description: "Get email and phone numbers for every candidate — ready to reach out from within the app." },
-    { visual: StackedBars, title: "Built-in Gmail Outreach", description: "Connect Gmail and send personalized recruitment emails directly from MediLead. Track opens, replies, and response rates." },
-    { visual: DataFlow, title: "Job Opening Management", description: "Organize candidates by role, track pipeline progress, and see real-time stats for every open req." },
-    { visual: SparkBurst, title: "AI-Written Outreach", description: "Generate personalized, role-specific recruitment messages that get responses — powered by AI." },
+    { visual: MagnetPull, title: "AI-Powered Candidate Search", description: "Describe the role in plain language. MediLead finds nurses with the right certifications, experience, and location." },
+    { visual: CircuitLines, title: "Instant Profile Enrichment", description: "Get verified email addresses and phone numbers for every candidate — instantly." },
+    { visual: DataFlow, title: "Smart Job Openings", description: "Organize candidates by job opening. Track who you've contacted, who responded, and where every candidate stands." },
+    { visual: StackedBars, title: "Personalized Email Outreach", description: "Connect your Gmail and send personalized recruitment emails directly from MediLead — no copy-pasting needed." },
+    { visual: TargetRings, title: "License Verification", description: "AI verifies nursing licenses, certifications, and credentials automatically so you only see qualified candidates." },
+    { visual: SparkBurst, title: "Complete Workflow", description: "From candidate search to outreach to tracking responses — everything in one place. No spreadsheets required." },
   ];
   
   const steps = [
-    { title: "Paste the Job Description", description: "Copy your req or just type the key details — role, location, requirements. MediLead handles the rest." },
-    { title: "AI Finds & Qualifies Candidates", description: "MediLead searches LinkedIn, verifies licenses and experience, and ranks the best matches for your role." },
-    { title: "Reach Out From Within the App", description: "Connect your Gmail and send AI-generated, personalized recruitment emails directly — no copy-pasting needed." },
-    { title: "Track Results & Fill Roles", description: "Monitor opens, replies, and response rates for every job opening. Fill roles in days, not weeks." },
+    { title: "Describe Who You Need", description: "Type the role, location, and requirements in plain language. MediLead understands what you're looking for." },
+    { title: "AI Searches LinkedIn", description: "MediLead automatically searches LinkedIn, finds matching profiles, and ranks the best candidates for your role." },
+    { title: "Get Verified Contact Info", description: "Instantly get verified email addresses and phone numbers for every qualified candidate." },
+    { title: "Send Personalized Emails", description: "Connect Gmail and send AI-generated, personalized recruitment emails — then track opens and replies." },
   ];
   
   const pricing = [
@@ -384,7 +384,7 @@ export default function Landing() {
             transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed"
           >
-            Stop wasting 4 hours per candidate. MediLead finds verified nurses, lets you reach out via Gmail, and tracks every response — all in one place.
+            Stop spending hours hunting for nurses. Describe the role you need to fill. MediLead finds qualified nurses, verifies credentials, and helps you reach the right candidates—fast.
           </motion.p>
           
           <motion.div
