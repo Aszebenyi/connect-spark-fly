@@ -15,10 +15,9 @@ interface LeadFinderProps {
 
 const suggestions = [
   'ICU Nurse - Los Angeles, CA - 3+ years, BLS/ACLS required',
-  'Travel ER Nurse - Phoenix, AZ - 2+ years, compact license',
-  'Physical Therapist - Austin, TX - DPT, outpatient ortho',
-  'OR Nurse - Miami, FL - 2+ years, BLS/ACLS/PALS',
-  'NICU Nurse - Boston, MA - 3+ years, NRP required',
+  'Travel ER Nurse - Phoenix, AZ',
+  'Physical Therapist - Austin, TX',
+  'OR Nurse - Miami, FL - 2+ years, BLS/ACLS/PALS certified',
 ];
 
 export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinderProps) {
@@ -225,15 +224,20 @@ export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinde
             />
           </div>
 
-          {/* Suggestions */}
-          <div className="mt-6">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-4">Try these</p>
-            <div className="flex flex-wrap gap-3">
+          {/* Helper text */}
+          <p className="text-sm text-muted-foreground mt-4 mb-2">
+            Be as specific as possible. Paste a full job description or describe the role, location, and requirements.
+          </p>
+
+          {/* Examples */}
+          <div className="mt-4">
+            <p className="text-xs font-medium text-muted-foreground mb-3">Examples:</p>
+            <div className="grid grid-cols-2 gap-2">
               {suggestions.map((suggestion) => (
                 <button
                   key={suggestion}
                   onClick={() => setQuery(suggestion)}
-                  className="text-sm px-5 py-2.5 rounded-full bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-300 border border-transparent hover:border-border"
+                  className="text-sm px-4 py-2 rounded-full bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-300 border border-transparent hover:border-border text-left truncate"
                 >
                   {suggestion}
                 </button>
