@@ -582,6 +582,48 @@ export type Database = {
         }
         Relationships: []
       }
+      user_company_profiles: {
+        Row: {
+          communication_tone: string | null
+          company_name: string
+          company_website: string | null
+          created_at: string
+          id: string
+          key_benefits: string | null
+          target_candidates: string
+          updated_at: string
+          user_id: string
+          value_proposition: string
+          what_you_do: string
+        }
+        Insert: {
+          communication_tone?: string | null
+          company_name?: string
+          company_website?: string | null
+          created_at?: string
+          id?: string
+          key_benefits?: string | null
+          target_candidates?: string
+          updated_at?: string
+          user_id: string
+          value_proposition?: string
+          what_you_do?: string
+        }
+        Update: {
+          communication_tone?: string | null
+          company_name?: string
+          company_website?: string | null
+          created_at?: string
+          id?: string
+          key_benefits?: string | null
+          target_candidates?: string
+          updated_at?: string
+          user_id?: string
+          value_proposition?: string
+          what_you_do?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
