@@ -238,19 +238,19 @@ export default function Landing() {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
   
   const features = [
-    { visual: MagnetPull, title: "AI-Powered Search", description: "Find nurses with the exact certifications, experience, and location you need — automatically." },
+    { visual: MagnetPull, title: "AI-Powered Candidate Search", description: "Paste a job description and AI finds nurses with the exact certifications, experience, and location you need." },
     { visual: CircuitLines, title: "Verified Qualifications", description: "AI checks licenses, certifications, and experience so you only see qualified candidates." },
-    { visual: TargetRings, title: "Contact Info Included", description: "Get email and phone numbers for every candidate — ready to reach out today." },
-    { visual: StackedBars, title: "10-15 Candidates in Minutes", description: "What used to take 4 hours now takes 2 minutes. Fill your pipeline fast." },
-    { visual: DataFlow, title: "All Healthcare Specialties", description: "ICU nurses, ER nurses, travel nurses, therapists, surgical techs — we cover them all." },
-    { visual: SparkBurst, title: "Personalized Outreach", description: "Generate compelling, personalized recruitment messages that get responses." },
+    { visual: TargetRings, title: "Contact Info Included", description: "Get email and phone numbers for every candidate — ready to reach out from within the app." },
+    { visual: StackedBars, title: "Built-in Gmail Outreach", description: "Connect Gmail and send personalized recruitment emails directly from MediLead. Track opens, replies, and response rates." },
+    { visual: DataFlow, title: "Job Opening Management", description: "Organize candidates by role, track pipeline progress, and see real-time stats for every open req." },
+    { visual: SparkBurst, title: "AI-Written Outreach", description: "Generate personalized, role-specific recruitment messages that get responses — powered by AI." },
   ];
   
   const steps = [
     { title: "Paste the Job Description", description: "Copy your req or just type the key details — role, location, requirements. MediLead handles the rest." },
-    { title: "AI Finds & Qualifies", description: "MediLead searches LinkedIn, verifies licenses and experience, and ranks the best matches for your role." },
-    { title: "Get Contact Info", description: "Download your list of 10-15 qualified candidates with phone and email — ready to call today." },
-    { title: "Start Making Placements", description: "Send personalized outreach and start booking interviews. Fill roles in days, not weeks." },
+    { title: "AI Finds & Qualifies Candidates", description: "MediLead searches LinkedIn, verifies licenses and experience, and ranks the best matches for your role." },
+    { title: "Reach Out From Within the App", description: "Connect your Gmail and send AI-generated, personalized recruitment emails directly — no copy-pasting needed." },
+    { title: "Track Results & Fill Roles", description: "Monitor opens, replies, and response rates for every job opening. Fill roles in days, not weeks." },
   ];
   
   const pricing = [
@@ -384,7 +384,7 @@ export default function Landing() {
             transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed"
           >
-            Stop wasting 4 hours per candidate. MediLead finds verified nurses with contact info in minutes, so you can focus on what matters: making placements.
+            Stop wasting 4 hours per candidate. MediLead finds verified nurses, lets you reach out via Gmail, and tracks every response — all in one place.
           </motion.p>
           
           <motion.div
