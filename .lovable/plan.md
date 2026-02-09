@@ -1,62 +1,38 @@
 
-# Update Candidates Table
 
-## Changes Overview
+# Remaining Phase 2 Gaps
 
-Updates to `src/components/LeadTable.tsx` to improve column layout, data display, and sorting.
+Most of what you described is already built. After reviewing every file, here are the **3 remaining items** that need fixing:
 
-## What Changes
+## 1. Fix Auto-Assignment to Use Junction Table
 
-### 1. Fix Search Placeholder
-- "Search leads..." becomes "Search candidates..."
+**Problem**: When searching from a job opening, `saveLeads()` still sets the old `campaign_id` column on the `leads` table instead of inserting into the `lead_campaign_assignments` junction table. This means candidates found via a job opening search aren't properly linked in the many-to-many system.
 
-### 2. Add Location Column (after Employer)
-- Display `lead.location` from the lead record
-- Fallback: check `profile_data.location` or `profile_data.linkedin?.location`
-- Show "-" if unavailable
+**Fix**: After inserting leads in `saveLeads()`, if a `campaignId` is provided, also insert rows into `lead_campaign_assignments` for each new lead.
 
-### 3. Add Experience Column (after Certifications, before Match Score)
-- Extract from `profile_data.years_experience` or `profile_data.linkedin?.totalExperienceYears`
-- Parse years from `scoring_notes` as a fallback (e.g., "3+ years" or "15 years")
-- Format: "5 yrs ICU" (combining years + first specialty) or "3 yrs" (if no specialty)
-- Show "-" if unavailable
+## 2. Shift+Click Range Selection
 
-### 4. Fix Missing Employer Data
-- Currently shows "-" when `lead.company` is null (3 of 10 leads have null company)
-- Add fallback chain: `lead.company` -> `profile_data.company` -> `profile_data.linkedin?.company` -> `profile_data.linkedin?.latestCompany`
-- This pulls from enrichment data when the initial parse missed it
+**Problem**: The bulk selection system has individual checkboxes and "select all," but shift+click to select a range of rows is not implemented.
 
-### 5. Default Sort by Match Score (Highest First)
-- Already implemented (`sortField` defaults to `'match_score'`, direction `'desc'`)
-- No change needed here
+**Fix**: Track the last-clicked row index. On shift+click, select all rows between the last-clicked index and the current one.
 
-### 6. Add Sortable Columns
-- **Match Score**: Already sortable (no change)
-- **Experience**: Add sort by `years_experience` from profile_data
-- **Added Date**: Add sort by `createdAt` field
-- All sortable headers get the clickable arrow indicator
+## 3. Certifications "+X more" Overflow
 
-### 7. Show Specialty in Subtitle
-- In the Name/Title cell, append specialty from `profile_data.specialty`
-- Format: "Registered Nurse . ICU Specialty" or "ICU CRITICAL CARE RN . Neuro, Surgical Specialty"
-- Only show if specialty exists and differs from the title
+**Problem**: The spec asks for max 3 visible certification badges with a "+X more" tooltip when there are more. Currently all badges are shown.
 
-## Updated Column Order
+**Fix**: In the Certifications table cell, only render the first 3 badges. If there are more, show a small "+N more" badge with a title tooltip listing all certifications.
 
-```text
-Candidate | Employer | Location | License | Certifications | Experience | Match Score | Status | Actions
-```
-
-- `colSpan` in empty states updated from 7 to 9
+---
 
 ## Technical Details
 
-All changes are in **one file**: `src/components/LeadTable.tsx`
+### File: `src/lib/api.ts`
+- In `saveLeads()`, after the leads insert succeeds and `campaignId` is provided, query back the inserted lead IDs and bulk-insert into `lead_campaign_assignments`.
 
-New helper functions:
-- `getEmployer(lead)` -- fallback chain for company name
-- `getLocation(lead)` -- fallback chain for location
-- `getExperienceLabel(lead)` -- formats "X yrs Specialty" string
-- `getExperienceYears(lead)` -- numeric value for sorting
+### File: `src/components/LeadTable.tsx`
+- Add a `lastClickedIndex` ref to track shift+click range selection.
+- Update `toggleOne` to accept the row index and event, checking `event.shiftKey`.
+- In the Certifications cell, slice to 3 items max and render a "+N more" indicator with a `title` attribute.
 
-Sorting logic update: add cases for `experience` (numeric from profile_data) and `createdAt` (date comparison).
+No database changes needed -- the junction table and RLS policies are already in place.
+
