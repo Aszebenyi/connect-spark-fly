@@ -292,7 +292,7 @@ export function LeadTable({
   return (
     <div className="glass-strong rounded-2xl overflow-hidden card-shadow relative">
       {/* Header */}
-      <div className="p-6 border-b border-border flex items-center gap-4 flex-wrap">
+      <div className="p-4 border-b border-border flex items-center gap-4 flex-wrap">
         <div className="search-input flex items-center gap-4 px-5 py-3 flex-1 max-w-md">
           <div className="w-4 h-4 relative flex-shrink-0">
             <div className="w-3 h-3 rounded-full border-2 border-muted-foreground" />
@@ -410,14 +410,14 @@ export function LeadTable({
         <table className="w-full">
           <thead>
             <tr className="border-b border-border bg-muted/10">
-              <th className="p-5 w-12">
+              <th className="p-3 w-12">
                 <Checkbox
                   checked={allSelected}
                   onCheckedChange={toggleAll}
                   aria-label="Select all"
                 />
               </th>
-              <th className="text-left p-5 text-sm font-semibold text-muted-foreground">
+              <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '20%' }}>
                 <button 
                   onClick={() => handleSort('name')}
                   className="flex items-center gap-2 hover:text-foreground transition-colors"
@@ -426,11 +426,11 @@ export function LeadTable({
                   <span className="text-[10px]">↕</span>
                 </button>
               </th>
-              <th className="text-left p-5 text-sm font-semibold text-muted-foreground">Employer</th>
-              <th className="text-left p-5 text-sm font-semibold text-muted-foreground">Location</th>
-              <th className="text-left p-5 text-sm font-semibold text-muted-foreground">License</th>
-              <th className="text-left p-5 text-sm font-semibold text-muted-foreground">Certifications</th>
-              <th className="text-left p-5 text-sm font-semibold text-muted-foreground">
+              <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '15%' }}>Employer</th>
+              <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '10%' }}>Location</th>
+              <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '10%' }}>License</th>
+              <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '15%' }}>Certifications</th>
+              <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '10%' }}>
                 <button 
                   onClick={() => handleSort('experience')}
                   className="flex items-center gap-2 hover:text-foreground transition-colors"
@@ -439,33 +439,24 @@ export function LeadTable({
                   <span className="text-[10px]">↕</span>
                 </button>
               </th>
-              <th className="text-left p-5 text-sm font-semibold text-muted-foreground">
+              <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '8%' }}>
                 <button 
                   onClick={() => handleSort('match_score')}
                   className="flex items-center gap-2 hover:text-foreground transition-colors"
                 >
-                  Match Score
+                  Match
                   <span className="text-[10px]">↕</span>
                 </button>
               </th>
-              <th className="text-left p-5 text-sm font-semibold text-muted-foreground">Job Opening</th>
-              <th className="text-left p-5 text-sm font-semibold text-muted-foreground">Status</th>
-              <th className="text-left p-5 text-sm font-semibold text-muted-foreground">
-                <button 
-                  onClick={() => handleSort('createdAt')}
-                  className="flex items-center gap-2 hover:text-foreground transition-colors"
-                >
-                  Added
-                  <span className="text-[10px]">↕</span>
-                </button>
-              </th>
-              <th className="text-right p-5 text-sm font-semibold text-muted-foreground">Actions</th>
+              <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '10%' }}>Job Opening</th>
+              <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '7%' }}>Status</th>
+              <th className="text-right p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '5%' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredLeads.length === 0 ? (
               <tr>
-                <td colSpan={12} className="p-0">
+                <td colSpan={11} className="p-0">
                   {leads.length === 0 ? (
                     <EmptyState
                       icon={<Users className="w-8 h-8" />}
@@ -523,14 +514,14 @@ export function LeadTable({
                     style={{ animationDelay: `${index * 0.03}s` }}
                     onClick={() => onLeadClick(lead)}
                   >
-                    <td className="p-5 w-12" onClick={(e) => { e.stopPropagation(); toggleOne(lead.id, index, e as unknown as React.MouseEvent); }}>
+                    <td className="p-3 w-12 align-middle" onClick={(e) => { e.stopPropagation(); toggleOne(lead.id, index, e as unknown as React.MouseEvent); }}>
                       <Checkbox
                         checked={selectedIds.has(lead.id)}
                         onCheckedChange={() => toggleOne(lead.id, index)}
                         aria-label={`Select ${lead.name}`}
                       />
                     </td>
-                    <td className="p-5">
+                    <td className="p-3 align-middle">
                       <div className="flex items-center gap-3">
                         <div className="relative">
                           <Avatar className="w-10 h-10 border border-border">
@@ -560,19 +551,19 @@ export function LeadTable({
                         </div>
                       </div>
                     </td>
-                    <td className="p-5">
+                    <td className="p-3 align-middle">
                       <p className="text-foreground">{getEmployer(lead)}</p>
                     </td>
-                    <td className="p-5">
+                    <td className="p-3 align-middle">
                       <p className="text-foreground text-sm">{getLocation(lead)}</p>
                     </td>
-                    <td className="p-5">
+                    <td className="p-3 align-middle">
                       {(() => {
                         const licenses = parseBadgeList(getProfileField(lead, 'licenses'));
                         return licenses.length > 0 ? (
-                          <div className="flex flex-wrap gap-1">
+                          <div className="flex flex-wrap gap-1.5">
                             {licenses.map((lic) => (
-                              <Badge key={lic} variant="outline" className="text-xs font-semibold px-2 py-0.5 rounded-full border-primary/30 text-primary bg-primary/10">
+                              <Badge key={lic} variant="outline" className="text-xs font-semibold px-2.5 py-1 rounded-full border-primary/30 text-primary bg-primary/10">
                                 <ShieldCheck className="w-3 h-3 mr-1" />
                                 {lic}
                               </Badge>
@@ -583,23 +574,23 @@ export function LeadTable({
                         );
                       })()}
                     </td>
-                    <td className="p-5">
+                    <td className="p-3 align-middle">
                       {(() => {
                         const certs = parseBadgeList(getProfileField(lead, 'certifications'));
                         if (certs.length === 0) return <span className="text-muted-foreground text-sm">-</span>;
                         const visible = certs.slice(0, 3);
                         const remaining = certs.length - 3;
                         return (
-                          <div className="flex flex-wrap gap-1">
+                          <div className="flex flex-wrap gap-1.5">
                             {visible.map((cert) => (
-                              <Badge key={cert} variant="secondary" className="text-[11px] font-semibold px-2 py-0.5 rounded-full">
+                              <Badge key={cert} variant="secondary" className="text-xs font-semibold px-2.5 py-1 rounded-full">
                                 {cert}
                               </Badge>
                             ))}
                             {remaining > 0 && (
                               <Badge
                                 variant="outline"
-                                className="text-[11px] px-2 py-0.5 rounded-full cursor-default"
+                                className="text-xs px-2.5 py-1 rounded-full cursor-default"
                                 title={certs.join(', ')}
                               >
                                 +{remaining} more
@@ -609,10 +600,10 @@ export function LeadTable({
                         );
                       })()}
                     </td>
-                    <td className="p-5">
+                    <td className="p-3 align-middle">
                       <span className="text-sm text-foreground">{getExperienceLabel(lead)}</span>
                     </td>
-                    <td className="p-5">
+                    <td className="p-3 align-middle">
                       {(() => {
                         const score = getMatchScore(lead);
                         return score != null ? (
@@ -624,7 +615,7 @@ export function LeadTable({
                         );
                       })()}
                     </td>
-                    <td className="p-5" onClick={(e) => e.stopPropagation()}>
+                    <td className="p-3 align-middle" onClick={(e) => e.stopPropagation()}>
                       {leadJobs.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
                           {leadJobs.map(j => (
@@ -641,15 +632,12 @@ export function LeadTable({
                         <span className="text-muted-foreground text-sm">Unassigned</span>
                       )}
                     </td>
-                    <td className="p-5">
+                    <td className="p-3 align-middle">
                       <Badge className={cn('border font-medium', status.color)}>
                         {status.label}
                       </Badge>
                     </td>
-                    <td className="p-5 text-sm text-muted-foreground">
-                      {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString() : '-'}
-                    </td>
-                    <td className="p-5 text-right">
+                    <td className="p-3 text-right align-middle">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                           <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl">
@@ -718,7 +706,7 @@ export function LeadTable({
       </div>
 
       {/* Footer */}
-      <div className="p-6 border-t border-border flex items-center justify-between">
+      <div className="p-4 border-t border-border flex items-center justify-between">
         <p className="text-sm text-muted-foreground font-medium">
           Showing {filteredLeads.length} of {leads.length} candidates
           {selectedCampaign && ` in "${selectedCampaign.name}"`}

@@ -194,8 +194,8 @@ export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinde
   return (
     <div className="max-w-3xl mx-auto">
       {/* Hero Section */}
-      <div className="text-center mb-12 animate-fade-in">
-        <div className="relative inline-block mb-8">
+      <div className="text-center mb-6 animate-fade-in">
+        <div className="relative inline-block mb-4">
           <div className="absolute -inset-8 opacity-30">
             <AbstractBlob className="w-full h-full animate-morph" />
           </div>
@@ -203,10 +203,10 @@ export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinde
             <SparkBurst className="w-12 h-12" />
           </div>
         </div>
-        <h2 className="text-4xl font-bold text-foreground mb-4 tracking-tight">
+        <h2 className="text-2xl font-bold text-foreground mb-2 tracking-tight">
           {campaignId ? `Find Candidates for "${campaignName}"` : 'Find Your Next Placement'}
         </h2>
-        <p className="text-muted-foreground text-xl max-w-md mx-auto">
+        <p className="text-muted-foreground text-base max-w-md mx-auto">
           {campaignId 
             ? 'Add more candidates to your job opening'
             : 'Paste a job description or describe who you need'}
@@ -214,13 +214,13 @@ export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinde
       </div>
 
       {/* Search Box */}
-      <div className="glass-strong rounded-3xl p-10 card-shadow mb-10 animate-fade-in stagger-2 relative overflow-hidden">
+      <div className="glass-strong rounded-3xl p-6 card-shadow mb-6 animate-fade-in stagger-2 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 opacity-20 -translate-y-1/2 translate-x-1/2">
           <AbstractBlob className="w-full h-full" />
         </div>
         
         <div className="relative">
-          <div className="search-input flex items-center gap-4 px-6 py-5">
+          <div className="search-input flex items-center gap-4 px-4 py-3">
             <div className="w-5 h-5 relative flex-shrink-0">
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="w-3.5 h-3.5 rounded-full border-2 border-muted-foreground" />
@@ -232,24 +232,24 @@ export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinde
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="border-0 bg-transparent text-lg placeholder:text-muted-foreground/60 focus-visible:ring-0 px-0"
+              className="border-0 bg-transparent text-base placeholder:text-muted-foreground/60 focus-visible:ring-0 px-0"
             />
           </div>
 
           {/* Helper text */}
-          <p className="text-sm text-muted-foreground mt-4 mb-2">
+          <p className="text-sm text-muted-foreground mt-2 mb-2">
             Be as specific as possible. Paste a full job description or describe the role, location, and requirements.
           </p>
 
           {/* Examples */}
-          <div className="mt-4">
-            <p className="text-xs font-medium text-muted-foreground mb-3">Examples:</p>
+          <div className="mt-2">
+            <p className="text-xs font-medium text-muted-foreground mb-2">Examples:</p>
             <div className="grid grid-cols-2 gap-2">
               {suggestions.map((suggestion) => (
                 <button
                   key={suggestion}
                   onClick={() => setQuery(suggestion)}
-                  className="text-sm px-4 py-2 rounded-full bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-300 border border-transparent hover:border-border text-left truncate"
+                  className="text-xs px-3 py-1.5 rounded-full bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-300 border border-transparent hover:border-border text-left truncate"
                 >
                   {suggestion}
                 </button>
@@ -271,7 +271,7 @@ export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinde
           <Button 
             onClick={handleSearch} 
             disabled={isSearching || !hasCredits}
-            className="w-full mt-6 h-16 text-base font-semibold rounded-2xl"
+            className="w-full mt-4 h-12 text-base font-semibold rounded-2xl"
             size="lg"
           >
             {isSearching ? (
