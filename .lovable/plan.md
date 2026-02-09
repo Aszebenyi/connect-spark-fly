@@ -1,48 +1,33 @@
 
+# Find Candidates Page Updates
 
-# Three Fixes: Light Mode, Dashboard Cleanup, and Bulk Actions
+## Changes
 
-## 1. Add Light Mode Toggle
+### 1. Update description text
+Replace the current helper text with:
+"Paste a full job description or describe the role, location, and requirements. Be as specific as possible."
 
-The app currently only has a dark theme with no way to switch. We'll add a proper light/dark mode toggle.
+### 2. Fix suggestion bubbles truncation
+The bubbles currently use `truncate` (single-line ellipsis) on a fixed `grid-cols-2` layout. Change to `flex flex-wrap` so each bubble auto-sizes to fit its content instead of being forced into equal widths.
 
-**What changes:**
-- Add a `ThemeProvider` from `next-themes` (already installed) wrapping the app
-- Define light mode CSS variables in `index.css` under `:root` (light) and `.dark` (dark)
-- Add a sun/moon toggle button in the Sidebar for switching themes
+### 3. Fix "OR Nurse" suggestion
+Change `'OR Nurse - Miami, FL - 2+ years, BLS/ACLS/PALS certified'` to `'Nurse - Miami, FL - 2+ years, BLS/ACLS/PALS certified'`.
 
-## 2. Remove "Recent Candidates" from Dashboard
-
-The dashboard currently shows a "Recent Candidates" table preview. This will be removed entirely so the dashboard focuses on stats, quick actions, and job openings only.
-
-## 3. Ensure Bulk Actions Work on Candidates Tab
-
-The floating bulk action bar (Delete, Add to Job Opening, Remove, Export CSV) already exists in the code and is wired up on the main Candidates tab. If it's not appearing, it may be a visibility issue. We'll verify the bar is visible and working when candidates are selected.
-
-The dashboard's mini candidate table (being removed in step 2) didn't have bulk action props -- that may have been the source of confusion.
+### 4. Add MediLead logo
+Copy the uploaded logo to `src/assets/medilead-logo.png` and replace the current SparkBurst icon in the hero section with the logo image.
 
 ---
 
 ## Technical Details
 
-### Files to modify:
+**File: `src/components/LeadFinder.tsx`**
 
-| File | Change |
-|------|--------|
-| `src/index.css` | Move current dark vars under `.dark` class, add light vars under `:root` |
-| `src/App.tsx` | Wrap app with `ThemeProvider` from `next-themes` |
-| `src/components/Sidebar.tsx` | Add theme toggle button (sun/moon icon) |
-| `src/pages/Dashboard.tsx` | Remove the "Recent Candidates" section (lines 420-434) |
+| Line(s) | Change |
+|---------|--------|
+| 22 (suggestions array) | Change `'OR Nurse - Miami, FL...'` to `'Nurse - Miami, FL...'` |
+| 198-204 (hero icon) | Replace `SparkBurst`/`AbstractBlob` with `<img>` using the imported logo |
+| 209-213 (description) | Update to new text for non-campaign mode |
+| 240-242 (helper text) | Remove duplicate helper text (merged into description above) |
+| 247-257 (suggestion buttons) | Change from `grid grid-cols-2` to `flex flex-wrap gap-2`, remove `truncate` class so text shows fully |
 
-### Light Mode Color Palette:
-- Background: white/near-white
-- Cards: white with subtle gray borders
-- Text: dark gray/black
-- Primary: same blue (210, 80%, 50%)
-- Muted: light gray tones
-
-### Theme Toggle:
-- Placed in the sidebar near the bottom (above user profile area)
-- Uses `useTheme()` hook from `next-themes`
-- Sun icon for light, Moon icon for dark
-
+**New file:** `src/assets/medilead-logo.png` (copied from upload)
