@@ -28,10 +28,10 @@ interface FreeLeadSampleModalProps {
 type Step = 'query' | 'email' | 'loading' | 'results' | 'limit-reached';
 
 const suggestions = [
-  { label: 'SaaS founders', icon: Target },
-  { label: 'Marketing directors', icon: Zap },
-  { label: 'E-commerce CEOs', icon: Users },
-  { label: 'HR managers', icon: CheckCircle2 },
+  { label: 'ICU Nurses — Los Angeles, CA', icon: Target },
+  { label: 'Travel ER Nurses — Texas', icon: Zap },
+  { label: 'OR Nurses — Chicago, IL', icon: Users },
+  { label: 'Med/Surg RNs — NYC', icon: CheckCircle2 },
 ];
 
 export function FreeLeadSampleModal({ open, onOpenChange }: FreeLeadSampleModalProps) {
@@ -173,14 +173,14 @@ export function FreeLeadSampleModal({ open, onOpenChange }: FreeLeadSampleModalP
             </motion.div>
             
             <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
-              {step === 'results' ? 'Your Free Leads' : 'Get 5 Free Leads'}
+              {step === 'results' ? 'Your Free Candidates' : 'Get 5 Free Candidates'}
             </DialogTitle>
             <DialogDescription className="text-muted-foreground mt-2">
-              {step === 'query' && 'Tell us who you\'re looking for and we\'ll find them instantly.'}
-              {step === 'email' && 'Enter your email to receive your personalized leads.'}
-              {step === 'loading' && 'Our AI is searching millions of profiles...'}
-              {step === 'results' && 'Sign up to unlock full contact details.'}
-              {step === 'limit-reached' && 'Ready to unlock unlimited leads?'}
+              {step === 'query' && 'Tell us what role you\'re hiring for and we\'ll show you 5 qualified candidates right now.'}
+              {step === 'email' && 'Enter your email to receive your qualified candidates.'}
+              {step === 'loading' && 'Searching LinkedIn for qualified candidates...'}
+              {step === 'results' && 'Sign up to unlock email and phone numbers.'}
+              {step === 'limit-reached' && 'Ready to unlock unlimited candidate searches?'}
             </DialogDescription>
           </DialogHeader>
 
@@ -195,14 +195,14 @@ export function FreeLeadSampleModal({ open, onOpenChange }: FreeLeadSampleModalP
                 className="space-y-5 mt-6"
               >
                 <div className="space-y-3">
-                  <Label htmlFor="query" className="text-sm font-medium">Who are you looking for?</Label>
+                  <Label htmlFor="query" className="text-sm font-medium">What role are you hiring for?</Label>
                   <div className="relative group">
                     <div className="absolute inset-0 rounded-xl bg-primary/20 blur-md opacity-0 group-focus-within:opacity-100 transition-opacity duration-300" />
                     <div className="relative">
                       <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                       <Input
                         id="query"
-                        placeholder="e.g., CTOs at fintech startups in NYC"
+                        placeholder="e.g., ICU Nurse — Los Angeles, CA — 3+ years, BLS/ACLS certified"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleQuerySubmit()}
@@ -302,7 +302,7 @@ export function FreeLeadSampleModal({ open, onOpenChange }: FreeLeadSampleModalP
                 </div>
 
                 <p className="text-xs text-muted-foreground text-center">
-                  We'll deliver your leads instantly. No spam, ever.
+                  We'll deliver your candidates instantly. No spam, ever.
                 </p>
 
                 <div className="flex gap-3">
@@ -318,7 +318,7 @@ export function FreeLeadSampleModal({ open, onOpenChange }: FreeLeadSampleModalP
                     className="flex-[2] h-12 rounded-xl apple-button group"
                   >
                     <Sparkles className="w-5 h-5 mr-2" />
-                    Get My Leads
+                    Find Candidates
                   </Button>
                 </div>
               </motion.div>
@@ -360,14 +360,14 @@ export function FreeLeadSampleModal({ open, onOpenChange }: FreeLeadSampleModalP
                     animate={{ opacity: [1, 0.7, 1] }}
                     transition={{ duration: 1.5, repeat: Infinity }}
                   >
-                    Finding your leads...
+                    Finding qualified candidates...
                   </motion.p>
-                  <p className="text-sm text-muted-foreground">Scanning millions of profiles</p>
+                  <p className="text-sm text-muted-foreground">Searching LinkedIn for matches</p>
                 </div>
                 
                 {/* Progress steps */}
                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  {['Searching', 'Analyzing', 'Enriching'].map((label, i) => (
+                  {['Searching', 'Verifying licenses', 'Getting contact info'].map((label, i) => (
                     <motion.div
                       key={label}
                       initial={{ opacity: 0.3 }}
@@ -397,12 +397,12 @@ export function FreeLeadSampleModal({ open, onOpenChange }: FreeLeadSampleModalP
                   <div className="flex items-center gap-2 min-w-0">
                     <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 min-w-0">
                       <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                      <span className="text-sm font-medium text-primary truncate">{leads.length} leads found</span>
+                      <span className="text-sm font-medium text-primary truncate">{leads.length} candidates found</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50 border border-border/30 shrink-0">
                     <Lock className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">Details locked</span>
+                    <span className="text-xs text-muted-foreground">Contact info locked</span>
                   </div>
                 </div>
 
@@ -418,7 +418,7 @@ export function FreeLeadSampleModal({ open, onOpenChange }: FreeLeadSampleModalP
                     <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-muted/50 flex items-center justify-center">
                       <Users className="w-8 h-8 text-muted-foreground" />
                     </div>
-                    <p className="text-muted-foreground">No leads found. Try a different search query.</p>
+                    <p className="text-muted-foreground">No candidates found. Try a different role or location.</p>
                   </div>
                 )}
 
@@ -434,8 +434,8 @@ export function FreeLeadSampleModal({ open, onOpenChange }: FreeLeadSampleModalP
                       <Sparkles className="w-5 h-5 text-primary" />
                     </div>
                     <div className="min-w-0">
-                      <h4 className="font-semibold text-foreground text-sm">Unlock full details</h4>
-                      <p className="text-xs text-muted-foreground">Emails, phones, LinkedIn + 250/mo</p>
+                      <h4 className="font-semibold text-foreground text-sm">Unlock contact info</h4>
+                      <p className="text-xs text-muted-foreground">Get email & phone for all candidates</p>
                     </div>
                   </div>
                   
@@ -468,10 +468,10 @@ export function FreeLeadSampleModal({ open, onOpenChange }: FreeLeadSampleModalP
                   </div>
                   
                   <h3 className="text-xl font-bold text-foreground mb-2">
-                    You've used your free samples
+                    You've used your free candidate searches
                   </h3>
                   <p className="text-muted-foreground text-sm max-w-sm mx-auto">
-                    {error || "Sign up now to unlock unlimited leads with full contact details."}
+                    {error || "Start your free trial to unlock unlimited candidate searches with full contact info."}
                   </p>
                 </div>
 
@@ -481,8 +481,8 @@ export function FreeLeadSampleModal({ open, onOpenChange }: FreeLeadSampleModalP
                       <Sparkles className="w-5 h-5 text-primary" />
                     </div>
                     <div className="min-w-0">
-                      <h4 className="font-semibold text-foreground text-sm">Go Pro</h4>
-                      <p className="text-xs text-muted-foreground">250 leads/mo + emails, phones, LinkedIn</p>
+                      <h4 className="font-semibold text-foreground text-sm">Start Free Trial</h4>
+                      <p className="text-xs text-muted-foreground">10-15 candidates per search + full contact info</p>
                     </div>
                   </div>
                   

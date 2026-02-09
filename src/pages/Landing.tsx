@@ -158,7 +158,7 @@ function PricingCard({ name, price, leads, features, popular, index }: { name: s
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            {leads} leads/month
+            {leads}
           </div>
         </div>
         
@@ -254,9 +254,9 @@ export default function Landing() {
   ];
   
   const pricing = [
-    { name: "Starter", price: "$299", leads: "100 searches", features: ["~1,000-1,500 qualified candidates", "AI-powered candidate search", "LinkedIn enrichment", "Personalized outreach emails", "Email support"] },
-    { name: "Growth", price: "$599", leads: "300 searches", popular: true, features: ["~3,000-4,500 qualified candidates", "Everything in Starter", "Advanced filtering", "Campaign management", "Analytics dashboard", "Priority support"] },
-    { name: "Agency", price: "$999", leads: "600 searches", features: ["~6,000-9,000 qualified candidates", "Everything in Growth", "Unlimited job openings", "Team collaboration", "Custom integrations", "Dedicated account manager"] },
+    { name: "Starter", price: "$299", leads: "100 searches/mo", features: ["~1,000-1,500 qualified candidates", "AI-powered candidate search", "LinkedIn enrichment", "Personalized outreach emails", "Perfect for: Solo recruiters"], description: "Perfect for solo recruiters and new agencies" },
+    { name: "Growth", price: "$599", leads: "300 searches/mo", popular: true, features: ["~3,000-4,500 qualified candidates", "Everything in Starter", "Advanced filtering", "Job opening management", "Analytics dashboard", "Perfect for: Teams of 2-5"], description: "For growing recruiting teams" },
+    { name: "Agency", price: "$999", leads: "600 searches/mo", features: ["~6,000-9,000 qualified candidates", "Everything in Growth", "Unlimited job openings", "Team collaboration", "Custom integrations", "Perfect for: 5-20 recruiters"], description: "For established agencies" },
   ];
   
   return (
@@ -406,7 +406,7 @@ export default function Landing() {
               className="h-14 px-8 text-lg gap-2 border-primary/30 hover:bg-primary/10 hover:border-primary/50"
             >
               <Users className="w-5 h-5 text-primary" />
-              See How It Works
+              👥 Get 5 Free Candidates
             </Button>
           </motion.div>
           
@@ -441,13 +441,14 @@ export default function Landing() {
       <section id="features" className="py-24 px-6">
         <div className="max-w-6xl mx-auto">
           <AnimatedSection className="text-center mb-16">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
+              Built for Healthcare Recruiters
+            </span>
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-              Everything you need to
-              <br />
-              <span className="gradient-text">fill roles faster</span>
+              Here's How MediLead Helps
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Powerful features designed to help you source, qualify, and reach qualified healthcare candidates.
+              Find nurses with the exact certifications, experience, and location you need — automatically.
             </p>
           </AnimatedSection>
           
@@ -553,14 +554,24 @@ export default function Landing() {
             <span className="gradient-text">3x faster?</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-10">
-            Start your free trial. No credit card required. Find your first batch of qualified candidates in 2 minutes.
+            Start your 7-day free trial. No credit card required. Find your first batch of qualified candidates in 2 minutes.
           </p>
-          <Button onClick={() => navigate('/auth')} size="lg" className="apple-button h-14 px-10 text-lg gap-2">
-            Start Your Free Trial
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-          </Button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Button onClick={() => navigate('/auth')} size="lg" className="apple-button h-14 px-10 text-lg gap-2">
+              Start Finding Candidates
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </Button>
+            <Button 
+              onClick={() => setIsFreeLeadSampleOpen(true)} 
+              variant="outline" 
+              size="lg" 
+              className="h-14 px-8 text-lg gap-2 border-primary/30 hover:bg-primary/10 hover:border-primary/50"
+            >
+              👥 Get 5 Free Candidates
+            </Button>
+          </div>
         </AnimatedSection>
       </section>
       

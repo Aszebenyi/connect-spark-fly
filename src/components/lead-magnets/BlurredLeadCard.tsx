@@ -124,7 +124,7 @@ export function BlurredLeadCard({ lead, index }: BlurredLeadCardProps) {
       >
         <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-background/90 backdrop-blur-sm border border-primary/30 shadow-lg shadow-primary/20">
           <Sparkles className="w-4 h-4 text-primary" />
-          <span className="text-sm font-medium text-foreground">Sign up to unlock</span>
+          <span className="text-sm font-medium text-foreground">Start trial to unlock</span>
         </div>
       </motion.div>
     </motion.div>
