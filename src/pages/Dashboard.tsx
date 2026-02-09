@@ -18,8 +18,13 @@ import {
   getCampaigns, 
   getStats, 
   getLeadsByCampaign,
+  getLeadAssignments,
+  assignLeadsToCampaign,
+  removeLeadsFromCampaign,
+  deleteLeads,
   Lead as ApiLead, 
   Campaign,
+  LeadCampaignAssignment,
   updateLeadStatus,
   deleteLead,
 } from '@/lib/api';
@@ -35,6 +40,7 @@ export default function Index() {
   const [selectedLead, setSelectedLead] = useState<LegacyLead | null>(null);
   const [dbLeads, setDbLeads] = useState<ApiLead[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [assignments, setAssignments] = useState<LeadCampaignAssignment[]>([]);
   const [stats, setStats] = useState({ totalLeads: 0, contacted: 0, replied: 0, qualified: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateCampaign, setShowCreateCampaign] = useState(false);
@@ -100,10 +106,11 @@ export default function Index() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [leadsResult, campaignsResult, statsResult] = await Promise.all([
+      const [leadsResult, campaignsResult, statsResult, assignResult] = await Promise.all([
         getLeads(),
         getCampaigns(),
         getStats(),
+        getLeadAssignments(),
       ]);
 
       if (leadsResult.success && leadsResult.leads) {
@@ -111,6 +118,9 @@ export default function Index() {
       }
       if (campaignsResult.success && campaignsResult.campaigns) {
         setCampaigns(campaignsResult.campaigns);
+      }
+      if (assignResult.success && assignResult.assignments) {
+        setAssignments(assignResult.assignments);
       }
       setStats(statsResult);
     } catch (error) {
@@ -125,34 +135,11 @@ export default function Index() {
     }
   };
 
-  const loadLeadsForCampaign = async (campaignId: string) => {
-    try {
-      const result = await getLeadsByCampaign(campaignId);
-      if (result.success && result.leads) {
-        setDbLeads(result.leads);
-      }
-    } catch (error) {
-      console.error('Failed to load campaign leads:', error);
-    }
-  };
-
   useEffect(() => {
     if (user) {
       loadData();
     }
   }, [user]);
-
-  useEffect(() => {
-    if (selectedCampaignId) {
-      loadLeadsForCampaign(selectedCampaignId);
-    } else if (user) {
-      getLeads().then(result => {
-        if (result.success && result.leads) {
-          setDbLeads(result.leads);
-        }
-      });
-    }
-  }, [selectedCampaignId, user]);
 
   const convertedLeads: LegacyLead[] = dbLeads.map((lead) => ({
     id: lead.id || '',
@@ -251,6 +238,37 @@ export default function Index() {
       toast({ title: 'Lead deleted' });
     } else {
       toast({ title: 'Failed to delete lead', variant: 'destructive' });
+    }
+  };
+
+  const handleBulkDelete = async (leadIds: string[]) => {
+    const result = await deleteLeads(leadIds);
+    if (result.success) {
+      loadData();
+      toast({ title: `${leadIds.length} candidate${leadIds.length > 1 ? 's' : ''} deleted` });
+    } else {
+      toast({ title: 'Failed to delete candidates', variant: 'destructive' });
+    }
+  };
+
+  const handleBulkAssign = async (leadIds: string[], campaignId: string) => {
+    const result = await assignLeadsToCampaign(leadIds, campaignId);
+    if (result.success) {
+      loadData();
+      const campaign = campaigns.find(c => c.id === campaignId);
+      toast({ title: `Added ${leadIds.length} candidate${leadIds.length > 1 ? 's' : ''} to ${campaign?.name || 'job opening'}` });
+    } else {
+      toast({ title: 'Failed to assign candidates', variant: 'destructive' });
+    }
+  };
+
+  const handleBulkRemove = async (leadIds: string[], campaignId: string) => {
+    const result = await removeLeadsFromCampaign(leadIds, campaignId);
+    if (result.success) {
+      loadData();
+      toast({ title: `Removed ${leadIds.length} candidate${leadIds.length > 1 ? 's' : ''} from job opening` });
+    } else {
+      toast({ title: 'Failed to remove candidates', variant: 'destructive' });
     }
   };
 
@@ -466,11 +484,15 @@ export default function Index() {
             <LeadTable 
               leads={convertedLeads}
               campaigns={campaigns}
+              assignments={assignments}
               selectedCampaignId={selectedCampaignId}
               onCampaignFilterChange={setSelectedCampaignId}
               onLeadClick={(lead) => setSelectedLead(lead)}
               onStatusChange={handleStatusChange}
               onDelete={handleDeleteLead}
+              onBulkDelete={handleBulkDelete}
+              onBulkAssign={handleBulkAssign}
+              onBulkRemove={handleBulkRemove}
               onCreateCampaign={() => setShowCreateCampaign(true)}
               onFindLeads={() => setActiveTab('finder')}
             />

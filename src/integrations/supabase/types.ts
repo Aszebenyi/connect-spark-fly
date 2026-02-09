@@ -322,6 +322,45 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_campaign_assignments: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          campaign_id: string
+          id: string
+          lead_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          campaign_id: string
+          id?: string
+          lead_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          campaign_id?: string
+          id?: string
+          lead_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_campaign_assignments_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_campaign_assignments_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_magnet_submissions: {
         Row: {
           converted_to_user: boolean | null
