@@ -189,8 +189,24 @@ serve(async (req) => {
 
     console.log(`Sending email to ${to} for user ${user.id}`);
 
-    // Get user's email connection
-    const { data: connection, error: connectionError } = await supabaseClient
+    // Validate email body for dangerous HTML patterns
+    const dangerousPatterns = [
+      /<script[^>]*>[\s\S]*?<\/script>/gi,
+      /<iframe[^>]*>[\s\S]*?<\/iframe>/gi,
+      /javascript:/gi,
+      /on\w+\s*=/gi,
+    ];
+    for (const pattern of dangerousPatterns) {
+      if (pattern.test(emailBody)) {
+        return new Response(
+          JSON.stringify({ error: "Prohibited HTML content detected" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    // Get user's email connection using service role (tokens not exposed to client)
+    const { data: connection, error: connectionError } = await supabaseAdmin
       .from("email_connections")
       .select("*")
       .eq("user_id", user.id)
