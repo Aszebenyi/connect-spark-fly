@@ -48,15 +48,17 @@ const statusConfig: Record<string, { label: string; color: string }> = {
 };
 
 // Healthcare data helpers
+function getProfileData(lead: Lead): any {
+  return lead.profile_data || lead.profileData || {};
+}
+
 function getProfileField(lead: Lead, field: string): string | null {
-  const pd = lead.profile_data || lead.profileData;
-  if (!pd) return null;
+  const pd = getProfileData(lead);
   return pd[field] || null;
 }
 
 function getMatchScore(lead: Lead): number | null {
-  const pd = lead.profile_data || lead.profileData;
-  return pd?.match_score ?? null;
+  return getProfileData(lead)?.match_score ?? null;
 }
 
 function parseBadgeList(val: string | null): string[] {
@@ -68,6 +70,41 @@ function getMatchScoreBadgeClass(score: number): string {
   if (score >= 75) return 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30';
   if (score >= 50) return 'bg-amber-500/15 text-amber-600 border-amber-500/30';
   return 'bg-red-500/15 text-red-500 border-red-500/30';
+}
+
+function getEmployer(lead: Lead): string {
+  const pd = getProfileData(lead);
+  return lead.company || pd.company || pd.linkedin?.company || pd.linkedin?.latestCompany || '-';
+}
+
+function getLocation(lead: Lead): string {
+  const pd = getProfileData(lead);
+  return lead.location || pd.location || pd.linkedin?.location || '-';
+}
+
+function getExperienceYears(lead: Lead): number | null {
+  const pd = getProfileData(lead);
+  if (pd.years_experience) return Number(pd.years_experience);
+  if (pd.linkedin?.totalExperienceYears) return Number(pd.linkedin.totalExperienceYears);
+  const notes = pd.scoring_notes || '';
+  const match = notes.match(/(\d+)\+?\s*years?/i);
+  return match ? Number(match[1]) : null;
+}
+
+function getExperienceLabel(lead: Lead): string {
+  const yrs = getExperienceYears(lead);
+  if (yrs == null) return '-';
+  const specialty = getProfileField(lead, 'specialty');
+  const shortSpec = specialty?.split(',')[0]?.trim();
+  return shortSpec ? `${yrs} yrs ${shortSpec}` : `${yrs} yrs`;
+}
+
+function getSpecialtySubtitle(lead: Lead): string | null {
+  const specialty = getProfileField(lead, 'specialty');
+  if (!specialty) return null;
+  const title = (lead.title || '').toLowerCase();
+  if (title.includes(specialty.toLowerCase())) return null;
+  return `${specialty} Specialty`;
 }
 
 export function LeadTable({ 
@@ -125,6 +162,16 @@ export function LeadTable({
         const bScore = getMatchScore(b) ?? -1;
         return sortDirection === 'asc' ? aScore - bScore : bScore - aScore;
       }
+      if (sortField === 'experience') {
+        const aYrs = getExperienceYears(a) ?? -1;
+        const bYrs = getExperienceYears(b) ?? -1;
+        return sortDirection === 'asc' ? aYrs - bYrs : bYrs - aYrs;
+      }
+      if (sortField === 'createdAt') {
+        const aDate = new Date(a.createdAt || 0).getTime();
+        const bDate = new Date(b.createdAt || 0).getTime();
+        return sortDirection === 'asc' ? aDate - bDate : bDate - aDate;
+      }
       const aVal = (a as any)[sortField];
       const bVal = (b as any)[sortField];
       if (typeof aVal === 'number' && typeof bVal === 'number') {
@@ -156,7 +203,7 @@ export function LeadTable({
             <div className="absolute bottom-0 right-0 w-1 h-1.5 bg-muted-foreground rounded-full rotate-45 origin-top" />
           </div>
           <Input
-            placeholder="Search leads..."
+            placeholder="Search candidates..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="border-0 bg-transparent focus-visible:ring-0 px-0 h-auto"
@@ -254,8 +301,18 @@ export function LeadTable({
                 </button>
               </th>
               <th className="text-left p-5 text-sm font-semibold text-muted-foreground">Employer</th>
+              <th className="text-left p-5 text-sm font-semibold text-muted-foreground">Location</th>
               <th className="text-left p-5 text-sm font-semibold text-muted-foreground">License</th>
               <th className="text-left p-5 text-sm font-semibold text-muted-foreground">Certifications</th>
+              <th className="text-left p-5 text-sm font-semibold text-muted-foreground">
+                <button 
+                  onClick={() => handleSort('experience')}
+                  className="flex items-center gap-2 hover:text-foreground transition-colors"
+                >
+                  Experience
+                  <span className="text-[10px]">↕</span>
+                </button>
+              </th>
               <th className="text-left p-5 text-sm font-semibold text-muted-foreground">
                 <button 
                   onClick={() => handleSort('match_score')}
@@ -266,13 +323,22 @@ export function LeadTable({
                 </button>
               </th>
               <th className="text-left p-5 text-sm font-semibold text-muted-foreground">Status</th>
+              <th className="text-left p-5 text-sm font-semibold text-muted-foreground">
+                <button 
+                  onClick={() => handleSort('createdAt')}
+                  className="flex items-center gap-2 hover:text-foreground transition-colors"
+                >
+                  Added
+                  <span className="text-[10px]">↕</span>
+                </button>
+              </th>
               <th className="text-right p-5 text-sm font-semibold text-muted-foreground">Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredLeads.length === 0 ? (
               <tr>
-                <td colSpan={7} className="p-0">
+                <td colSpan={10} className="p-0">
                   {leads.length === 0 ? (
                     // No leads at all - encourage creating a campaign
                     <EmptyState
@@ -354,17 +420,21 @@ export function LeadTable({
                         </div>
                         <div>
                           <p className="font-semibold text-foreground">{lead.name}</p>
-                          <p className="text-sm text-muted-foreground mt-0.5">{lead.title || 'No title'}</p>
+                          <p className="text-sm text-muted-foreground mt-0.5">
+                            {lead.title || 'No title'}
+                            {(() => {
+                              const spec = getSpecialtySubtitle(lead);
+                              return spec ? <span> · {spec}</span> : null;
+                            })()}
+                          </p>
                         </div>
                       </div>
                     </td>
                     <td className="p-5">
-                      <div>
-                        <p className="text-foreground">{lead.company || '-'}</p>
-                        {lead.location && (
-                          <p className="text-sm text-muted-foreground mt-0.5">{lead.location}</p>
-                        )}
-                      </div>
+                      <p className="text-foreground">{getEmployer(lead)}</p>
+                    </td>
+                    <td className="p-5">
+                      <p className="text-foreground text-sm">{getLocation(lead)}</p>
                     </td>
                     <td className="p-5">
                       {(() => {
@@ -400,6 +470,9 @@ export function LeadTable({
                       })()}
                     </td>
                     <td className="p-5">
+                      <span className="text-sm text-foreground">{getExperienceLabel(lead)}</span>
+                    </td>
+                    <td className="p-5">
                       {(() => {
                         const score = getMatchScore(lead);
                         return score != null ? (
@@ -415,6 +488,9 @@ export function LeadTable({
                       <Badge className={cn('border font-medium', status.color)}>
                         {status.label}
                       </Badge>
+                    </td>
+                    <td className="p-5 text-sm text-muted-foreground">
+                      {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString() : '-'}
                     </td>
                     <td className="p-5 text-right">
                       <DropdownMenu>
