@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { CheckCircle2, Download, Users, Search, Sparkles } from 'lucide-react';
+import { CheckCircle2, Download, Users, Search, Sparkles, ShieldCheck } from 'lucide-react';
 import { exportLeadsToCSV } from '@/lib/csv-export';
 import { useToast } from '@/hooks/use-toast';
 import { EmptyState } from '@/components/EmptyState';
@@ -47,6 +47,29 @@ const statusConfig: Record<string, { label: string; color: string }> = {
   lost: { label: 'Lost', color: 'bg-destructive/15 text-destructive border-destructive/30' },
 };
 
+// Healthcare data helpers
+function getProfileField(lead: Lead, field: string): string | null {
+  const pd = lead.profile_data || lead.profileData;
+  if (!pd) return null;
+  return pd[field] || null;
+}
+
+function getMatchScore(lead: Lead): number | null {
+  const pd = lead.profile_data || lead.profileData;
+  return pd?.match_score ?? null;
+}
+
+function parseBadgeList(val: string | null): string[] {
+  if (!val) return [];
+  return val.split(',').map((s: string) => s.trim()).filter(Boolean);
+}
+
+function getMatchScoreBadgeClass(score: number): string {
+  if (score >= 75) return 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30';
+  if (score >= 50) return 'bg-amber-500/15 text-amber-600 border-amber-500/30';
+  return 'bg-red-500/15 text-red-500 border-red-500/30';
+}
+
 export function LeadTable({ 
   leads, 
   campaigns,
@@ -61,7 +84,7 @@ export function LeadTable({
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [sortField, setSortField] = useState<keyof Lead>('createdAt');
+  const [sortField, setSortField] = useState<string>('match_score');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   const handleExport = () => {
@@ -97,8 +120,13 @@ export function LeadTable({
       return matchesSearch && matchesStatus;
     })
     .sort((a, b) => {
-      const aVal = a[sortField];
-      const bVal = b[sortField];
+      if (sortField === 'match_score') {
+        const aScore = getMatchScore(a) ?? -1;
+        const bScore = getMatchScore(b) ?? -1;
+        return sortDirection === 'asc' ? aScore - bScore : bScore - aScore;
+      }
+      const aVal = (a as any)[sortField];
+      const bVal = (b as any)[sortField];
       if (typeof aVal === 'number' && typeof bVal === 'number') {
         return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
       }
@@ -107,7 +135,7 @@ export function LeadTable({
         : String(bVal || '').localeCompare(String(aVal || ''));
     });
 
-  const handleSort = (field: keyof Lead) => {
+  const handleSort = (field: string) => {
     if (sortField === field) {
       setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
     } else {
@@ -225,25 +253,26 @@ export function LeadTable({
                   <span className="text-[10px]">↕</span>
                 </button>
               </th>
-              <th className="text-left p-5 text-sm font-semibold text-muted-foreground">Company</th>
-              <th className="text-left p-5 text-sm font-semibold text-muted-foreground">Status</th>
+              <th className="text-left p-5 text-sm font-semibold text-muted-foreground">Employer</th>
+              <th className="text-left p-5 text-sm font-semibold text-muted-foreground">License</th>
+              <th className="text-left p-5 text-sm font-semibold text-muted-foreground">Certifications</th>
               <th className="text-left p-5 text-sm font-semibold text-muted-foreground">
                 <button 
-                  onClick={() => handleSort('createdAt')}
+                  onClick={() => handleSort('match_score')}
                   className="flex items-center gap-2 hover:text-foreground transition-colors"
                 >
-                  Added
+                  Match Score
                   <span className="text-[10px]">↕</span>
                 </button>
               </th>
-              <th className="text-left p-5 text-sm font-semibold text-muted-foreground">Contact</th>
+              <th className="text-left p-5 text-sm font-semibold text-muted-foreground">Status</th>
               <th className="text-right p-5 text-sm font-semibold text-muted-foreground">Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredLeads.length === 0 ? (
               <tr>
-                <td colSpan={6} className="p-0">
+                <td colSpan={7} className="p-0">
                   {leads.length === 0 ? (
                     // No leads at all - encourage creating a campaign
                     <EmptyState
@@ -332,49 +361,60 @@ export function LeadTable({
                     <td className="p-5">
                       <div>
                         <p className="text-foreground">{lead.company || '-'}</p>
-                        {lead.industry && (
-                          <p className="text-sm text-muted-foreground mt-0.5">{lead.industry}</p>
+                        {lead.location && (
+                          <p className="text-sm text-muted-foreground mt-0.5">{lead.location}</p>
                         )}
                       </div>
+                    </td>
+                    <td className="p-5">
+                      {(() => {
+                        const licenses = parseBadgeList(getProfileField(lead, 'licenses'));
+                        return licenses.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {licenses.map((lic) => (
+                              <Badge key={lic} variant="outline" className="text-xs font-semibold px-2 py-0.5 rounded-full border-primary/30 text-primary bg-primary/10">
+                                <ShieldCheck className="w-3 h-3 mr-1" />
+                                {lic}
+                              </Badge>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">-</span>
+                        );
+                      })()}
+                    </td>
+                    <td className="p-5">
+                      {(() => {
+                        const certs = parseBadgeList(getProfileField(lead, 'certifications'));
+                        return certs.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {certs.map((cert) => (
+                              <Badge key={cert} variant="secondary" className="text-[11px] font-semibold px-2 py-0.5 rounded-full">
+                                {cert}
+                              </Badge>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">-</span>
+                        );
+                      })()}
+                    </td>
+                    <td className="p-5">
+                      {(() => {
+                        const score = getMatchScore(lead);
+                        return score != null ? (
+                          <Badge className={cn('border font-semibold', getMatchScoreBadgeClass(score))}>
+                            {score}%
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">-</span>
+                        );
+                      })()}
                     </td>
                     <td className="p-5">
                       <Badge className={cn('border font-medium', status.color)}>
                         {status.label}
                       </Badge>
-                    </td>
-                    <td className="p-5 text-muted-foreground">
-                      {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric'
-                      }) : '-'}
-                    </td>
-                    <td className="p-5">
-                      <div className="flex items-center gap-1">
-                        {lead.email && (
-                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" onClick={(e) => {
-                            e.stopPropagation();
-                            window.location.href = `mailto:${lead.email}`;
-                          }}>
-                            <span className="text-xs">@</span>
-                          </Button>
-                        )}
-                        {lead.linkedin && (
-                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" onClick={(e) => {
-                            e.stopPropagation();
-                            window.open(lead.linkedin, '_blank');
-                          }}>
-                            <span className="text-xs font-bold">in</span>
-                          </Button>
-                        )}
-                        {lead.phone && (
-                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" onClick={(e) => {
-                            e.stopPropagation();
-                            window.location.href = `tel:${lead.phone}`;
-                          }}>
-                            <span className="text-xs">☎</span>
-                          </Button>
-                        )}
-                      </div>
                     </td>
                     <td className="p-5 text-right">
                       <DropdownMenu>

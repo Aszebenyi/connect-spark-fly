@@ -30,15 +30,15 @@ function getMatchScore(lead: Lead): number | null {
 }
 
 function getMatchScoreColor(score: number): string {
-  if (score >= 90) return 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30';
-  if (score >= 75) return 'bg-amber-500/15 text-amber-600 border-amber-500/30';
-  return 'bg-orange-500/15 text-orange-600 border-orange-500/30';
+  if (score >= 75) return 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30';
+  if (score >= 50) return 'bg-amber-500/15 text-amber-600 border-amber-500/30';
+  return 'bg-red-500/15 text-red-500 border-red-500/30';
 }
 
 function getMatchScoreDot(score: number): string {
-  if (score >= 90) return 'bg-emerald-500';
-  if (score >= 75) return 'bg-amber-500';
-  return 'bg-orange-500';
+  if (score >= 75) return 'bg-emerald-500';
+  if (score >= 50) return 'bg-amber-500';
+  return 'bg-red-500';
 }
 
 interface LicenseInfo {
@@ -50,8 +50,15 @@ interface LicenseInfo {
 function getLicense(lead: Lead): LicenseInfo | null {
   const pd = lead.profile_data;
   if (!pd) return null;
-  // Check structured license data
+  // Handle structured license object
   if (pd.license) return pd.license as LicenseInfo;
+  // Handle comma-separated string from regex extraction (e.g., "RN, BSN")
+  if (typeof pd.licenses === 'string' && pd.licenses) {
+    return {
+      status: 'active',
+      label: pd.licenses,
+    };
+  }
   if (pd.license_status) {
     return {
       status: pd.license_status,
@@ -65,12 +72,12 @@ function getLicense(lead: Lead): LicenseInfo | null {
 function getCertifications(lead: Lead): string[] {
   const pd = lead.profile_data;
   if (!pd) return [];
+  // Handle comma-separated string (from regex extraction)
+  if (typeof pd.certifications === 'string' && pd.certifications) {
+    return pd.certifications.split(',').map((c: string) => c.trim()).filter(Boolean);
+  }
   if (Array.isArray(pd.certifications)) {
     return pd.certifications.map((c: any) => (typeof c === 'string' ? c : c.name || c.title || ''));
-  }
-  // Fallback: extract from linkedin certifications
-  if (pd.linkedin?.certifications && Array.isArray(pd.linkedin.certifications)) {
-    return pd.linkedin.certifications.map((c: any) => c.name).filter(Boolean);
   }
   return [];
 }
