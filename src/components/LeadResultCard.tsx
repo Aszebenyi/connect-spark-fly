@@ -13,13 +13,92 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { useEmailConnection } from '@/hooks/useEmailConnection';
-import { Send, Loader2, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Send, Loader2, AlertCircle, ShieldCheck, ShieldAlert, ShieldX, Clock, Lock } from 'lucide-react';
 
 interface LeadResultCardProps {
   lead: Lead;
   isSelected: boolean;
   onToggleSelect: () => void;
   campaignGoal?: string;
+}
+
+// --- Helper functions for healthcare data extraction ---
+
+function getMatchScore(lead: Lead): number | null {
+  return lead.profile_data?.match_score ?? lead.profile_data?.score ?? null;
+}
+
+function getMatchScoreColor(score: number): string {
+  if (score >= 90) return 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30';
+  if (score >= 75) return 'bg-amber-500/15 text-amber-600 border-amber-500/30';
+  return 'bg-orange-500/15 text-orange-600 border-orange-500/30';
+}
+
+function getMatchScoreDot(score: number): string {
+  if (score >= 90) return 'bg-emerald-500';
+  if (score >= 75) return 'bg-amber-500';
+  return 'bg-orange-500';
+}
+
+interface LicenseInfo {
+  status: 'active' | 'expiring' | 'expired';
+  label: string;
+  number?: string;
+}
+
+function getLicense(lead: Lead): LicenseInfo | null {
+  const pd = lead.profile_data;
+  if (!pd) return null;
+  // Check structured license data
+  if (pd.license) return pd.license as LicenseInfo;
+  if (pd.license_status) {
+    return {
+      status: pd.license_status,
+      label: pd.license_type || 'License',
+      number: pd.license_number,
+    };
+  }
+  return null;
+}
+
+function getCertifications(lead: Lead): string[] {
+  const pd = lead.profile_data;
+  if (!pd) return [];
+  if (Array.isArray(pd.certifications)) {
+    return pd.certifications.map((c: any) => (typeof c === 'string' ? c : c.name || c.title || ''));
+  }
+  // Fallback: extract from linkedin certifications
+  if (pd.linkedin?.certifications && Array.isArray(pd.linkedin.certifications)) {
+    return pd.linkedin.certifications.map((c: any) => c.name).filter(Boolean);
+  }
+  return [];
+}
+
+function getYearsExperience(lead: Lead): number | null {
+  const pd = lead.profile_data;
+  if (!pd) return null;
+  if (pd.years_experience != null) return pd.years_experience;
+  if (pd.linkedin?.totalExperienceYears != null) return pd.linkedin.totalExperienceYears;
+  return null;
+}
+
+function getSpecialtyLabel(lead: Lead): string | null {
+  return lead.profile_data?.specialty || lead.industry || null;
+}
+
+// --- License status icon ---
+function LicenseStatusIcon({ status }: { status: string }) {
+  switch (status) {
+    case 'active':
+      return <ShieldCheck className="w-4 h-4 text-emerald-500" />;
+    case 'expiring':
+      return <ShieldAlert className="w-4 h-4 text-amber-500" />;
+    case 'expired':
+      return <ShieldX className="w-4 h-4 text-destructive" />;
+    default:
+      return <ShieldCheck className="w-4 h-4 text-muted-foreground" />;
+  }
 }
 
 export function LeadResultCard({ lead, isSelected, onToggleSelect, campaignGoal }: LeadResultCardProps) {
@@ -31,6 +110,16 @@ export function LeadResultCard({ lead, isSelected, onToggleSelect, campaignGoal 
   const [isSending, setIsSending] = useState(false);
   const { toast } = useToast();
   const { isConnected, sendEmail } = useEmailConnection();
+  const { subscription } = useAuth();
+
+  const isPaidUser = subscription?.plan_id && subscription.plan_id !== 'free';
+
+  // Healthcare data
+  const matchScore = getMatchScore(lead);
+  const license = getLicense(lead);
+  const certifications = getCertifications(lead);
+  const yearsExperience = getYearsExperience(lead);
+  const specialty = getSpecialtyLabel(lead);
 
   // Sync edited values when outreach is generated
   useEffect(() => {
@@ -86,10 +175,9 @@ export function LeadResultCard({ lead, isSelected, onToggleSelect, campaignGoal 
 
     setIsSending(true);
     try {
-      // TEST: Send to luukalleman@gmail.com instead of actual lead email
       const result = await sendEmail({
         leadId: lead.id,
-        to: 'luukalleman@gmail.com', // TEST OVERRIDE - change to lead.email for production
+        to: 'luukalleman@gmail.com',
         subject: editedSubject,
         body: editedBody,
         campaignId: lead.campaign_id,
@@ -122,9 +210,8 @@ export function LeadResultCard({ lead, isSelected, onToggleSelect, campaignGoal 
     });
   };
 
-  // Extract enrichment snippets for preview
-  const enrichments = lead.profile_data?.enrichments || [];
-  const firstSnippet = enrichments[0]?.references?.[0]?.snippet;
+  // Build employer + location line
+  const employerLocation = [lead.company, lead.location].filter(Boolean).join(' · ');
 
   return (
     <>
@@ -149,30 +236,27 @@ export function LeadResultCard({ lead, isSelected, onToggleSelect, campaignGoal 
           </button>
 
           <div className="flex-1 min-w-0">
+            {/* TOP SECTION */}
             <div className="flex items-start justify-between gap-4">
-              <div className="space-y-2">
-                <h4 className="font-semibold text-foreground text-lg">{lead.name}</h4>
+              <div className="space-y-1">
+                <h4 className="font-semibold text-foreground text-lg leading-tight">{lead.name}</h4>
                 {lead.title && (
-                  <p className="text-sm text-muted-foreground flex items-center gap-2">
-                    <span className="w-1 h-1 rounded-full bg-muted-foreground" />
-                    {lead.title}
-                  </p>
+                  <p className="text-sm text-muted-foreground">{lead.title}</p>
                 )}
-                {lead.company && (
-                  <p className="text-sm text-muted-foreground flex items-center gap-2">
-                    <span className="w-1 h-1 rounded-full bg-muted-foreground" />
-                    {lead.company}
-                  </p>
-                )}
-                {lead.location && (
-                  <p className="text-sm text-muted-foreground flex items-center gap-2">
-                    <span className="w-1 h-1 rounded-full bg-muted-foreground" />
-                    {lead.location}
-                  </p>
+                {employerLocation && (
+                  <p className="text-sm text-muted-foreground">{employerLocation}</p>
                 )}
               </div>
 
-              <div className="flex flex-wrap gap-2 items-start">
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {/* Match Score Badge */}
+                {matchScore != null && (
+                  <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm font-semibold ${getMatchScoreColor(matchScore)}`}>
+                    <span className={`w-2 h-2 rounded-full ${getMatchScoreDot(matchScore)}`} />
+                    {matchScore}% Match
+                  </div>
+                )}
+
                 {lead.linkedin_url && (
                   <a
                     href={lead.linkedin_url}
@@ -183,22 +267,75 @@ export function LeadResultCard({ lead, isSelected, onToggleSelect, campaignGoal 
                     <span className="text-xs font-bold">in</span>
                   </a>
                 )}
-                {lead.industry && (
-                  <Badge variant="secondary" className="text-xs font-medium">
-                    {lead.industry}
-                  </Badge>
-                )}
               </div>
             </div>
 
-            {/* Enrichment Preview */}
-            {firstSnippet && (
-              <div className="mt-4 p-4 rounded-xl bg-muted/30 border border-border/50">
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {firstSnippet}
-                </p>
+            {/* CREDENTIALS SECTION */}
+            {(license || certifications.length > 0 || yearsExperience != null || specialty) && (
+              <div className="mt-4 p-4 rounded-xl bg-muted/30 border border-border/50 space-y-3">
+                {/* License Status */}
+                {license && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <LicenseStatusIcon status={license.status} />
+                    <span className="text-foreground font-medium">
+                      {license.status === 'active' && 'Active'}
+                      {license.status === 'expiring' && 'Expiring'}
+                      {license.status === 'expired' && 'Expired'}
+                      {' '}{license.label}
+                    </span>
+                    {license.number && (
+                      <span className="text-muted-foreground">({license.number})</span>
+                    )}
+                  </div>
+                )}
+
+                {/* Certifications */}
+                {certifications.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {certifications.map((cert) => (
+                      <Badge key={cert} variant="secondary" className="text-xs font-semibold px-3 py-1 rounded-full">
+                        {cert}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+
+                {/* Years of Experience */}
+                {yearsExperience != null && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Clock className="w-4 h-4" />
+                    <span>{yearsExperience} year{yearsExperience !== 1 ? 's' : ''} {specialty ? `${specialty} ` : ''}experience</span>
+                  </div>
+                )}
               </div>
             )}
+
+            {/* CONTACT SECTION */}
+            <div className="mt-4">
+              {isPaidUser ? (
+                <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
+                  {lead.email && (
+                    <span className="text-muted-foreground">{lead.email}</span>
+                  )}
+                  {lead.phone && (
+                    <span className="text-muted-foreground">{lead.phone}</span>
+                  )}
+                </div>
+              ) : (
+                <div className="relative rounded-xl bg-muted/20 border border-border/40 p-3">
+                  <div className="flex items-center gap-x-6 gap-y-1 text-sm select-none" style={{ filter: 'blur(5px)' }}>
+                    <span className="text-muted-foreground">candidate@email.com</span>
+                    <span className="text-muted-foreground">(555) 123-4567</span>
+                  </div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                      <Lock className="w-4 h-4" />
+                      <span>Upgrade to unlock contact info</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-3 mt-5">
@@ -246,7 +383,6 @@ export function LeadResultCard({ lead, isSelected, onToggleSelect, campaignGoal 
 
           {outreach && (
             <div className="space-y-6 mt-4">
-              {/* Gmail connection warning */}
               {!isConnected && (
                 <div className="flex items-center gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600">
                   <AlertCircle className="w-5 h-5 flex-shrink-0" />
@@ -254,102 +390,41 @@ export function LeadResultCard({ lead, isSelected, onToggleSelect, campaignGoal 
                 </div>
               )}
 
-              {/* Test mode notice */}
               <div className="flex items-center gap-3 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-600">
                 <Send className="w-5 h-5 flex-shrink-0" />
                 <p className="text-sm">Test mode: Emails will be sent to <strong>luukalleman@gmail.com</strong></p>
               </div>
 
-              {/* Email Subject */}
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <label className="text-sm font-semibold text-foreground">Email Subject</label>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => copyToClipboard(editedSubject, 'Subject')}
-                    className="h-8 rounded-lg"
-                  >
-                    Copy
-                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => copyToClipboard(editedSubject, 'Subject')} className="h-8 rounded-lg">Copy</Button>
                 </div>
-                <Input
-                  value={editedSubject}
-                  onChange={(e) => setEditedSubject(e.target.value)}
-                  className="bg-muted/30 border-border/50 rounded-xl"
-                  placeholder="Email subject..."
-                />
+                <Input value={editedSubject} onChange={(e) => setEditedSubject(e.target.value)} className="bg-muted/30 border-border/50 rounded-xl" placeholder="Email subject..." />
               </div>
 
-              {/* Email Body */}
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <label className="text-sm font-semibold text-foreground">Email Body</label>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => copyToClipboard(editedBody, 'Email body')}
-                    className="h-8 rounded-lg"
-                  >
-                    Copy
-                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => copyToClipboard(editedBody, 'Email body')} className="h-8 rounded-lg">Copy</Button>
                 </div>
-                <Textarea
-                  value={editedBody}
-                  onChange={(e) => setEditedBody(e.target.value)}
-                  className="min-h-[150px] bg-muted/30 border-border/50 resize-none rounded-xl"
-                  placeholder="Email body..."
-                />
+                <Textarea value={editedBody} onChange={(e) => setEditedBody(e.target.value)} className="min-h-[150px] bg-muted/30 border-border/50 resize-none rounded-xl" placeholder="Email body..." />
               </div>
 
-              {/* LinkedIn Message */}
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <label className="text-sm font-semibold text-foreground">LinkedIn Message</label>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => copyToClipboard(outreach.linkedin_message, 'LinkedIn message')}
-                    className="h-8 rounded-lg"
-                  >
-                    Copy
-                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => copyToClipboard(outreach.linkedin_message, 'LinkedIn message')} className="h-8 rounded-lg">Copy</Button>
                 </div>
-                <Textarea
-                  value={outreach.linkedin_message}
-                  readOnly
-                  className="min-h-[100px] bg-muted/30 border-border/50 resize-none rounded-xl"
-                />
+                <Textarea value={outreach.linkedin_message} readOnly className="min-h-[100px] bg-muted/30 border-border/50 resize-none rounded-xl" />
               </div>
 
-              {/* Action Buttons */}
               <div className="flex gap-3 pt-2">
-                <Button
-                  onClick={handleSendEmail}
-                  disabled={isSending || !isConnected}
-                  className="flex-1 rounded-xl gap-2"
-                >
-                  {isSending ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Sending...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="w-4 h-4" />
-                      Send Email
-                    </>
-                  )}
+                <Button onClick={handleSendEmail} disabled={isSending || !isConnected} className="flex-1 rounded-xl gap-2">
+                  {isSending ? (<><Loader2 className="w-4 h-4 animate-spin" />Sending...</>) : (<><Send className="w-4 h-4" />Send Email</>)}
                 </Button>
-                
                 {lead.linkedin_url && (
-                  <Button
-                    variant="outline"
-                    className="rounded-xl"
-                    onClick={() => window.open(lead.linkedin_url, '_blank')}
-                  >
-                    Open LinkedIn →
-                  </Button>
+                  <Button variant="outline" className="rounded-xl" onClick={() => window.open(lead.linkedin_url, '_blank')}>Open LinkedIn →</Button>
                 )}
               </div>
             </div>
