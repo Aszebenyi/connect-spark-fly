@@ -1,38 +1,120 @@
 
+# UI/UX Polish -- Professional Layout and Spacing
 
-# Remaining Phase 2 Gaps
-
-Most of what you described is already built. After reviewing every file, here are the **3 remaining items** that need fixing:
-
-## 1. Fix Auto-Assignment to Use Junction Table
-
-**Problem**: When searching from a job opening, `saveLeads()` still sets the old `campaign_id` column on the `leads` table instead of inserting into the `lead_campaign_assignments` junction table. This means candidates found via a job opening search aren't properly linked in the many-to-many system.
-
-**Fix**: After inserting leads in `saveLeads()`, if a `campaignId` is provided, also insert rows into `lead_campaign_assignments` for each new lead.
-
-## 2. Shift+Click Range Selection
-
-**Problem**: The bulk selection system has individual checkboxes and "select all," but shift+click to select a range of rows is not implemented.
-
-**Fix**: Track the last-clicked row index. On shift+click, select all rows between the last-clicked index and the current one.
-
-## 3. Certifications "+X more" Overflow
-
-**Problem**: The spec asks for max 3 visible certification badges with a "+X more" tooltip when there are more. Currently all badges are shown.
-
-**Fix**: In the Certifications table cell, only render the first 3 badges. If there are more, show a small "+N more" badge with a title tooltip listing all certifications.
+## Overview
+Tighten spacing, increase density, and improve visual hierarchy across all major pages to give MediLead a polished, professional SaaS feel.
 
 ---
 
-## Technical Details
+## 1. Candidates Table (`src/components/LeadTable.tsx`)
 
-### File: `src/lib/api.ts`
-- In `saveLeads()`, after the leads insert succeeds and `campaignId` is provided, query back the inserted lead IDs and bulk-insert into `lead_campaign_assignments`.
+**Row density**
+- Reduce all cell padding from `p-5` to `p-3` (both `<th>` and `<td>`)
+- Reduce header bar padding from `p-6` to `p-4`
+- Reduce footer padding from `p-6` to `p-4`
 
-### File: `src/components/LeadTable.tsx`
-- Add a `lastClickedIndex` ref to track shift+click range selection.
-- Update `toggleOne` to accept the row index and event, checking `event.shiftKey`.
-- In the Certifications cell, slice to 3 items max and render a "+N more" indicator with a `title` attribute.
+**Column headers**
+- Increase header font from `text-sm` to `text-[13px]` with uppercase tracking (`uppercase tracking-wider`)
 
-No database changes needed -- the junction table and RLS policies are already in place.
+**Column widths**
+- Apply `style={{ width: 'X%' }}` on each `<th>` matching the requested distribution (Candidate 20%, Employer 15%, Location 10%, License 10%, Certifications 15%, Experience 10%, Match Score 8%, Job Opening 10%, Status 7%, Actions 5%)
+- Remove the "Added" column to reclaim space (it adds clutter with minimal value)
 
+**Badges**
+- Increase license/cert badge padding from `px-2 py-0.5` to `px-2.5 py-1`
+- Increase cert badge font from `text-[11px]` to `text-xs`
+- Increase gap between badge groups from `gap-1` to `gap-1.5`
+
+**Vertical alignment**
+- Add `align-middle` to all `<td>` elements via className
+
+---
+
+## 2. Dashboard Page (`src/pages/Dashboard.tsx` + components)
+
+**Global page padding**
+- Reduce main padding from `p-10` to `p-6`
+
+**Page header**
+- Reduce `page-header` margin-bottom from `mb-12` to `mb-6` (in `index.css`)
+
+**Stats cards (`StatCard.tsx` + CSS)**
+- Reduce `.stat-card` padding from `p-7` to `p-5`
+- Reduce value font from `text-5xl` to `text-3xl`
+- Reduce title margin-bottom from `mb-3` to `mb-1`
+- Reduce stats grid bottom margin from `mb-12` to `mb-6`
+- Reduce stats grid gap from `gap-6` to `gap-4`
+
+**Quick Actions**
+- Reduce action card padding (CSS `.action-card`) from `p-8` to `p-5`
+- Reduce visual badge from `visual-badge-lg` (w-20 h-20) to default `visual-badge` (w-16 h-16), reduce icon size, reduce `mb-5` to `mb-3`
+- Reduce heading from `text-xl` to `text-base`
+- Reduce bottom margin from `mb-12` to `mb-6`
+- Reduce grid gap from `gap-6` to `gap-4`
+
+**Recent Candidates preview**
+- Already shows up to 5 candidates on the dashboard; reduce its `mb-12` to `mb-6`
+
+**Onboarding card**
+- Already compact. Minor: reduce step item padding from `p-4` to `p-3`
+
+---
+
+## 3. Find Candidates Page (`src/components/LeadFinder.tsx`)
+
+**Hero section**
+- Reduce `mb-12` to `mb-6`
+- Reduce `mb-8` (blob spacer) to `mb-4`
+- Reduce heading from `text-4xl` to `text-2xl`
+- Reduce subtitle from `text-xl` to `text-base`
+
+**Search box card**
+- Reduce padding from `p-10` to `p-6`
+- Reduce search input padding from `px-6 py-5` to `px-4 py-3`
+- Reduce button height from `h-16` to `h-12`
+- Reduce `mb-10` (card bottom margin) to `mb-6`
+- Make the input `text-base` instead of `text-lg`
+
+**Example buttons**
+- Make them `text-xs` instead of `text-sm`, reduce padding from `px-4 py-2` to `px-3 py-1.5`
+- Reduce spacing between helper text and examples (`mt-4` to `mt-2`, `mb-3` to `mb-2`)
+
+**Error messages**
+- Wrap toast calls with a top-positioned variant (already using toast which appears at top -- no structural change needed)
+
+---
+
+## 4. Job Openings Empty State (`src/pages/Dashboard.tsx`, campaigns tab)
+
+- Replace generic empty state with richer content:
+  - Heading: "No job openings yet"
+  - Subtext: "Job openings help you organize candidates by role. Create your first job opening to get started."
+  - Add 2 ghost/preview example cards showing what a job opening looks like (static, non-interactive, with muted styling)
+  - Make the CTA button larger and more prominent with the `apple-button` class
+
+---
+
+## 5. Global Spacing (`src/index.css`)
+
+- `.page-header` margin-bottom from `mb-12` to `mb-6`
+- `.section-header` margin-bottom from `mb-7` to `mb-4`
+- Reduce `.page-title` from `text-4xl` to `text-3xl`
+- Reduce `.page-subtitle` text from `text-lg` to `text-base`, margin from `mt-2` to `mt-1`
+- Reduce `.stat-card` padding from `p-7` to `p-5`
+- Reduce `.action-card` padding from `p-8` to `p-5`
+- Reduce `.empty-state` padding from `p-16` to `p-10`
+- Reduce `.visual-badge-lg` from `w-20 h-20` to `w-14 h-14`
+
+---
+
+## Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/index.css` | Reduce global spacing tokens for page-header, section-header, stat-card, action-card, empty-state, visual-badge-lg, page-title, page-subtitle |
+| `src/components/LeadTable.tsx` | Reduce cell/header padding, add column widths, remove "Added" column, enlarge badges, add align-middle |
+| `src/components/StatCard.tsx` | Reduce value font size, tighten margins |
+| `src/pages/Dashboard.tsx` | Reduce grid gaps, margins, quick action icon sizes, add richer job openings empty state with preview cards |
+| `src/components/LeadFinder.tsx` | Reduce hero/search box padding, heading sizes, example button sizes |
+| `src/components/OnboardingChecklist.tsx` | Minor step padding reduction |
+| `src/components/EmptyState.tsx` | Reduce default vertical padding |
