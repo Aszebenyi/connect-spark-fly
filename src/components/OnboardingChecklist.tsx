@@ -47,26 +47,26 @@ export function OnboardingChecklist({
   const steps = [
     {
       id: 'campaign',
-      title: 'Create your first campaign',
-      description: 'Set up a campaign to organize your leads and outreach',
+      title: 'Create your first job opening',
+      description: 'Set up a job opening to find and organize candidates',
       completed: progress.hasCampaign,
       icon: Sparkles,
       action: onCreateCampaign,
-      actionLabel: 'Create Campaign',
+      actionLabel: 'Create Opening',
     },
     {
       id: 'leads',
-      title: 'Find your first leads',
-      description: 'Use AI-powered search to discover potential customers',
+      title: 'Find your first candidates',
+      description: 'Use AI-powered search to discover qualified healthcare professionals',
       completed: progress.hasLeads,
       icon: Users,
       action: onNavigateToFinder,
-      actionLabel: 'Find Leads',
+      actionLabel: 'Find Candidates',
     },
     {
       id: 'email',
       title: 'Connect Gmail',
-      description: 'Link your Gmail account to send personalized outreach',
+      description: 'Link your Gmail account to send personalized recruitment outreach',
       completed: progress.hasEmailConnection,
       icon: Mail,
       action: onNavigateToSettings,
@@ -75,11 +75,11 @@ export function OnboardingChecklist({
     {
       id: 'outreach',
       title: 'Send your first outreach',
-      description: 'Reach out to a lead and start building relationships',
+      description: 'Reach out to a candidate and start booking interviews',
       completed: progress.hasSentOutreach,
       icon: Send,
       action: onNavigateToLeads,
-      actionLabel: 'View Leads',
+      actionLabel: 'View Candidates',
     },
   ];
 

@@ -14,9 +14,9 @@ interface LeadFinderProps {
 }
 
 const suggestions = [
-  'Marketing directors at fintech startups in NYC',
-  'CTOs at Series A healthcare companies',
-  'Sales VPs at B2B SaaS with 50-200 employees',
+  'ICU Nurse — Los Angeles, CA — 3+ years, BLS/ACLS certified',
+  'Travel ER Nurse — Phoenix, AZ — 2+ years, compact license',
+  'Physical Therapist — Austin, TX — DPT, outpatient ortho experience',
 ];
 
 export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinderProps) {
@@ -191,12 +191,12 @@ export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinde
           </div>
         </div>
         <h2 className="text-4xl font-bold text-foreground mb-4 tracking-tight">
-          {campaignId ? `Find Leads for "${campaignName}"` : 'Find Your Ideal Leads'}
+          {campaignId ? `Find Candidates for "${campaignName}"` : 'Find Your Next Placement'}
         </h2>
         <p className="text-muted-foreground text-xl max-w-md mx-auto">
           {campaignId 
-            ? 'Add more leads to your campaign'
-            : 'Describe who you\'re looking for and let AI find them'}
+            ? 'Add more candidates to your job opening'
+            : 'Paste a job description or describe who you need'}
         </p>
       </div>
 
@@ -215,7 +215,7 @@ export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinde
               <div className="absolute bottom-0 right-0 w-1.5 h-2 bg-muted-foreground rounded-full rotate-45 origin-top" />
             </div>
             <Input
-              placeholder="VPs of Engineering at SaaS companies in San Francisco..."
+              placeholder="ICU Nurse — Los Angeles, CA — 3+ years ICU experience, BLS/ACLS certified, CA RN license required"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -241,11 +241,11 @@ export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinde
 
           {/* Credits remaining indicator */}
           {!subscriptionLoading && (
-            <p className="text-sm text-muted-foreground mt-4 text-center">
+             <p className="text-sm text-muted-foreground mt-4 text-center">
               {hasCredits ? (
-                <>You have <span className="font-semibold text-foreground">{creditsRemaining}</span> credits remaining. Each search uses up to 10 credits.</>
+                <>You have <span className="font-semibold text-foreground">{creditsRemaining}</span> searches remaining. Each search finds 10-15 qualified candidates.</>
               ) : (
-                <span className="text-destructive font-medium">You have no credits remaining. Upgrade to continue searching.</span>
+                <span className="text-destructive font-medium">You have no searches remaining. Upgrade to continue finding candidates.</span>
               )}
             </p>
           )}
@@ -259,12 +259,12 @@ export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinde
             {isSearching ? (
               <span className="flex items-center gap-3">
                 <RingLoader className="w-5 h-5" />
-                Searching with AI...
+                Finding candidates...
               </span>
             ) : !hasCredits ? (
-              'No Credits - Upgrade Plan'
+              'No Searches Left — Upgrade Plan'
             ) : (
-              'Find Leads →'
+              'Find Candidates →'
             )}
           </Button>
         </div>
@@ -276,7 +276,7 @@ export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinde
           <div className="flex items-center justify-between mb-8">
             <div>
               <h3 className="text-2xl font-bold text-foreground">
-                Found {foundLeads.length} leads
+                Found {foundLeads.length} candidates
               </h3>
               <p className="text-muted-foreground mt-1">
                 {selectedLeads.size} selected for import
@@ -293,7 +293,7 @@ export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinde
                   Saving...
                 </span>
               ) : (
-                `Save ${selectedLeads.size} Leads`
+                `Save ${selectedLeads.size} Candidates`
               )}
             </Button>
           </div>

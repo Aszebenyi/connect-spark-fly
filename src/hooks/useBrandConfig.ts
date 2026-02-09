@@ -12,10 +12,10 @@ export interface BrandConfig {
 }
 
 const DEFAULT_BRAND: Omit<BrandConfig, 'isLoading'> = {
-  appName: 'LeadPulse',
-  tagline: 'AI-Powered Lead Generation',
-  supportEmail: 'support@leadpulse.com',
-  privacyEmail: 'privacy@leadpulse.com',
+  appName: 'MediLead',
+  tagline: 'Fill Healthcare Roles 3x Faster',
+  supportEmail: 'support@medilead.io',
+  privacyEmail: 'privacy@medilead.io',
   termsUrl: '/terms',
   privacyUrl: '/privacy',
   dashboardUrl: '',

@@ -292,7 +292,7 @@ export default function Index() {
           <div className="animate-fade-in">
             <div className="page-header">
               <h1 className="page-title">Dashboard</h1>
-              <p className="page-subtitle">Track your outreach performance and lead pipeline</p>
+              <p className="page-subtitle">Track your candidate pipeline and placement performance</p>
             </div>
 
             {/* Onboarding Checklist */}
@@ -305,10 +305,10 @@ export default function Index() {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-              <StatCard
-                title="Total Leads"
-                value={stats.totalLeads}
-                change={stats.totalLeads > 0 ? 'In database' : 'Start finding leads'}
+                <StatCard
+                  title="Total Candidates"
+                  value={stats.totalLeads}
+                  change={stats.totalLeads > 0 ? 'In database' : 'Start finding candidates'}
                 changeType="positive"
                 visual="users"
                 className="animate-fade-in stagger-1"
@@ -350,8 +350,8 @@ export default function Index() {
                     <div className="visual-badge visual-badge-lg mb-5">
                       <SparkBurst className="w-10 h-10" />
                     </div>
-                    <h3 className="font-semibold text-foreground text-xl mb-2">New Campaign</h3>
-                    <p className="text-muted-foreground">Create campaign with leads</p>
+                    <h3 className="font-semibold text-foreground text-xl mb-2">New Job Opening</h3>
+                    <p className="text-muted-foreground">Create job opening with candidates</p>
                   </div>
                 </button>
                 <button onClick={() => setActiveTab('leads')} className="action-card text-left">
@@ -359,8 +359,8 @@ export default function Index() {
                     <div className="visual-badge visual-badge-lg mb-5">
                       <TargetRings className="w-10 h-10" />
                     </div>
-                    <h3 className="font-semibold text-foreground text-xl mb-2">View Leads</h3>
-                    <p className="text-muted-foreground">{dbLeads.length} in your database</p>
+                    <h3 className="font-semibold text-foreground text-xl mb-2">View Candidates</h3>
+                    <p className="text-muted-foreground">{dbLeads.length} in your pipeline</p>
                   </div>
                 </button>
                 <button onClick={() => setActiveTab('campaigns')} className="action-card text-left">
@@ -368,8 +368,8 @@ export default function Index() {
                     <div className="visual-badge visual-badge-lg mb-5">
                       <DataFlow className="w-10 h-10" />
                     </div>
-                    <h3 className="font-semibold text-foreground text-xl mb-2">Manage Campaigns</h3>
-                    <p className="text-muted-foreground">{campaigns.length} campaigns</p>
+                    <h3 className="font-semibold text-foreground text-xl mb-2">Manage Openings</h3>
+                    <p className="text-muted-foreground">{campaigns.length} job openings</p>
                   </div>
                 </button>
               </div>
@@ -379,7 +379,7 @@ export default function Index() {
             {convertedLeads.length > 0 && (
               <div className="mb-12 animate-fade-in stagger-5">
                 <div className="section-header">
-                  <h2 className="section-title">Recent Leads</h2>
+                  <h2 className="section-title">Recent Candidates</h2>
                   <Button variant="outline" size="sm" onClick={() => setActiveTab('leads')} className="rounded-xl">
                     View All →
                   </Button>
@@ -395,7 +395,7 @@ export default function Index() {
             {campaigns.length > 0 && (
               <div className="animate-fade-in stagger-6">
                 <div className="section-header">
-                  <h2 className="section-title">Campaigns</h2>
+                  <h2 className="section-title">Job Openings</h2>
                   <Button variant="outline" size="sm" onClick={() => setActiveTab('campaigns')} className="rounded-xl">
                     View All →
                   </Button>
@@ -427,12 +427,12 @@ export default function Index() {
                       <div className="absolute inset-0 rounded-full border-2 border-primary/30 animate-ping" />
                     </div>
                   </div>
-                  <h3 className="text-3xl font-bold text-foreground mb-4">Welcome to {appName}</h3>
-                  <p className="text-muted-foreground mb-8 max-w-lg mx-auto text-lg">
-                    Start by creating a campaign to find and organize your leads using AI-powered search.
-                  </p>
+                   <h3 className="text-3xl font-bold text-foreground mb-4">Welcome to {appName}</h3>
+                   <p className="text-muted-foreground mb-8 max-w-lg mx-auto text-lg">
+                     Start by creating a job opening to find qualified healthcare candidates using AI-powered search.
+                   </p>
                   <Button onClick={() => setShowCreateCampaign(true)} size="lg" className="rounded-xl px-8 h-14 text-base">
-                    Create Your First Campaign →
+                    Create Your First Job Opening →
                   </Button>
                 </div>
               </div>
@@ -444,11 +444,11 @@ export default function Index() {
           <div className="animate-fade-in">
             <div className="flex items-center justify-between mb-10">
               <div className="page-header mb-0">
-                <h1 className="page-title">Leads</h1>
+                <h1 className="page-title">Candidates</h1>
                 <p className="page-subtitle">
                   {selectedCampaignId 
-                    ? `Viewing leads from campaign` 
-                    : `${dbLeads.length} leads in your database`}
+                    ? `Viewing candidates from job opening` 
+                    : `${dbLeads.length} candidates in your pipeline`}
                 </p>
               </div>
               <div className="flex items-center gap-3">
@@ -459,7 +459,7 @@ export default function Index() {
                   Export
                 </Button>
                 <Button onClick={() => setShowCreateCampaign(true)} className="rounded-xl">
-                  + New Campaign
+                  + New Job Opening
                 </Button>
               </div>
             </div>
@@ -490,8 +490,8 @@ export default function Index() {
                     ← Back
                   </Button>
                   <div>
-                    <p className="text-sm text-muted-foreground">Adding leads to campaign</p>
-                    <p className="font-semibold text-foreground">{findMoreCampaign.name}</p>
+                     <p className="text-sm text-muted-foreground">Adding candidates to job opening</p>
+                     <p className="font-semibold text-foreground">{findMoreCampaign.name}</p>
                   </div>
                 </div>
                 <LeadFinder 
@@ -510,11 +510,11 @@ export default function Index() {
           <div className="animate-fade-in">
             <div className="flex items-center justify-between mb-10">
               <div className="page-header mb-0">
-                <h1 className="page-title">Campaigns</h1>
-                <p className="page-subtitle">{campaigns.length} campaigns</p>
+                <h1 className="page-title">Job Openings</h1>
+                <p className="page-subtitle">{campaigns.length} job openings</p>
               </div>
               <Button onClick={() => setShowCreateCampaign(true)} className="rounded-xl">
-                + New Campaign
+                + New Job Opening
               </Button>
             </div>
             {campaigns.length > 0 ? (
@@ -536,10 +536,10 @@ export default function Index() {
                   <div className="visual-badge visual-badge-lg mx-auto mb-8">
                     <DataFlow className="w-12 h-12" />
                   </div>
-                  <h3 className="text-2xl font-bold text-foreground mb-3">No campaigns yet</h3>
-                  <p className="text-muted-foreground mb-6">Create a campaign to find and organize leads</p>
-                  <Button onClick={() => setShowCreateCampaign(true)} size="lg" className="rounded-xl">
-                    + Create Campaign
+                   <h3 className="text-2xl font-bold text-foreground mb-3">No job openings yet</h3>
+                   <p className="text-muted-foreground mb-6">Create a job opening to find and organize candidates</p>
+                   <Button onClick={() => setShowCreateCampaign(true)} size="lg" className="rounded-xl">
+                     + Create Job Opening
                   </Button>
                 </div>
               </div>
