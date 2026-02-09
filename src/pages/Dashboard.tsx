@@ -37,6 +37,7 @@ import { useBrandConfig } from '@/hooks/useBrandConfig';
 export default function Index() {
   const { appName } = useBrandConfig();
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<LegacyLead | null>(null);
   const [dbLeads, setDbLeads] = useState<ApiLead[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -303,9 +304,32 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      {/* Mobile header */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-background/80 backdrop-blur-xl border-b border-border flex items-center px-4 gap-3">
+        <button onClick={() => setMobileMenuOpen(true)} className="p-2 rounded-lg hover:bg-muted transition-colors">
+          <svg className="w-5 h-5 text-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <span className="text-sm font-semibold text-foreground">{appName}</span>
+      </div>
+
+      {/* Mobile sidebar overlay */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
+          <div className="relative z-10 h-full w-72">
+            <Sidebar activeTab={activeTab} onTabChange={(tab) => { setActiveTab(tab); setMobileMenuOpen(false); }} />
+          </div>
+        </div>
+      )}
+
+      {/* Desktop sidebar */}
+      <div className="hidden lg:block">
+        <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      </div>
       
-      <main className="ml-72 p-6">
+      <main className="lg:ml-72 p-6 pt-20 lg:pt-6">
         {activeTab === 'dashboard' && (
           <div className="animate-fade-in">
             <div className="page-header">

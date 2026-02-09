@@ -663,6 +663,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_preferences: {
+        Row: {
+          campaign_updates: boolean
+          created_at: string
+          email_digest: boolean
+          id: string
+          lead_alerts: boolean
+          updated_at: string
+          user_id: string
+          weekly_report: boolean
+        }
+        Insert: {
+          campaign_updates?: boolean
+          created_at?: string
+          email_digest?: boolean
+          id?: string
+          lead_alerts?: boolean
+          updated_at?: string
+          user_id: string
+          weekly_report?: boolean
+        }
+        Update: {
+          campaign_updates?: boolean
+          created_at?: string
+          email_digest?: boolean
+          id?: string
+          lead_alerts?: boolean
+          updated_at?: string
+          user_id?: string
+          weekly_report?: boolean
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null

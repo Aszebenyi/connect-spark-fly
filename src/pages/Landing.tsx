@@ -241,9 +241,9 @@ export default function Landing() {
     { visual: MagnetPull, title: "AI-Powered Candidate Search", description: "Describe who you're looking for in plain English. 'ICU nurses in California with 3+ years experience.' Our AI understands licensing, certifications, and healthcare context." },
     { visual: CircuitLines, title: "Instant Profile Enrichment", description: "Every candidate is enriched with verified email, phone number, LinkedIn profile, and license verification—automatically in seconds." },
     { visual: DataFlow, title: "Smart Job Openings", description: "Create job openings for each role you're filling. Track which candidates you've contacted, who responded, and who's interview-ready." },
-    { visual: StackedBars, title: "Personalized Email Outreach", description: "AI reads each candidate's LinkedIn profile, skills, and career history — then writes a unique recruitment email. Send it via Gmail without leaving MediLead." },
+    { visual: StackedBars, title: "Personalized Email Outreach", description: `AI reads each candidate's LinkedIn profile, skills, and career history — then writes a unique recruitment email. Send it via Gmail without leaving ${appName}.` },
     { visual: TargetRings, title: "License Verification", description: "Every candidate shows current license status, certifications (BLS, ACLS, etc.), and years of experience. No manual verification needed." },
-    { visual: SparkBurst, title: "Complete Workflow", description: "Find candidates, verify credentials, save to job openings, and send personalized emails—all without leaving MediLead." },
+    { visual: SparkBurst, title: "Complete Workflow", description: `Find candidates, verify credentials, save to job openings, and send personalized emails—all without leaving ${appName}.` },
   ];
   
   const steps = [
@@ -384,7 +384,7 @@ export default function Landing() {
             transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed"
           >
-            Describe the role you need to fill. MediLead finds qualified nurses, verifies credentials, and helps you reach the right candidates—fast.
+            Describe the role you need to fill. {appName} finds qualified nurses, verifies credentials, and helps you reach the right candidates—fast.
           </motion.p>
           
           <motion.div
@@ -554,7 +554,7 @@ export default function Landing() {
             <span className="gradient-text">3x faster?</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-10">
-            Join hundreds of healthcare recruiters using MediLead to source, qualify, and reach qualified candidates in minutes.
+            Join hundreds of healthcare recruiters using {appName} to source, qualify, and reach qualified candidates in minutes.
           </p>
           <p className="text-sm text-muted-foreground/60 mt-2">
             First 5 candidates free. No credit card required.
