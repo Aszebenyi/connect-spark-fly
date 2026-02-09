@@ -238,25 +238,25 @@ export default function Landing() {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
   
   const features = [
-    { visual: MagnetPull, title: "AI-Powered Candidate Search", description: "Describe the role in plain language. MediLead finds nurses with the right certifications, experience, and location." },
-    { visual: CircuitLines, title: "Instant Profile Enrichment", description: "Get verified email addresses and phone numbers for every candidate — instantly." },
-    { visual: DataFlow, title: "Smart Job Openings", description: "Organize candidates by job opening. Track who you've contacted, who responded, and where every candidate stands." },
+    { visual: MagnetPull, title: "AI-Powered Candidate Search", description: "Describe who you're looking for in plain English. 'ICU nurses in California with 3+ years experience.' Our AI understands licensing, certifications, and healthcare context." },
+    { visual: CircuitLines, title: "Instant Profile Enrichment", description: "Every candidate is enriched with verified email, phone number, LinkedIn profile, and license verification—automatically in seconds." },
+    { visual: DataFlow, title: "Smart Job Openings", description: "Create job openings for each role you're filling. Track which candidates you've contacted, who responded, and who's interview-ready." },
     { visual: StackedBars, title: "Personalized Email Outreach", description: "AI reads each candidate's LinkedIn profile, skills, and career history — then writes a unique recruitment email. Send it via Gmail without leaving MediLead." },
-    { visual: TargetRings, title: "License Verification", description: "AI verifies nursing licenses, certifications, and credentials automatically so you only see qualified candidates." },
-    { visual: SparkBurst, title: "Complete Workflow", description: "Search, enrich, personalize, send, and track responses — all without leaving MediLead. No spreadsheets, no copy-pasting." },
+    { visual: TargetRings, title: "License Verification", description: "Every candidate shows current license status, certifications (BLS, ACLS, etc.), and years of experience. No manual verification needed." },
+    { visual: SparkBurst, title: "Complete Workflow", description: "Find candidates, verify credentials, save to job openings, and send personalized emails—all without leaving MediLead." },
   ];
   
   const steps = [
-    { title: "Describe Who You Need", description: "Type the role, location, and requirements in plain language. MediLead understands what you're looking for." },
-    { title: "AI Searches LinkedIn", description: "MediLead automatically searches LinkedIn, finds matching profiles, and ranks the best candidates for your role." },
-    { title: "Get Verified Contact Info", description: "Instantly get verified email addresses and phone numbers for every qualified candidate." },
-    { title: "Send Personalized Emails", description: "AI writes a unique email for each candidate based on their real profile. Send via Gmail and track opens and replies — all inside MediLead." },
+    { title: "Describe Who You Need", description: "Use natural language to describe the role. 'Travel ICU nurse, 13-week contract, Phoenix, BLS/ACLS required.' Our AI understands healthcare terminology and requirements." },
+    { title: "AI Searches LinkedIn", description: "Our technology searches across millions of healthcare professionals to find candidates who match your exact requirements—location, license, certifications, and experience." },
+    { title: "Get Verified Contact Info", description: "Each candidate is automatically enriched with email, phone, license verification, and current employment status. 98% contact accuracy guaranteed." },
+    { title: "Send Personalized Emails", description: "Generate personalized outreach with AI, or write your own. Send directly from the platform using your Gmail account. Track opens and responses." },
   ];
   
   const pricing = [
-    { name: "Starter", price: "$299", leads: "100 searches/mo", features: ["~1,000-1,500 qualified candidates", "AI-powered candidate search", "LinkedIn enrichment", "Personalized outreach emails", "Perfect for: Solo recruiters"], description: "Perfect for solo recruiters and new agencies" },
-    { name: "Growth", price: "$599", leads: "300 searches/mo", popular: true, features: ["~3,000-4,500 qualified candidates", "Everything in Starter", "Advanced filtering", "Job opening management", "Analytics dashboard", "Perfect for: Teams of 2-5"], description: "For growing recruiting teams" },
-    { name: "Agency", price: "$999", leads: "600 searches/mo", features: ["~6,000-9,000 qualified candidates", "Everything in Growth", "Unlimited job openings", "Team collaboration", "Custom integrations", "Perfect for: 5-20 recruiters"], description: "For established agencies" },
+    { name: "Starter", price: "$299", leads: "100 searches/mo", features: ["~1,000-1,500 qualified candidates", "AI-powered candidate search", "Gmail integration", "Email outreach", "Job opening management", "Basic analytics"], description: "Perfect for solo recruiters and new agencies" },
+    { name: "Growth", price: "$599", leads: "300 searches/mo", popular: true, features: ["~3,000-4,500 qualified candidates", "Everything in Starter, plus:", "Priority enrichment", "Advanced candidate filters", "Team collaboration", "Email templates", "Campaign analytics"], description: "For growing recruiting teams" },
+    { name: "Agency", price: "$999", leads: "600 searches/mo", features: ["~6,000-9,000 qualified candidates", "Everything in Growth, plus:", "Dedicated support", "Custom integrations", "Unlimited job openings", "Advanced reporting"], description: "For established agencies" },
   ];
   
   return (
@@ -384,7 +384,7 @@ export default function Landing() {
             transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed"
           >
-            Stop spending hours hunting for nurses. Describe the role you need to fill. MediLead finds qualified nurses, verifies credentials, and helps you reach the right candidates—fast.
+            Describe the role you're hiring for. Our AI finds qualified nurses, enriches their profiles, and helps you reach them—all in one platform.
           </motion.p>
           
           <motion.div
@@ -429,10 +429,10 @@ export default function Landing() {
       <section className="py-24 px-6">
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16">
-            <StatItem value="10-15" label="Candidates per Search" index={0} />
-            <StatItem value="2min" label="Per Search" index={1} />
-            <StatItem value="3x" label="Faster Than Manual" index={2} />
-            <StatItem value="70%+" label="Contact Info Rate" index={3} />
+            <StatItem value="10K+" label="Candidates Found" index={0} />
+            <StatItem value="98%" label="Contact Accuracy" index={1} />
+            <StatItem value="3x" label="Faster Placements" index={2} />
+            <StatItem value="2min" label="Avg. Search Time" index={3} />
           </div>
         </div>
       </section>
@@ -445,10 +445,10 @@ export default function Landing() {
               Built for Healthcare Recruiters
             </span>
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-              Here's How MediLead Helps
+              Everything you need to fill roles faster
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Find nurses with the exact certifications, experience, and location you need — automatically.
+              Powerful features designed to help you source, qualify, and reach qualified healthcare candidates.
             </p>
           </AnimatedSection>
           
@@ -480,10 +480,10 @@ export default function Landing() {
               Simple Process
             </span>
             <h2 className="text-4xl md:text-5xl font-bold text-neutral-900 mb-6">
-              From Job Req to Contact Info in 3 Steps
+              From Job Req to Placement in 4 Steps
             </h2>
             <p className="text-xl text-neutral-500 max-w-2xl mx-auto">
-              Paste a job description, get qualified candidates with contact info in minutes.
+              Find, qualify, and contact candidates in minutes, not hours.
             </p>
           </AnimatedSection>
           
@@ -527,7 +527,7 @@ export default function Landing() {
               Simple, Transparent Pricing
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Every search gives you 10-15 qualified candidates with contact info. That's ~$1-2 per candidate vs. $3-5 from lead providers.
+              Every search gives you 10-15 qualified candidates with verified contact info. Start free for 7 days.
             </p>
           </AnimatedSection>
           
@@ -554,7 +554,10 @@ export default function Landing() {
             <span className="gradient-text">3x faster?</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-10">
-            Join healthcare recruiters who fill roles 3x faster with AI that finds candidates and writes personalized outreach from their real profiles.
+            Join hundreds of healthcare recruiters using MediLead to source, qualify, and reach qualified candidates in minutes.
+          </p>
+          <p className="text-sm text-muted-foreground/60 mt-2">
+            7-day free trial. No credit card required. Cancel anytime.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button onClick={() => navigate('/auth')} size="lg" className="apple-button h-14 px-10 text-lg gap-2">
