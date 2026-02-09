@@ -137,18 +137,91 @@ export function SettingsPage() {
   const creditsRemaining = Math.max(0, creditsLimit - creditsUsed);
   const creditsPercentage = Math.min((creditsUsed / creditsLimit) * 100, 100);
 
-  const handleSaveProfile = () => {
-    toast({
-      title: 'Profile saved',
-      description: 'Your profile has been updated successfully.',
-    });
+  // Load profile from DB on mount
+  useEffect(() => {
+    if (!user) return;
+    const loadProfile = async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('full_name, company')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (data) {
+        setProfile(prev => ({
+          ...prev,
+          name: data.full_name || prev.name,
+          company: data.company || '',
+        }));
+      }
+    };
+    loadProfile();
+  }, [user]);
+
+  // Load notification preferences on mount
+  useEffect(() => {
+    if (!user) return;
+    const loadPrefs = async () => {
+      const { data } = await supabase
+        .from('user_preferences')
+        .select('email_digest, lead_alerts, campaign_updates, weekly_report')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (data) {
+        setNotifications({
+          emailDigest: data.email_digest,
+          leadAlerts: data.lead_alerts,
+          campaignUpdates: data.campaign_updates,
+          weeklyReport: data.weekly_report,
+        });
+      }
+    };
+    loadPrefs();
+  }, [user]);
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    try {
+      // Update auth metadata
+      await supabase.auth.updateUser({
+        data: { full_name: profile.name },
+      });
+      // Upsert profile
+      await supabase
+        .from('profiles')
+        .upsert({
+          user_id: user.id,
+          full_name: profile.name,
+          company: profile.company,
+          email: user.email,
+        }, { onConflict: 'user_id' });
+      toast({
+        title: 'Profile saved',
+        description: 'Your profile has been updated successfully.',
+      });
+    } catch {
+      toast({ title: 'Error saving profile', variant: 'destructive' });
+    }
   };
 
-  const handleSaveNotifications = () => {
-    toast({
-      title: 'Preferences saved',
-      description: 'Your notification preferences have been updated.',
-    });
+  const handleSaveNotifications = async () => {
+    if (!user) return;
+    try {
+      await supabase
+        .from('user_preferences')
+        .upsert({
+          user_id: user.id,
+          email_digest: notifications.emailDigest,
+          lead_alerts: notifications.leadAlerts,
+          campaign_updates: notifications.campaignUpdates,
+          weekly_report: notifications.weeklyReport,
+        }, { onConflict: 'user_id' });
+      toast({
+        title: 'Preferences saved',
+        description: 'Your notification preferences have been updated.',
+      });
+    } catch {
+      toast({ title: 'Error saving preferences', variant: 'destructive' });
+    }
   };
 
   const handleManageBilling = async () => {
