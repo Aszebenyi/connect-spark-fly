@@ -384,7 +384,7 @@ export default function Landing() {
             transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed"
           >
-            Describe the role you're hiring for. Our AI finds qualified nurses, enriches their profiles, and helps you reach them—all in one platform.
+            Describe the role you need to fill. MediLead finds qualified nurses, verifies credentials, and helps you reach the right candidates—fast.
           </motion.p>
           
           <motion.div
