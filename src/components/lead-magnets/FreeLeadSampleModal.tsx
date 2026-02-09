@@ -443,7 +443,7 @@ export function FreeLeadSampleModal({ open, onOpenChange }: FreeLeadSampleModalP
                     onClick={handleSignUp} 
                     className="w-full h-11 rounded-lg apple-button text-sm"
                   >
-                    Start Free Trial
+                    Get Started
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </motion.div>
@@ -471,7 +471,7 @@ export function FreeLeadSampleModal({ open, onOpenChange }: FreeLeadSampleModalP
                     You've used your free candidate searches
                   </h3>
                   <p className="text-muted-foreground text-sm max-w-sm mx-auto">
-                    {error || "Start your free trial to unlock unlimited candidate searches with full contact info."}
+                    {error || "Sign up to unlock unlimited candidate searches with full contact info."}
                   </p>
                 </div>
 
@@ -481,7 +481,7 @@ export function FreeLeadSampleModal({ open, onOpenChange }: FreeLeadSampleModalP
                       <Sparkles className="w-5 h-5 text-primary" />
                     </div>
                     <div className="min-w-0">
-                      <h4 className="font-semibold text-foreground text-sm">Start Free Trial</h4>
+                      <h4 className="font-semibold text-foreground text-sm">Get Started</h4>
                       <p className="text-xs text-muted-foreground">10-15 candidates per search + full contact info</p>
                     </div>
                   </div>
@@ -490,7 +490,7 @@ export function FreeLeadSampleModal({ open, onOpenChange }: FreeLeadSampleModalP
                     onClick={handleSignUp} 
                     className="w-full h-12 rounded-lg apple-button"
                   >
-                    Start Free Trial
+                    Get Started
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </div>
