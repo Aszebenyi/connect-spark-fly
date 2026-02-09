@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
 import { Lead } from '@/types/lead';
 import { Campaign } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
@@ -237,14 +237,28 @@ export function LeadTable({
     }
   };
 
-  const toggleOne = (id: string) => {
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
+  const lastClickedIndex = useRef<number | null>(null);
+
+  const toggleOne = useCallback((id: string, index: number, event?: React.MouseEvent) => {
+    if (event?.shiftKey && lastClickedIndex.current !== null) {
+      const start = Math.min(lastClickedIndex.current, index);
+      const end = Math.max(lastClickedIndex.current, index);
+      const rangeIds = filteredLeads.slice(start, end + 1).map(l => l.id);
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        rangeIds.forEach(rid => next.add(rid));
+        return next;
+      });
+    } else {
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        return next;
+      });
+    }
+    lastClickedIndex.current = index;
+  }, [filteredLeads]);
 
   const clearSelection = () => setSelectedIds(new Set());
 
@@ -509,10 +523,10 @@ export function LeadTable({
                     style={{ animationDelay: `${index * 0.03}s` }}
                     onClick={() => onLeadClick(lead)}
                   >
-                    <td className="p-5 w-12" onClick={(e) => e.stopPropagation()}>
+                    <td className="p-5 w-12" onClick={(e) => { e.stopPropagation(); toggleOne(lead.id, index, e as unknown as React.MouseEvent); }}>
                       <Checkbox
                         checked={selectedIds.has(lead.id)}
-                        onCheckedChange={() => toggleOne(lead.id)}
+                        onCheckedChange={() => toggleOne(lead.id, index)}
                         aria-label={`Select ${lead.name}`}
                       />
                     </td>
@@ -572,16 +586,26 @@ export function LeadTable({
                     <td className="p-5">
                       {(() => {
                         const certs = parseBadgeList(getProfileField(lead, 'certifications'));
-                        return certs.length > 0 ? (
+                        if (certs.length === 0) return <span className="text-muted-foreground text-sm">-</span>;
+                        const visible = certs.slice(0, 3);
+                        const remaining = certs.length - 3;
+                        return (
                           <div className="flex flex-wrap gap-1">
-                            {certs.map((cert) => (
+                            {visible.map((cert) => (
                               <Badge key={cert} variant="secondary" className="text-[11px] font-semibold px-2 py-0.5 rounded-full">
                                 {cert}
                               </Badge>
                             ))}
+                            {remaining > 0 && (
+                              <Badge
+                                variant="outline"
+                                className="text-[11px] px-2 py-0.5 rounded-full cursor-default"
+                                title={certs.join(', ')}
+                              >
+                                +{remaining} more
+                              </Badge>
+                            )}
                           </div>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">-</span>
                         );
                       })()}
                     </td>
