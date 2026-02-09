@@ -17,6 +17,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import Explainer from "./pages/Explainer";
 
+// MediLead v2.0 - Blue theme + Product Identity
 const queryClient = new QueryClient();
 
 const App = () => (
