@@ -1,120 +1,105 @@
 
-# UI/UX Polish -- Professional Layout and Spacing
+# Remaining Work -- Project Completion Checklist
 
 ## Overview
-Tighten spacing, increase density, and improve visual hierarchy across all major pages to give MediLead a polished, professional SaaS feel.
+Five functional gaps remain after the UI polish and CORS fixes. These are ordered by impact, from most critical to nice-to-have.
 
 ---
 
-## 1. Candidates Table (`src/components/LeadTable.tsx`)
+## 1. Profile & Notification Persistence (High Priority)
 
-**Row density**
-- Reduce all cell padding from `p-5` to `p-3` (both `<th>` and `<td>`)
-- Reduce header bar padding from `p-6` to `p-4`
-- Reduce footer padding from `p-6` to `p-4`
+**Problem**: The Settings page profile form (`handleSaveProfile`) and notification toggles (`handleSaveNotifications`) only show a toast -- they don't persist anything to the database.
 
-**Column headers**
-- Increase header font from `text-sm` to `text-[13px]` with uppercase tracking (`uppercase tracking-wider`)
+**Solution**:
+- Create a `user_preferences` table with columns: `user_id`, `full_name`, `company`, `email_digest`, `lead_alerts`, `campaign_updates`, `weekly_report`
+- Update `handleSaveProfile` to upsert name/company into `profiles` (already exists) and update `auth.user_metadata` via `supabase.auth.updateUser()`
+- Update `handleSaveNotifications` to upsert into `user_preferences`
+- Load saved preferences on mount via `useEffect`
 
-**Column widths**
-- Apply `style={{ width: 'X%' }}` on each `<th>` matching the requested distribution (Candidate 20%, Employer 15%, Location 10%, License 10%, Certifications 15%, Experience 10%, Match Score 8%, Job Opening 10%, Status 7%, Actions 5%)
-- Remove the "Added" column to reclaim space (it adds clutter with minimal value)
-
-**Badges**
-- Increase license/cert badge padding from `px-2 py-0.5` to `px-2.5 py-1`
-- Increase cert badge font from `text-[11px]` to `text-xs`
-- Increase gap between badge groups from `gap-1` to `gap-1.5`
-
-**Vertical alignment**
-- Add `align-middle` to all `<td>` elements via className
+**Files**:
+- New migration (create `user_preferences` table with RLS)
+- `src/components/SettingsPage.tsx` (wire up save/load)
 
 ---
 
-## 2. Dashboard Page (`src/pages/Dashboard.tsx` + components)
+## 2. Hardcoded "MediLead" Branding (Medium Priority)
 
-**Global page padding**
-- Reduce main padding from `p-10` to `p-6`
+**Problem**: The Landing page has 3 hardcoded "MediLead" references in feature descriptions and CTA text, even though `appName` is already available from `useBrandConfig()`.
 
-**Page header**
-- Reduce `page-header` margin-bottom from `mb-12` to `mb-6` (in `index.css`)
+**Locations**:
+- Line 244: "...without leaving MediLead."
+- Line 246: "...without leaving MediLead."
+- Line 387: "MediLead finds qualified nurses..."
+- Line 557: "...using MediLead to source..."
 
-**Stats cards (`StatCard.tsx` + CSS)**
-- Reduce `.stat-card` padding from `p-7` to `p-5`
-- Reduce value font from `text-5xl` to `text-3xl`
-- Reduce title margin-bottom from `mb-3` to `mb-1`
-- Reduce stats grid bottom margin from `mb-12` to `mb-6`
-- Reduce stats grid gap from `gap-6` to `gap-4`
+**Solution**: Replace all 4 instances with template literals using `appName`.
 
-**Quick Actions**
-- Reduce action card padding (CSS `.action-card`) from `p-8` to `p-5`
-- Reduce visual badge from `visual-badge-lg` (w-20 h-20) to default `visual-badge` (w-16 h-16), reduce icon size, reduce `mb-5` to `mb-3`
-- Reduce heading from `text-xl` to `text-base`
-- Reduce bottom margin from `mb-12` to `mb-6`
-- Reduce grid gap from `gap-6` to `gap-4`
-
-**Recent Candidates preview**
-- Already shows up to 5 candidates on the dashboard; reduce its `mb-12` to `mb-6`
-
-**Onboarding card**
-- Already compact. Minor: reduce step item padding from `p-4` to `p-3`
+**Files**:
+- `src/pages/Landing.tsx`
 
 ---
 
-## 3. Find Candidates Page (`src/components/LeadFinder.tsx`)
+## 3. Mobile Responsive Layout (Medium Priority)
 
-**Hero section**
-- Reduce `mb-12` to `mb-6`
-- Reduce `mb-8` (blob spacer) to `mb-4`
-- Reduce heading from `text-4xl` to `text-2xl`
-- Reduce subtitle from `text-xl` to `text-base`
+**Problem**: The dashboard uses a fixed `ml-72` sidebar with no mobile breakpoints. On screens under 768px, the sidebar overlaps or pushes content off-screen.
 
-**Search box card**
-- Reduce padding from `p-10` to `p-6`
-- Reduce search input padding from `px-6 py-5` to `px-4 py-3`
-- Reduce button height from `h-16` to `h-12`
-- Reduce `mb-10` (card bottom margin) to `mb-6`
-- Make the input `text-base` instead of `text-lg`
+**Solution**:
+- Make the sidebar collapsible on mobile with a hamburger toggle
+- Add `lg:ml-72 ml-0` to the main content area
+- Add a mobile top bar with app name and hamburger icon
+- Use a backdrop overlay when sidebar is open on mobile
 
-**Example buttons**
-- Make them `text-xs` instead of `text-sm`, reduce padding from `px-4 py-2` to `px-3 py-1.5`
-- Reduce spacing between helper text and examples (`mt-4` to `mt-2`, `mb-3` to `mb-2`)
-
-**Error messages**
-- Wrap toast calls with a top-positioned variant (already using toast which appears at top -- no structural change needed)
+**Files**:
+- `src/components/Sidebar.tsx` (add mobile toggle, overlay)
+- `src/pages/Dashboard.tsx` (conditional margin, mobile header)
 
 ---
 
-## 4. Job Openings Empty State (`src/pages/Dashboard.tsx`, campaigns tab)
+## 4. Candidate Table Filtering/Sorting/Search (Medium Priority)
 
-- Replace generic empty state with richer content:
-  - Heading: "No job openings yet"
-  - Subtext: "Job openings help you organize candidates by role. Create your first job opening to get started."
-  - Add 2 ghost/preview example cards showing what a job opening looks like (static, non-interactive, with muted styling)
-  - Make the CTA button larger and more prominent with the `apple-button` class
+**Problem**: Once candidates are in the table, there's no way to filter, sort, or search them without scrolling.
 
----
+**Solution**:
+- Add a search input above the table that filters by name, employer, or location
+- Add clickable column headers for sorting (Name, Match Score, Experience, Status)
+- Add a status filter dropdown (All, New, Contacted, Replied, etc.)
+- All filtering is client-side on the already-loaded data
 
-## 5. Global Spacing (`src/index.css`)
-
-- `.page-header` margin-bottom from `mb-12` to `mb-6`
-- `.section-header` margin-bottom from `mb-7` to `mb-4`
-- Reduce `.page-title` from `text-4xl` to `text-3xl`
-- Reduce `.page-subtitle` text from `text-lg` to `text-base`, margin from `mt-2` to `mt-1`
-- Reduce `.stat-card` padding from `p-7` to `p-5`
-- Reduce `.action-card` padding from `p-8` to `p-5`
-- Reduce `.empty-state` padding from `p-16` to `p-10`
-- Reduce `.visual-badge-lg` from `w-20 h-20` to `w-14 h-14`
+**Files**:
+- `src/components/LeadTable.tsx` (add filter bar, sort logic, search state)
 
 ---
 
-## Files to Modify
+## 5. Delayed Email Queue Processor (Low Priority)
 
-| File | Changes |
-|------|---------|
-| `src/index.css` | Reduce global spacing tokens for page-header, section-header, stat-card, action-card, empty-state, visual-badge-lg, page-title, page-subtitle |
-| `src/components/LeadTable.tsx` | Reduce cell/header padding, add column widths, remove "Added" column, enlarge badges, add align-middle |
-| `src/components/StatCard.tsx` | Reduce value font size, tighten margins |
-| `src/pages/Dashboard.tsx` | Reduce grid gaps, margins, quick action icon sizes, add richer job openings empty state with preview cards |
-| `src/components/LeadFinder.tsx` | Reduce hero/search box padding, heading sizes, example button sizes |
-| `src/components/OnboardingChecklist.tsx` | Minor step padding reduction |
-| `src/components/EmptyState.tsx` | Reduce default vertical padding |
+**Problem**: Email sequences with `delay_minutes > 0` are stored in `email_sequences` but there's no cron or processor that actually sends them after the delay.
+
+**Solution**:
+- Create a `process-email-queue` edge function (file already exists but may need review)
+- Set up a pg_cron job or use Supabase's scheduled functions to call it periodically
+- The processor checks for pending emails where `created_at + delay_minutes < now()` and sends them
+
+**Files**:
+- `supabase/functions/process-email-queue/index.ts` (review/update)
+- New migration for pg_cron schedule (if needed)
+
+---
+
+## Recommended Order
+
+| Step | Task | Effort |
+|------|------|--------|
+| 1 | Fix hardcoded branding (quick win) | Small |
+| 2 | Profile and notification persistence | Medium |
+| 3 | Mobile responsive layout | Medium |
+| 4 | Table filtering/sorting/search | Medium |
+| 5 | Delayed email queue | Medium |
+
+---
+
+## Technical Notes
+
+- The `profiles` table already exists and has `user_id` -- profile save can update `full_name` via `supabase.auth.updateUser()` and upsert company into profiles
+- The `useBrandConfig` hook is already imported in `Landing.tsx` and `appName` is destructured -- the branding fix is just string interpolation
+- For mobile layout, the Sidebar component is 217 lines with a fixed `w-72` -- it needs a `translate-x` toggle controlled by parent state
+- Table filtering can reuse the existing `displayLeads` computed array with an additional `.filter()` step
