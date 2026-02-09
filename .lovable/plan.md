@@ -1,37 +1,62 @@
 
+# Update Candidates Table
 
-## Fix: Ensure "No Credits" Shows a Friendly Message Instead of an Error
+## Changes Overview
 
-### Problem
-When the edge function returns a 402 (NO_CREDITS), the Supabase JS client treats it as an error. The `searchLeadsWithExa` function tries to parse the error body to extract the `"NO_CREDITS"` string, but this parsing can fail depending on the error format, resulting in a generic "Edge function returned 402" error message instead of the friendly "No credits remaining - upgrade" toast.
+Updates to `src/components/LeadTable.tsx` to improve column layout, data display, and sorting.
 
-### Root Cause
-The `error.context?.body` parsing in `src/lib/api.ts` (line 75) may not reliably extract the JSON body from a 402 response. If parsing fails, the fallback `error.message` is a generic string that doesn't match `"NO_CREDITS"`.
+## What Changes
 
-### Solution
+### 1. Fix Search Placeholder
+- "Search leads..." becomes "Search candidates..."
 
-#### 1. Make the API layer more robust at parsing 402 errors (`src/lib/api.ts`)
-- Try multiple paths to extract the error response: `error.context?.body`, `error.message`, and check if the error itself contains structured data
-- Also check for HTTP status code 402 explicitly
+### 2. Add Location Column (after Employer)
+- Display `lead.location` from the lead record
+- Fallback: check `profile_data.location` or `profile_data.linkedin?.location`
+- Show "-" if unavailable
 
-#### 2. Also catch it at the UI level as a fallback (`src/components/LeadFinder.tsx`)  
-- In the generic error handler, check if the error message contains "402" or "credits" and show the upgrade message instead of a generic error
+### 3. Add Experience Column (after Certifications, before Match Score)
+- Extract from `profile_data.years_experience` or `profile_data.linkedin?.totalExperienceYears`
+- Parse years from `scoring_notes` as a fallback (e.g., "3+ years" or "15 years")
+- Format: "5 yrs ICU" (combining years + first specialty) or "3 yrs" (if no specialty)
+- Show "-" if unavailable
 
-#### 3. Prevent the search from even firing when credits are exhausted
-- The button already disables when `!hasCredits`, but the subscription data might be stale
-- Call `refreshSubscription()` before searching to ensure credit data is current
+### 4. Fix Missing Employer Data
+- Currently shows "-" when `lead.company` is null (3 of 10 leads have null company)
+- Add fallback chain: `lead.company` -> `profile_data.company` -> `profile_data.linkedin?.company` -> `profile_data.linkedin?.latestCompany`
+- This pulls from enrichment data when the initial parse missed it
 
-### Technical Details
+### 5. Default Sort by Match Score (Highest First)
+- Already implemented (`sortField` defaults to `'match_score'`, direction `'desc'`)
+- No change needed here
 
-**File: `src/lib/api.ts`** (lines 71-79)
-- Improve error body parsing to handle multiple formats
-- Add explicit check: if error message includes "402", attempt to parse body as JSON and look for `error` field
-- Return `"NO_CREDITS"` as the error string when a 402 is detected even if body parsing fails
+### 6. Add Sortable Columns
+- **Match Score**: Already sortable (no change)
+- **Experience**: Add sort by `years_experience` from profile_data
+- **Added Date**: Add sort by `createdAt` field
+- All sortable headers get the clickable arrow indicator
 
-**File: `src/components/LeadFinder.tsx`**  
-- In the `catch` block (~line 100), add a check for "402" or "credit" in the error message to show upgrade-specific toast
-- Before searching, call `refreshSubscription()` to get fresh credit data, so the `!hasCredits` guard catches it before the API call
+### 7. Show Specialty in Subtitle
+- In the Name/Title cell, append specialty from `profile_data.specialty`
+- Format: "Registered Nurse . ICU Specialty" or "ICU CRITICAL CARE RN . Neuro, Surgical Specialty"
+- Only show if specialty exists and differs from the title
 
-### Changes Summary
-- `src/lib/api.ts` - More robust 402/NO_CREDITS error parsing (3-5 lines changed)
-- `src/components/LeadFinder.tsx` - Add pre-search credit refresh + fallback 402 handling (~5 lines added)
+## Updated Column Order
+
+```text
+Candidate | Employer | Location | License | Certifications | Experience | Match Score | Status | Actions
+```
+
+- `colSpan` in empty states updated from 7 to 9
+
+## Technical Details
+
+All changes are in **one file**: `src/components/LeadTable.tsx`
+
+New helper functions:
+- `getEmployer(lead)` -- fallback chain for company name
+- `getLocation(lead)` -- fallback chain for location
+- `getExperienceLabel(lead)` -- formats "X yrs Specialty" string
+- `getExperienceYears(lead)` -- numeric value for sorting
+
+Sorting logic update: add cases for `experience` (numeric from profile_data) and `createdAt` (date comparison).
