@@ -238,25 +238,25 @@ export default function Landing() {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
   
   const features = [
-    { visual: MagnetPull, title: "AI-Powered Discovery", description: "Find your ideal prospects with natural language search. Our AI understands exactly who you're looking for." },
-    { visual: CircuitLines, title: "Instant Enrichment", description: "Get complete profiles with verified emails, company data, and social insights in seconds." },
-    { visual: TargetRings, title: "Smart Campaigns", description: "Organize leads into campaigns, track engagement, and measure what matters." },
-    { visual: StackedBars, title: "Personalized Outreach", description: "Generate compelling, personalized messages that resonate with each prospect." },
-    { visual: DataFlow, title: "Data Quality", description: "Every lead is verified and enriched with the most accurate, up-to-date information." },
-    { visual: SparkBurst, title: "Seamless Workflow", description: "From discovery to outreach, everything works together beautifully." },
+    { visual: MagnetPull, title: "AI-Powered Search", description: "Find nurses with the exact certifications, experience, and location you need — automatically." },
+    { visual: CircuitLines, title: "Verified Qualifications", description: "AI checks licenses, certifications, and experience so you only see qualified candidates." },
+    { visual: TargetRings, title: "Contact Info Included", description: "Get email and phone numbers for every candidate — ready to reach out today." },
+    { visual: StackedBars, title: "10-15 Candidates in Minutes", description: "What used to take 4 hours now takes 2 minutes. Fill your pipeline fast." },
+    { visual: DataFlow, title: "All Healthcare Specialties", description: "ICU nurses, ER nurses, travel nurses, therapists, surgical techs — we cover them all." },
+    { visual: SparkBurst, title: "Personalized Outreach", description: "Generate compelling, personalized recruitment messages that get responses." },
   ];
   
   const steps = [
-    { title: "Describe Your Ideal Customer", description: "Use natural language to describe who you want to reach. Our AI understands context, industry terms, and nuances." },
-    { title: "AI Finds Perfect Matches", description: "Our technology searches across millions of profiles to find people who match your criteria exactly." },
-    { title: "Enrich & Verify", description: "Each lead is automatically enriched with verified contact information, company data, and social profiles." },
-    { title: "Personalize & Reach Out", description: "Generate tailored outreach messages and start meaningful conversations that convert." },
+    { title: "Paste the Job Description", description: "Copy your req or just type the key details — role, location, requirements. MediLead handles the rest." },
+    { title: "AI Finds & Qualifies", description: "MediLead searches LinkedIn, verifies licenses and experience, and ranks the best matches for your role." },
+    { title: "Get Contact Info", description: "Download your list of 10-15 qualified candidates with phone and email — ready to call today." },
+    { title: "Start Making Placements", description: "Send personalized outreach and start booking interviews. Fill roles in days, not weeks." },
   ];
   
   const pricing = [
-    { name: "Starter", price: "$35", leads: "250", features: ["AI-powered search", "Email enrichment", "Campaign management", "Basic analytics"] },
-    { name: "Growth", price: "$99", leads: "1,000", popular: true, features: ["Everything in Starter", "Priority enrichment", "Advanced filters", "Team collaboration", "API access"] },
-    { name: "Scale", price: "$199", leads: "2,500", features: ["Everything in Growth", "Dedicated support", "Custom integrations", "Unlimited campaigns", "Advanced analytics"] },
+    { name: "Starter", price: "$299", leads: "100 searches", features: ["~1,000-1,500 qualified candidates", "AI-powered candidate search", "LinkedIn enrichment", "Personalized outreach emails", "Email support"] },
+    { name: "Growth", price: "$599", leads: "300 searches", popular: true, features: ["~3,000-4,500 qualified candidates", "Everything in Starter", "Advanced filtering", "Campaign management", "Analytics dashboard", "Priority support"] },
+    { name: "Agency", price: "$999", leads: "600 searches", features: ["~6,000-9,000 qualified candidates", "Everything in Growth", "Unlimited job openings", "Team collaboration", "Custom integrations", "Dedicated account manager"] },
   ];
   
   return (
@@ -315,7 +315,7 @@ export default function Landing() {
                 {user ? (
                   <button 
                     onClick={() => navigate('/dashboard')} 
-                    className="h-9 px-5 rounded-xl text-sm font-medium bg-gradient-to-b from-primary to-primary/90 text-primary-foreground shadow-[0_2px_8px_rgba(255,45,146,0.35),inset_0_1px_0_rgba(255,255,255,0.15)] hover:shadow-[0_4px_16px_rgba(255,45,146,0.45),inset_0_1px_0_rgba(255,255,255,0.15)] transition-all duration-300 hover:-translate-y-0.5"
+                  className="h-9 px-5 rounded-xl text-sm font-medium bg-gradient-to-b from-primary to-primary/90 text-primary-foreground shadow-[0_2px_8px_rgba(41,121,209,0.35),inset_0_1px_0_rgba(255,255,255,0.15)] hover:shadow-[0_4px_16px_rgba(41,121,209,0.45),inset_0_1px_0_rgba(255,255,255,0.15)] transition-all duration-300 hover:-translate-y-0.5"
                   >
                     Dashboard
                   </button>
@@ -329,8 +329,8 @@ export default function Landing() {
                     </button>
                     <button 
                       onClick={() => navigate('/auth')} 
-                      className="h-9 px-5 rounded-xl text-sm font-medium bg-gradient-to-b from-primary to-primary/90 text-primary-foreground shadow-[0_2px_8px_rgba(255,45,146,0.35),inset_0_1px_0_rgba(255,255,255,0.15)] hover:shadow-[0_4px_16px_rgba(255,45,146,0.45),inset_0_1px_0_rgba(255,255,255,0.15)] transition-all duration-300 hover:-translate-y-0.5"
-                    >
+                    className="h-9 px-5 rounded-xl text-sm font-medium bg-gradient-to-b from-primary to-primary/90 text-primary-foreground shadow-[0_2px_8px_rgba(41,121,209,0.35),inset_0_1px_0_rgba(255,255,255,0.15)] hover:shadow-[0_4px_16px_rgba(41,121,209,0.45),inset_0_1px_0_rgba(255,255,255,0.15)] transition-all duration-300 hover:-translate-y-0.5"
+                  >
                       Get Started
                     </button>
                   </>
@@ -363,7 +363,7 @@ export default function Landing() {
           >
             <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-card/80 border border-border/50 text-sm font-medium mb-8 backdrop-blur-sm">
               <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-muted-foreground">AI-Powered Lead Generation</span>
+              <span className="text-muted-foreground">Healthcare Candidate Sourcing</span>
             </div>
           </motion.div>
           
@@ -373,9 +373,9 @@ export default function Landing() {
             transition={{ duration: 0.8, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
             className="text-5xl md:text-7xl lg:text-8xl font-bold text-foreground tracking-tight leading-[0.95] mb-8"
           >
-            Find your next
+            Fill healthcare roles
             <br />
-            <span className="gradient-text">best customers</span>
+            <span className="gradient-text">3x faster</span>
           </motion.h1>
           
           <motion.p
@@ -384,7 +384,7 @@ export default function Landing() {
             transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed"
           >
-            Describe who you're looking for in plain English. Our AI finds, enriches, and helps you reach your ideal prospects.
+            Stop wasting 4 hours per candidate. MediLead finds verified nurses with contact info in minutes, so you can focus on what matters: making placements.
           </motion.p>
           
           <motion.div
@@ -394,7 +394,7 @@ export default function Landing() {
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <Button onClick={() => navigate('/auth')} size="lg" className="apple-button h-14 px-8 text-lg gap-2">
-              Start Finding Leads
+              Start Free Trial
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
@@ -406,7 +406,7 @@ export default function Landing() {
               className="h-14 px-8 text-lg gap-2 border-primary/30 hover:bg-primary/10 hover:border-primary/50"
             >
               <Users className="w-5 h-5 text-primary" />
-              Get 5 Free Leads
+              See How It Works
             </Button>
           </motion.div>
           
@@ -416,7 +416,7 @@ export default function Landing() {
             transition={{ duration: 1, delay: 0.6 }}
             className="mt-16 text-sm text-muted-foreground/60"
           >
-            Trusted by 2,000+ sales teams worldwide
+            Trusted by 100+ healthcare recruiters
           </motion.div>
         </motion.div>
         
@@ -429,10 +429,10 @@ export default function Landing() {
       <section className="py-24 px-6">
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16">
-            <StatItem value="10M+" label="Leads Found" index={0} />
-            <StatItem value="98%" label="Data Accuracy" index={1} />
-            <StatItem value="3x" label="Response Rate" index={2} />
-            <StatItem value="2min" label="Avg. Enrichment" index={3} />
+            <StatItem value="10-15" label="Candidates per Search" index={0} />
+            <StatItem value="2min" label="Per Search" index={1} />
+            <StatItem value="3x" label="Faster Than Manual" index={2} />
+            <StatItem value="70%+" label="Contact Info Rate" index={3} />
           </div>
         </div>
       </section>
@@ -444,10 +444,10 @@ export default function Landing() {
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
               Everything you need to
               <br />
-              <span className="gradient-text">grow your pipeline</span>
+              <span className="gradient-text">fill roles faster</span>
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Powerful features designed to help you find, engage, and convert your ideal customers.
+              Powerful features designed to help you source, qualify, and reach qualified healthcare candidates.
             </p>
           </AnimatedSection>
           
@@ -479,10 +479,10 @@ export default function Landing() {
               Simple Process
             </span>
             <h2 className="text-4xl md:text-5xl font-bold text-neutral-900 mb-6">
-              How it works
+              From Job Req to Contact Info in 3 Steps
             </h2>
             <p className="text-xl text-neutral-500 max-w-2xl mx-auto">
-              From idea to outreach in minutes, not hours.
+              Paste a job description, get qualified candidates with contact info in minutes.
             </p>
           </AnimatedSection>
           
@@ -523,10 +523,10 @@ export default function Landing() {
         <div className="max-w-5xl mx-auto">
           <AnimatedSection className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-              Simple, transparent pricing
+              Simple, Transparent Pricing
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Choose the plan that fits your needs. Scale as you grow.
+              Every search gives you 10-15 qualified candidates with contact info. That's ~$1-2 per candidate vs. $3-5 from lead providers.
             </p>
           </AnimatedSection>
           
@@ -548,12 +548,12 @@ export default function Landing() {
           </div>
           
           <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-            Ready to transform
+            Ready to fill roles
             <br />
-            <span className="gradient-text">your outreach?</span>
+            <span className="gradient-text">3x faster?</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-10">
-            Join thousands of sales teams already using {appName} to find and convert their ideal customers.
+            Start your free trial. No credit card required. Find your first batch of qualified candidates in 2 minutes.
           </p>
           <Button onClick={() => navigate('/auth')} size="lg" className="apple-button h-14 px-10 text-lg gap-2">
             Start Your Free Trial

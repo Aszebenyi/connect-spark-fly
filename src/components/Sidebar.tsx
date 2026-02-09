@@ -13,9 +13,9 @@ interface SidebarProps {
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', visual: 'bars' },
-  { id: 'leads', label: 'Leads', visual: 'dots' },
-  { id: 'finder', label: 'Lead Finder', visual: 'pulse' },
-  { id: 'campaigns', label: 'Campaigns', visual: 'arrow' },
+  { id: 'leads', label: 'Candidates', visual: 'dots' },
+  { id: 'finder', label: 'Find Candidates', visual: 'pulse' },
+  { id: 'campaigns', label: 'Job Openings', visual: 'arrow' },
   { id: 'settings', label: 'Settings', visual: 'gear' },
 ];
 
@@ -181,7 +181,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
                   width: `${creditsPercentage}%`,
                   background: creditsPercentage > 90 
                     ? 'hsl(0 72% 55%)' 
-                    : 'linear-gradient(90deg, hsl(330 100% 63%), hsl(350 90% 65%), hsl(15 95% 60%))'
+                    : 'linear-gradient(90deg, hsl(210 80% 50%), hsl(195 75% 45%), hsl(170 70% 42%))'
                 }} 
               />
             </div>

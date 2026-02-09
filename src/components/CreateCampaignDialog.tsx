@@ -34,46 +34,46 @@ interface CreateCampaignDialogProps {
 type Step = 'name' | 'goal' | 'search' | 'saving' | 'processing';
 
 const searchSuggestions = [
-  'Marketing directors at fintech startups',
-  'CTOs at Series A healthcare companies',
-  'Sales VPs at B2B SaaS companies',
+  'ICU Nurse — Los Angeles, CA — 3+ years, BLS/ACLS',
+  'Travel ER Nurse — Phoenix, AZ — compact license',
+  'Physical Therapist — Austin, TX — DPT required',
 ];
 
 const goalSuggestions = [
-  'Book demo calls for our platform',
-  'Invite to our upcoming webinar',
-  'Explore partnership opportunities',
+  'Fill 3-month ICU travel contract starting next month',
+  'Source candidates for permanent OR nurse position',
+  'Build pipeline for per diem ER nurses',
 ];
 
 const stepConfig = {
   name: {
     number: 1,
-    title: 'Campaign Name',
-    subtitle: 'Give your campaign a name that describes its purpose',
+    title: 'Job Opening Name',
+    subtitle: 'Give this job opening a name that describes the role',
     icon: Sparkles,
   },
   goal: {
     number: 2,
     title: 'Define Your Goal',
-    subtitle: 'What do you want to achieve with this outreach?',
+    subtitle: 'What kind of placement are you working on?',
     icon: Target,
   },
   search: {
     number: 3,
-    title: 'Find Your Audience',
-    subtitle: 'Describe who you want to reach',
+    title: 'Describe the Role',
+    subtitle: 'Paste a job description or describe the candidate you need',
     icon: Search,
   },
   saving: {
     number: 4,
-    title: 'Creating Campaign',
+    title: 'Creating Job Opening',
     subtitle: 'Setting everything up for you',
     icon: Check,
   },
   processing: {
     number: 4,
-    title: 'Finding Leads',
-    subtitle: 'AI is searching for matching profiles',
+    title: 'Finding Candidates',
+    subtitle: 'AI is searching for matching healthcare professionals',
     icon: Users,
   },
 };
@@ -315,7 +315,7 @@ export function CreateCampaignDialog({ open, onOpenChange, onCreated }: CreateCa
                 </p>
                 <div className="space-y-3">
                   <Input
-                    placeholder="Q1 Outreach - Engineering Leaders"
+                    placeholder="ICU Travel Nurse — Los Angeles, Q2 2026"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     onKeyDown={handleKeyDown}
@@ -328,7 +328,7 @@ export function CreateCampaignDialog({ open, onOpenChange, onCreated }: CreateCa
                     Quick tips
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {['Be specific', 'Include timeframe', 'Target audience'].map((tip) => (
+                    {['Be specific', 'Include location', 'Specialty type'].map((tip) => (
                       <span 
                         key={tip}
                         className="text-xs px-3 py-1.5 rounded-full bg-muted/40 text-muted-foreground"
@@ -348,7 +348,7 @@ export function CreateCampaignDialog({ open, onOpenChange, onCreated }: CreateCa
                   {config.subtitle}
                 </p>
                 <Textarea
-                  placeholder="Book demo calls to show our platform to engineering teams..."
+                  placeholder="Fill ICU travel nurse contract, 3-month assignment starting next month..."
                   value={goal}
                   onChange={(e) => setGoal(e.target.value)}
                   onKeyDown={handleKeyDown}
@@ -385,7 +385,7 @@ export function CreateCampaignDialog({ open, onOpenChange, onCreated }: CreateCa
                   {config.subtitle}
                 </p>
                 <Input
-                  placeholder="VPs of Engineering at SaaS companies in the US..."
+                  placeholder="ICU Nurse — Los Angeles, CA — 3+ years experience, BLS/ACLS, CA RN license..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
@@ -414,7 +414,7 @@ export function CreateCampaignDialog({ open, onOpenChange, onCreated }: CreateCa
                 </div>
                 <div className="pt-4 flex items-center gap-3 text-sm text-muted-foreground/70">
                   <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-                  <span>AI will find matching profiles in real-time</span>
+                  <span>AI will find matching healthcare professionals in real-time</span>
                 </div>
               </div>
             )}
@@ -427,12 +427,12 @@ export function CreateCampaignDialog({ open, onOpenChange, onCreated }: CreateCa
                     <div className="apple-spinner" />
                   </div>
                 </div>
-                <h3 className="text-xl font-semibold text-foreground mb-2">Creating your campaign</h3>
+                <h3 className="text-xl font-semibold text-foreground mb-2">Creating your job opening</h3>
                 <p className="text-muted-foreground text-center max-w-sm">
-                  Setting up "{name}" and starting your lead search...
+                  Setting up "{name}" and starting your candidate search...
                 </p>
                 <div className="flex items-center gap-6 mt-8">
-                  {['Campaign', 'Search', 'AI'].map((item, i) => (
+                  {['Job Opening', 'Search', 'AI'].map((item, i) => (
                     <div key={item} className="flex items-center gap-2">
                       <div className={cn(
                         "w-5 h-5 rounded-full flex items-center justify-center transition-all duration-500",
