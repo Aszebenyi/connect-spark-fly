@@ -538,3 +538,76 @@ export async function getStats(): Promise<{
     qualified: allLeads.filter(l => l.status === 'qualified').length,
   };
 }
+
+// Lead-Campaign Assignment functions (many-to-many)
+export interface LeadCampaignAssignment {
+  id: string;
+  lead_id: string;
+  campaign_id: string;
+  assigned_at: string;
+  assigned_by: string | null;
+}
+
+export async function getLeadAssignments(): Promise<{ success: boolean; assignments?: LeadCampaignAssignment[]; error?: string }> {
+  const { data, error } = await supabase
+    .from('lead_campaign_assignments')
+    .select('*');
+
+  if (error) {
+    console.error('Get lead assignments error:', error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true, assignments: data };
+}
+
+export async function assignLeadsToCampaign(leadIds: string[], campaignId: string): Promise<{ success: boolean; error?: string }> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const rows = leadIds.map(lead_id => ({
+    lead_id,
+    campaign_id: campaignId,
+    assigned_by: user.id,
+  }));
+
+  const { error } = await supabase
+    .from('lead_campaign_assignments')
+    .upsert(rows, { onConflict: 'lead_id,campaign_id' });
+
+  if (error) {
+    console.error('Assign leads error:', error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+
+export async function removeLeadsFromCampaign(leadIds: string[], campaignId: string): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase
+    .from('lead_campaign_assignments')
+    .delete()
+    .in('lead_id', leadIds)
+    .eq('campaign_id', campaignId);
+
+  if (error) {
+    console.error('Remove leads from campaign error:', error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+
+export async function deleteLeads(leadIds: string[]): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase
+    .from('leads')
+    .delete()
+    .in('id', leadIds);
+
+  if (error) {
+    console.error('Delete leads error:', error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}

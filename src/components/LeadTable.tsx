@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Lead } from '@/types/lead';
 import { Campaign } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { CheckCircle2, Download, Users, Search, Sparkles, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, Download, Users, Search, Sparkles, ShieldCheck, X, Trash2, Plus } from 'lucide-react';
 import { exportLeadsToCSV } from '@/lib/csv-export';
 import { useToast } from '@/hooks/use-toast';
 import { EmptyState } from '@/components/EmptyState';
@@ -25,14 +26,23 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+interface LeadCampaignAssignment {
+  lead_id: string;
+  campaign_id: string;
+}
+
 interface LeadTableProps {
   leads: Lead[];
   campaigns?: Campaign[];
+  assignments?: LeadCampaignAssignment[];
   selectedCampaignId?: string | null;
   onCampaignFilterChange?: (campaignId: string | null) => void;
   onLeadClick: (lead: Lead) => void;
   onStatusChange?: (leadId: string, status: string) => void;
   onDelete?: (leadId: string) => void;
+  onBulkDelete?: (leadIds: string[]) => void;
+  onBulkAssign?: (leadIds: string[], campaignId: string) => void;
+  onBulkRemove?: (leadIds: string[], campaignId: string) => void;
   onCreateCampaign?: () => void;
   onFindLeads?: () => void;
 }
@@ -110,11 +120,15 @@ function getSpecialtySubtitle(lead: Lead): string | null {
 export function LeadTable({ 
   leads, 
   campaigns,
+  assignments = [],
   selectedCampaignId,
   onCampaignFilterChange,
   onLeadClick, 
   onStatusChange, 
   onDelete,
+  onBulkDelete,
+  onBulkAssign,
+  onBulkRemove,
   onCreateCampaign,
   onFindLeads,
 }: LeadTableProps) {
@@ -123,35 +137,53 @@ export function LeadTable({
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortField, setSortField] = useState<string>('match_score');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const handleExport = () => {
-    if (filteredLeads.length === 0) {
-      toast({
-        title: 'No leads to export',
-        description: 'There are no leads matching your current filters.',
-        variant: 'destructive',
-      });
+  // Build a map: leadId -> campaign names
+  const leadCampaignMap = useMemo(() => {
+    const map: Record<string, { id: string; name: string }[]> = {};
+    if (!campaigns || !assignments) return map;
+    for (const a of assignments) {
+      const c = campaigns.find(c => c.id === a.campaign_id);
+      if (c) {
+        if (!map[a.lead_id]) map[a.lead_id] = [];
+        map[a.lead_id].push({ id: c.id!, name: c.name });
+      }
+    }
+    return map;
+  }, [campaigns, assignments]);
+
+  // Build set of lead IDs for the selected campaign filter
+  const campaignLeadIds = useMemo(() => {
+    if (!selectedCampaignId) return null;
+    if (selectedCampaignId === 'unassigned') {
+      const assignedIds = new Set(assignments.map(a => a.lead_id));
+      return new Set(leads.filter(l => !assignedIds.has(l.id)).map(l => l.id));
+    }
+    return new Set(assignments.filter(a => a.campaign_id === selectedCampaignId).map(a => a.lead_id));
+  }, [selectedCampaignId, assignments, leads]);
+
+  const handleExport = (leadsToExport?: Lead[]) => {
+    const target = leadsToExport || filteredLeads;
+    if (target.length === 0) {
+      toast({ title: 'No leads to export', description: 'No leads match current filters.', variant: 'destructive' });
       return;
     }
-
     const campaignName = selectedCampaign?.name?.replace(/\s+/g, '-').toLowerCase() || 'all-leads';
-    exportLeadsToCSV(filteredLeads, campaignName);
-    
-    toast({
-      title: 'Export complete',
-      description: `Exported ${filteredLeads.length} leads to CSV.`,
-    });
+    exportLeadsToCSV(target, campaignName);
+    toast({ title: 'Export complete', description: `Exported ${target.length} leads to CSV.` });
   };
 
   const filteredLeads = leads
     .filter(lead => {
-      // Search filter
+      // Campaign/job opening filter
+      if (campaignLeadIds && !campaignLeadIds.has(lead.id)) return false;
+
       const matchesSearch = 
         lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         lead.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
         lead.email.toLowerCase().includes(searchQuery.toLowerCase());
       
-      // Status filter
       const matchesStatus = statusFilter === 'all' || lead.status === statusFilter;
       
       return matchesSearch && matchesStatus;
@@ -193,8 +225,58 @@ export function LeadTable({
 
   const selectedCampaign = campaigns?.find(c => c.id === selectedCampaignId);
 
+  // Selection helpers
+  const allSelected = filteredLeads.length > 0 && filteredLeads.every(l => selectedIds.has(l.id));
+  const someSelected = selectedIds.size > 0;
+
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredLeads.map(l => l.id)));
+    }
+  };
+
+  const toggleOne = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const handleBulkExport = () => {
+    const selected = filteredLeads.filter(l => selectedIds.has(l.id));
+    handleExport(selected);
+    clearSelection();
+  };
+
+  const handleBulkDelete = () => {
+    if (onBulkDelete) {
+      onBulkDelete(Array.from(selectedIds));
+      clearSelection();
+    }
+  };
+
+  const handleBulkAssign = (campaignId: string) => {
+    if (onBulkAssign) {
+      onBulkAssign(Array.from(selectedIds), campaignId);
+      clearSelection();
+    }
+  };
+
+  const handleBulkRemove = () => {
+    if (onBulkRemove && selectedCampaignId && selectedCampaignId !== 'unassigned') {
+      onBulkRemove(Array.from(selectedIds), selectedCampaignId);
+      clearSelection();
+    }
+  };
+
   return (
-    <div className="glass-strong rounded-2xl overflow-hidden card-shadow">
+    <div className="glass-strong rounded-2xl overflow-hidden card-shadow relative">
       {/* Header */}
       <div className="p-6 border-b border-border flex items-center gap-4 flex-wrap">
         <div className="search-input flex items-center gap-4 px-5 py-3 flex-1 max-w-md">
@@ -210,17 +292,21 @@ export function LeadTable({
           />
         </div>
         
-        {/* Campaign Filter */}
+        {/* Job Opening Filter */}
         {campaigns && campaigns.length > 0 && onCampaignFilterChange && (
           <Select 
             value={selectedCampaignId || 'all'} 
-            onValueChange={(val) => onCampaignFilterChange(val === 'all' ? null : val)}
+            onValueChange={(val) => {
+              onCampaignFilterChange(val === 'all' ? null : val);
+              clearSelection();
+            }}
           >
-            <SelectTrigger className="w-[200px] rounded-xl">
-              <SelectValue placeholder="Filter by campaign" />
+            <SelectTrigger className="w-[220px] rounded-xl">
+              <SelectValue placeholder="Filter by Job Opening" />
             </SelectTrigger>
             <SelectContent className="glass-strong">
-              <SelectItem value="all">All Campaigns</SelectItem>
+              <SelectItem value="all">All Job Openings</SelectItem>
+              <SelectItem value="unassigned">Unassigned Candidates</SelectItem>
               {campaigns.map((campaign) => (
                 <SelectItem key={campaign.id} value={campaign.id || ''}>
                   {campaign.name}
@@ -252,7 +338,7 @@ export function LeadTable({
         <Button
           variant="outline"
           size="sm"
-          onClick={handleExport}
+          onClick={() => handleExport()}
           className="gap-2 rounded-xl"
           disabled={filteredLeads.length === 0}
         >
@@ -266,7 +352,7 @@ export function LeadTable({
         <div className="px-6 py-3 bg-primary/5 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Badge variant="outline" className="bg-primary/10 border-primary/30 text-primary">
-              Campaign
+              Job Opening
             </Badge>
             <span className="font-medium text-foreground">{selectedCampaign.name}</span>
             {selectedCampaign.search_query && (
@@ -286,17 +372,43 @@ export function LeadTable({
         </div>
       )}
 
+      {selectedCampaignId === 'unassigned' && (
+        <div className="px-6 py-3 bg-muted/30 border-b border-border flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Badge variant="outline" className="bg-muted border-border text-muted-foreground">
+              Unassigned
+            </Badge>
+            <span className="font-medium text-foreground">Candidates not in any job opening</span>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => onCampaignFilterChange?.(null)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Clear filter
+          </Button>
+        </div>
+      )}
+
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="border-b border-border bg-muted/10">
+              <th className="p-5 w-12">
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={toggleAll}
+                  aria-label="Select all"
+                />
+              </th>
               <th className="text-left p-5 text-sm font-semibold text-muted-foreground">
                 <button 
                   onClick={() => handleSort('name')}
                   className="flex items-center gap-2 hover:text-foreground transition-colors"
                 >
-                  Lead
+                  Candidate
                   <span className="text-[10px]">↕</span>
                 </button>
               </th>
@@ -322,6 +434,7 @@ export function LeadTable({
                   <span className="text-[10px]">↕</span>
                 </button>
               </th>
+              <th className="text-left p-5 text-sm font-semibold text-muted-foreground">Job Opening</th>
               <th className="text-left p-5 text-sm font-semibold text-muted-foreground">Status</th>
               <th className="text-left p-5 text-sm font-semibold text-muted-foreground">
                 <button 
@@ -338,23 +451,21 @@ export function LeadTable({
           <tbody>
             {filteredLeads.length === 0 ? (
               <tr>
-                <td colSpan={10} className="p-0">
+                <td colSpan={12} className="p-0">
                   {leads.length === 0 ? (
-                    // No leads at all - encourage creating a campaign
                     <EmptyState
                       icon={<Users className="w-8 h-8" />}
-                      title="No leads yet"
-                      description="Create a campaign to start discovering potential customers using AI-powered search."
-                      actionLabel={onCreateCampaign ? "Create Campaign" : undefined}
+                      title="No candidates yet"
+                      description="Create a job opening to start discovering qualified candidates using AI-powered search."
+                      actionLabel={onCreateCampaign ? "Create Job Opening" : undefined}
                       onAction={onCreateCampaign}
-                      secondaryActionLabel={onFindLeads ? "Find Leads" : undefined}
+                      secondaryActionLabel={onFindLeads ? "Find Candidates" : undefined}
                       onSecondaryAction={onFindLeads}
                     />
                   ) : searchQuery || statusFilter !== 'all' ? (
-                    // Has leads but filters returned no results
                     <EmptyState
                       icon={<Search className="w-8 h-8" />}
-                      title="No matching leads"
+                      title="No matching candidates"
                       description="Try adjusting your search query or filters to find what you're looking for."
                       actionLabel="Clear Filters"
                       onAction={() => {
@@ -363,23 +474,21 @@ export function LeadTable({
                       }}
                     />
                   ) : selectedCampaignId ? (
-                    // Viewing a campaign with no leads
                     <EmptyState
                       icon={<Sparkles className="w-8 h-8" />}
-                      title="No leads in this campaign"
-                      description="This campaign doesn't have any leads yet. Find more leads to add to it."
-                      actionLabel={onFindLeads ? "Find Leads" : undefined}
+                      title="No candidates in this job opening"
+                      description="This job opening doesn't have any candidates yet. Find candidates to add."
+                      actionLabel={onFindLeads ? "Find Candidates" : undefined}
                       onAction={onFindLeads}
-                      secondaryActionLabel="View All Leads"
+                      secondaryActionLabel="View All Candidates"
                       onSecondaryAction={() => onCampaignFilterChange?.(null)}
                     />
                   ) : (
-                    // Fallback empty state
                     <EmptyState
                       icon={<Users className="w-8 h-8" />}
-                      title="No leads found"
-                      description="Start by creating a campaign to find leads."
-                      actionLabel={onCreateCampaign ? "Create Campaign" : undefined}
+                      title="No candidates found"
+                      description="Start by creating a job opening to find candidates."
+                      actionLabel={onCreateCampaign ? "Create Job Opening" : undefined}
                       onAction={onCreateCampaign}
                     />
                   )}
@@ -388,19 +497,27 @@ export function LeadTable({
             ) : (
               filteredLeads.map((lead, index) => {
                 const status = statusConfig[lead.status] || statusConfig.new;
+                const leadJobs = leadCampaignMap[lead.id] || [];
                 return (
                   <tr 
                     key={lead.id} 
                     className={cn(
                       'lead-row border-b border-border/50 cursor-pointer',
-                      'animate-fade-in opacity-0'
+                      'animate-fade-in opacity-0',
+                      selectedIds.has(lead.id) && 'bg-primary/5'
                     )}
                     style={{ animationDelay: `${index * 0.03}s` }}
                     onClick={() => onLeadClick(lead)}
                   >
+                    <td className="p-5 w-12" onClick={(e) => e.stopPropagation()}>
+                      <Checkbox
+                        checked={selectedIds.has(lead.id)}
+                        onCheckedChange={() => toggleOne(lead.id)}
+                        aria-label={`Select ${lead.name}`}
+                      />
+                    </td>
                     <td className="p-5">
                       <div className="flex items-center gap-3">
-                        {/* Avatar with enrichment indicator */}
                         <div className="relative">
                           <Avatar className="w-10 h-10 border border-border">
                             <AvatarImage 
@@ -411,7 +528,6 @@ export function LeadTable({
                               {lead.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
-                          {/* Enriched indicator */}
                           {(lead.profile_data || lead.profileData)?.linkedin && (
                             <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-card flex items-center justify-center">
                               <CheckCircle2 className="w-2.5 h-2.5 text-white" />
@@ -483,6 +599,23 @@ export function LeadTable({
                           <span className="text-muted-foreground text-sm">-</span>
                         );
                       })()}
+                    </td>
+                    <td className="p-5" onClick={(e) => e.stopPropagation()}>
+                      {leadJobs.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {leadJobs.map(j => (
+                            <button
+                              key={j.id}
+                              onClick={() => onCampaignFilterChange?.(j.id)}
+                              className="text-xs font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
+                            >
+                              {j.name}
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">Unassigned</span>
+                      )}
                     </td>
                     <td className="p-5">
                       <Badge className={cn('border font-medium', status.color)}>
@@ -563,10 +696,75 @@ export function LeadTable({
       {/* Footer */}
       <div className="p-6 border-t border-border flex items-center justify-between">
         <p className="text-sm text-muted-foreground font-medium">
-          Showing {filteredLeads.length} of {leads.length} leads
+          Showing {filteredLeads.length} of {leads.length} candidates
           {selectedCampaign && ` in "${selectedCampaign.name}"`}
         </p>
       </div>
+
+      {/* Bulk Action Bar */}
+      {someSelected && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-card border border-border rounded-2xl shadow-2xl px-6 py-3 animate-fade-in">
+          <span className="text-sm font-semibold text-foreground whitespace-nowrap">
+            {selectedIds.size} candidate{selectedIds.size > 1 ? 's' : ''} selected
+          </span>
+
+          <div className="w-px h-6 bg-border" />
+
+          {/* Add to Job Opening */}
+          {onBulkAssign && campaigns && campaigns.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1.5 rounded-xl">
+                  <Plus className="w-3.5 h-3.5" />
+                  Add to Job Opening
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="glass-strong w-56">
+                {campaigns.map(c => (
+                  <DropdownMenuItem key={c.id} onClick={() => handleBulkAssign(c.id!)}>
+                    {c.name}
+                  </DropdownMenuItem>
+                ))}
+                {onCreateCampaign && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={onCreateCampaign}>
+                      <Plus className="w-3.5 h-3.5 mr-2" />
+                      Create New Job Opening
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
+          {/* Remove from Job Opening (only when filtered to specific job) */}
+          {onBulkRemove && selectedCampaignId && selectedCampaignId !== 'unassigned' && (
+            <Button variant="outline" size="sm" className="gap-1.5 rounded-xl" onClick={handleBulkRemove}>
+              Remove from Job
+            </Button>
+          )}
+
+          {/* Delete */}
+          {onBulkDelete && (
+            <Button variant="outline" size="sm" className="gap-1.5 rounded-xl text-destructive hover:text-destructive" onClick={handleBulkDelete}>
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </Button>
+          )}
+
+          {/* Export */}
+          <Button variant="outline" size="sm" className="gap-1.5 rounded-xl" onClick={handleBulkExport}>
+            <Download className="w-3.5 h-3.5" />
+            Export CSV
+          </Button>
+
+          {/* Cancel */}
+          <Button variant="ghost" size="sm" className="rounded-xl" onClick={clearSelection}>
+            <X className="w-3.5 h-3.5" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
