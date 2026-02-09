@@ -70,6 +70,17 @@ export async function searchLeadsWithExa(params: {
 
   if (error) {
     console.error('Exa search error:', error);
+    // Check for 402 / NO_CREDITS explicitly
+    const errorMsg = error.message || '';
+    if (errorMsg.includes('402')) {
+      // Try to parse body, but default to NO_CREDITS for any 402
+      try {
+        const errorBody = error.context?.body ? JSON.parse(error.context.body) : null;
+        return { success: false, error: errorBody?.error || 'NO_CREDITS' };
+      } catch {
+        return { success: false, error: 'NO_CREDITS' };
+      }
+    }
     // Parse backend error for better messages
     try {
       const errorBody = error.context?.body ? JSON.parse(error.context.body) : null;

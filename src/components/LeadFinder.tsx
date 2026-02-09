@@ -32,7 +32,7 @@ export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinde
   const creditsRemaining = (subscription?.credits_limit || 0) - (subscription?.credits_used || 0);
   const hasCredits = creditsRemaining > 0;
 
-  const { user } = useAuth();
+  const { user, refreshSubscription } = useAuth();
 
   const handleSearch = async () => {
     if (!user) {
@@ -56,6 +56,9 @@ export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinde
     setIsSearching(true);
     setFoundLeads([]);
     setSelectedLeads(new Set());
+
+    // Refresh subscription to get fresh credit data
+    await refreshSubscription();
 
     try {
       const result = await searchLeadsWithExa({ 
@@ -107,13 +110,22 @@ export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinde
           });
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Search error:', error);
-      toast({
-        title: 'Search error',
-        description: 'Failed to search for leads. Please try again.',
-        variant: 'destructive',
-      });
+      const msg = error?.message || '';
+      if (msg.includes('402') || msg.toLowerCase().includes('credit')) {
+        toast({
+          title: 'No credits remaining',
+          description: 'You have used all your credits. Please upgrade your plan to continue.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Search error',
+          description: 'Failed to search for leads. Please try again.',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setIsSearching(false);
     }
