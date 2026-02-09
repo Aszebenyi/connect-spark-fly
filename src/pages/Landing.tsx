@@ -394,7 +394,7 @@ export default function Landing() {
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <Button onClick={() => navigate('/auth')} size="lg" className="apple-button h-14 px-8 text-lg gap-2">
-              Start Free Trial
+              Get Started
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
@@ -527,7 +527,7 @@ export default function Landing() {
               Simple, Transparent Pricing
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Every search gives you 10-15 qualified candidates with verified contact info. Start free for 7 days.
+              Every search gives you 10-15 qualified candidates with verified contact info. First 5 candidates free.
             </p>
           </AnimatedSection>
           
@@ -557,7 +557,7 @@ export default function Landing() {
             Join hundreds of healthcare recruiters using MediLead to source, qualify, and reach qualified candidates in minutes.
           </p>
           <p className="text-sm text-muted-foreground/60 mt-2">
-            7-day free trial. No credit card required. Cancel anytime.
+            First 5 candidates free. No credit card required.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button onClick={() => navigate('/auth')} size="lg" className="apple-button h-14 px-10 text-lg gap-2">
