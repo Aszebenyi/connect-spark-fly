@@ -6,8 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, Settings, Mail, CreditCard, Building2, AlertCircle } from 'lucide-react';
+import { Loader2, Save, Settings, Mail, CreditCard, Building2, AlertCircle, Package } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ProductIdentityTab } from './ProductIdentityTab';
 
 interface PlatformSetting {
   id: string;
@@ -101,6 +102,11 @@ export function PlatformSettings() {
       description: 'Customize your app name and identity',
       icon: Building2,
     },
+    product_identity: {
+      title: 'Product Identity',
+      description: 'Define your product/service for AI-generated content',
+      icon: Package,
+    },
     email: {
       title: 'Email Configuration',
       description: 'Configure email sending settings (requires verified Resend domain)',
@@ -144,10 +150,14 @@ export function PlatformSettings() {
       </Alert>
 
       <Tabs defaultValue="branding" className="space-y-6">
-        <TabsList className="grid grid-cols-4 w-full max-w-2xl">
+        <TabsList className="grid grid-cols-5 w-full max-w-3xl">
           <TabsTrigger value="branding" className="gap-2">
             <Building2 className="w-4 h-4" />
             <span className="hidden sm:inline">Branding</span>
+          </TabsTrigger>
+          <TabsTrigger value="product_identity" className="gap-2">
+            <Package className="w-4 h-4" />
+            <span className="hidden sm:inline">Identity</span>
           </TabsTrigger>
           <TabsTrigger value="email" className="gap-2">
             <Mail className="w-4 h-4" />
@@ -165,98 +175,111 @@ export function PlatformSettings() {
 
         {Object.entries(categoryConfig).map(([category, config]) => (
           <TabsContent key={category} value={category} className="space-y-4">
-            <Card className="bg-card/50 border-border/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <config.icon className="w-5 h-5 text-primary" />
-                  {config.title}
-                </CardTitle>
-                <CardDescription>{config.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {getSettingsByCategory(category).map((setting) => (
-                  <div key={setting.key} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor={setting.key} className="text-sm font-medium">
-                        {setting.label}
-                      </Label>
-                      {hasChanges(setting.key) && (
-                        <Button
-                          size="sm"
-                          onClick={() => handleSave(setting.key)}
-                          disabled={saving === setting.key}
-                          className="gap-1"
-                        >
-                          {saving === setting.key ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
-                          ) : (
-                            <Save className="w-3 h-3" />
+            {category === 'product_identity' ? (
+              <ProductIdentityTab
+                settings={getSettingsByCategory('product_identity')}
+                editedValues={editedValues}
+                setEditedValues={setEditedValues}
+                onSave={handleSave}
+                saving={saving}
+                hasChanges={hasChanges}
+              />
+            ) : (
+              <>
+                <Card className="bg-card/50 border-border/50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <config.icon className="w-5 h-5 text-primary" />
+                      {config.title}
+                    </CardTitle>
+                    <CardDescription>{config.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {getSettingsByCategory(category).map((setting) => (
+                      <div key={setting.key} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor={setting.key} className="text-sm font-medium">
+                            {setting.label}
+                          </Label>
+                          {hasChanges(setting.key) && (
+                            <Button
+                              size="sm"
+                              onClick={() => handleSave(setting.key)}
+                              disabled={saving === setting.key}
+                              className="gap-1"
+                            >
+                              {saving === setting.key ? (
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                              ) : (
+                                <Save className="w-3 h-3" />
+                              )}
+                              Save
+                            </Button>
                           )}
-                          Save
-                        </Button>
-                      )}
-                    </div>
-                    <Input
-                      id={setting.key}
-                      type={setting.is_secret ? 'password' : 'text'}
-                      value={editedValues[setting.key] || ''}
-                      onChange={(e) => setEditedValues(prev => ({
-                        ...prev,
-                        [setting.key]: e.target.value
-                      }))}
-                      className="font-mono text-sm"
-                    />
-                    {setting.description && (
-                      <p className="text-xs text-muted-foreground">
-                        {setting.description}
+                        </div>
+                        <Input
+                          id={setting.key}
+                          type={setting.is_secret ? 'password' : 'text'}
+                          value={editedValues[setting.key] || ''}
+                          onChange={(e) => setEditedValues(prev => ({
+                            ...prev,
+                            [setting.key]: e.target.value
+                          }))}
+                          className="font-mono text-sm"
+                        />
+                        {setting.description && (
+                          <p className="text-xs text-muted-foreground">
+                            {setting.description}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+
+                    {getSettingsByCategory(category).length === 0 && (
+                      <p className="text-sm text-muted-foreground py-4 text-center">
+                        No settings in this category
                       </p>
                     )}
-                  </div>
-                ))}
+                  </CardContent>
+                </Card>
 
-                {getSettingsByCategory(category).length === 0 && (
-                  <p className="text-sm text-muted-foreground py-4 text-center">
-                    No settings in this category
-                  </p>
+                {category === 'email' && (
+                  <Alert className="border-amber-500/20 bg-amber-500/5">
+                    <AlertCircle className="h-4 w-4 text-amber-500" />
+                    <AlertDescription className="text-sm">
+                      <strong>Important:</strong> The "From Address" must be a verified domain in your{' '}
+                      <a 
+                        href="https://resend.com/domains" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-primary underline"
+                      >
+                        Resend dashboard
+                      </a>
+                      . Using an unverified domain will cause emails to fail.
+                    </AlertDescription>
+                  </Alert>
                 )}
-              </CardContent>
-            </Card>
 
-            {category === 'email' && (
-              <Alert className="border-amber-500/20 bg-amber-500/5">
-                <AlertCircle className="h-4 w-4 text-amber-500" />
-                <AlertDescription className="text-sm">
-                  <strong>Important:</strong> The "From Address" must be a verified domain in your{' '}
-                  <a 
-                    href="https://resend.com/domains" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-primary underline"
-                  >
-                    Resend dashboard
-                  </a>
-                  . Using an unverified domain will cause emails to fail.
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {category === 'stripe' && (
-              <Alert className="border-amber-500/20 bg-amber-500/5">
-                <AlertCircle className="h-4 w-4 text-amber-500" />
-                <AlertDescription className="text-sm">
-                  <strong>How to get Stripe IDs:</strong> Create products in your{' '}
-                  <a 
-                    href="https://dashboard.stripe.com/products" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-primary underline"
-                  >
-                    Stripe Dashboard
-                  </a>
-                  , then copy the Price ID (starts with <code className="text-xs bg-muted px-1 rounded">price_</code>) 
-                  and Product ID (starts with <code className="text-xs bg-muted px-1 rounded">prod_</code>).
-                </AlertDescription>
-              </Alert>
+                {category === 'stripe' && (
+                  <Alert className="border-amber-500/20 bg-amber-500/5">
+                    <AlertCircle className="h-4 w-4 text-amber-500" />
+                    <AlertDescription className="text-sm">
+                      <strong>How to get Stripe IDs:</strong> Create products in your{' '}
+                      <a 
+                        href="https://dashboard.stripe.com/products" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-primary underline"
+                      >
+                        Stripe Dashboard
+                      </a>
+                      , then copy the Price ID (starts with <code className="text-xs bg-muted px-1 rounded">price_</code>) 
+                      and Product ID (starts with <code className="text-xs bg-muted px-1 rounded">prod_</code>).
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </>
             )}
           </TabsContent>
         ))}
