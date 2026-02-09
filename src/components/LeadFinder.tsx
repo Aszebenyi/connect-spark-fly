@@ -14,9 +14,11 @@ interface LeadFinderProps {
 }
 
 const suggestions = [
-  'ICU Nurse — Los Angeles, CA — 3+ years, BLS/ACLS certified',
-  'Travel ER Nurse — Phoenix, AZ — 2+ years, compact license',
-  'Physical Therapist — Austin, TX — DPT, outpatient ortho experience',
+  'ICU Nurse - Los Angeles, CA - 3+ years, BLS/ACLS required',
+  'Travel ER Nurse - Phoenix, AZ - 2+ years, compact license',
+  'Physical Therapist - Austin, TX - DPT, outpatient ortho',
+  'OR Nurse - Miami, FL - 2+ years, BLS/ACLS/PALS',
+  'NICU Nurse - Boston, MA - 3+ years, NRP required',
 ];
 
 export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinderProps) {
