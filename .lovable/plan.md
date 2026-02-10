@@ -1,28 +1,35 @@
 
 
-# Fix Find Candidates: Restore Helper Text and Reposition Logo
+# Two Fixes: Logo Update + Theme per Page
 
-## Issue 1: Restore Helper Text Below Search Input
-The helper text "Paste a full job description or describe the role, location, and requirements. Be as specific as possible." was moved into the hero description but should also appear as helper text below the search input inside the search card (where it was before, but with the updated wording).
+## 1. Replace MediLead Logo
+The logo file at `src/assets/medilead-logo.png` still shows the old icon (blue rounded square with a dot). The user has re-uploaded their desired logo (from the original Screenshot_2026-02-02_at_4.57.54_PM.png). We need to copy the correct uploaded image over the existing file again.
 
-**Change in `src/components/LeadFinder.tsx`:**
-- Add back the helper `<p>` tag between the search input and the Examples section (around line 232), with the text: "Paste a full job description or describe the role, location, and requirements. Be as specific as possible."
+**Action:** Copy `user-uploads://Screenshot_2026-02-02_at_4.57.54_PM-2.png` to `src/assets/medilead-logo.png`, overwriting the current file.
 
-## Issue 2: Move MediLead Logo to Top-Right Corner
-The logo is currently centered above the title. Move it to the top-right corner of the search card instead.
+## 2. Landing Page = Light  Mode, Dashboard = Light Mode (with user toggle)
+Currently the app uses `next-themes` with `defaultTheme="dark"` globally. The user wants:
+- Landing page (`/`): always Lightmode mode
+- Dashboard (`/dashboard`): defaults to light mode, but users can toggle to dark via existing settings
 
-**Change in `src/components/LeadFinder.tsx`:**
-- Remove the `<img>` from the hero section (line 199-201)
-- Add the logo inside the search card (line 213), positioned absolute in the top-right corner using `absolute top-4 right-4`
+**Approach:** Add a small `useEffect` hook in each page component to set the theme on mount:
+- `Landing.tsx`: Call `setTheme("dark")` on mount
+- `Dashboard.tsx`: Call `setTheme("light")` on mount (only if no user preference is saved; users who toggle dark mode in settings will have their preference respected)
+
+This uses the existing `next-themes` `useTheme()` hook -- no new dependencies needed.
 
 ---
 
 ## Technical Details
 
-**File: `src/components/LeadFinder.tsx`**
+**File: `src/assets/medilead-logo.png`**
+- Overwrite with the correct uploaded logo image
 
-| Lines | Change |
-|-------|--------|
-| 199-201 | Remove `<img>` logo from hero section |
-| ~213-215 | Add logo `<img>` inside the search card, positioned `absolute top-4 right-4 w-10 h-10 object-contain` |
-| ~232 | Re-add `<p className="text-sm text-muted-foreground mt-2 mb-2">Paste a full job description...</p>` between search input and Examples |
+**File: `src/pages/Landing.tsx`**
+- Import `useTheme` from `next-themes`
+- Add `useEffect` that calls `setTheme("dark")` on mount
+
+**File: `src/pages/Dashboard.tsx`**
+- Import `useTheme` from `next-themes`
+- Add `useEffect` that calls `setTheme("light")` on mount (this sets the default; the existing theme toggle in settings will still work for the user to switch to dark)
+
