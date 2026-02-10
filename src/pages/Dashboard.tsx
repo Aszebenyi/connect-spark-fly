@@ -335,7 +335,7 @@ export default function Index() {
         <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
       
-      <main className="lg:ml-72 p-6 pt-20 lg:pt-6">
+      <main className="lg:ml-72 p-4 pt-18 lg:pt-4">
         {activeTab === 'dashboard' && (
           <div className="animate-fade-in">
             <div className="page-header">
@@ -352,7 +352,7 @@ export default function Index() {
             />
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
                 <StatCard
                   title="Total Candidates"
                   value={stats.totalLeads}
@@ -388,11 +388,11 @@ export default function Index() {
             </div>
 
             {/* Quick Actions */}
-            <div className="mb-6">
+            <div className="mb-4">
               <div className="section-header">
                 <h2 className="section-title">Quick Actions</h2>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <button onClick={() => setShowCreateCampaign(true)} className="action-card text-left">
                   <div className="relative z-10">
                     <div className="visual-badge visual-badge-lg mb-3">
@@ -433,7 +433,7 @@ export default function Index() {
                     View All →
                   </Button>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {campaigns.slice(0, 4).map((campaign, index) => (
                     <CampaignCard 
                       key={campaign.id} 
