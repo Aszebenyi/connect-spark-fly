@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils';
 import { GlowDot, AbstractBlob } from './ui/visual-elements';
+import medileadLogo from '@/assets/medilead-logo.png';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBrandConfig } from '@/hooks/useBrandConfig';
 import { PLANS, PlanId } from '@/lib/plans';
@@ -96,9 +97,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
       <div className="p-7 border-b border-sidebar-border">
         <div className="flex items-center gap-4">
           <div className="relative">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/25 to-primary/5 flex items-center justify-center border border-primary/25 animate-pulse-glow">
-              <div className="w-5 h-5 rounded-lg bg-gradient-to-br from-primary to-primary/60 rotate-45" />
-            </div>
+            <img src={medileadLogo} alt="MediLead" className="w-12 h-12 rounded-2xl object-contain" />
             <GlowDot className="absolute -top-0.5 -right-0.5 w-3 h-3" color="success" />
           </div>
           <div>
