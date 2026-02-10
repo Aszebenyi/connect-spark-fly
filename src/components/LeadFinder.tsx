@@ -196,9 +196,6 @@ export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinde
     <div className="max-w-3xl mx-auto">
       {/* Hero Section */}
       <div className="text-center mb-6 animate-fade-in">
-        <div className="relative inline-block mb-4">
-          <img src={medileadLogo} alt="MediLead" className="w-16 h-16 object-contain" />
-        </div>
         <h2 className="text-2xl font-bold text-foreground mb-2 tracking-tight">
           {campaignId ? `Find Candidates for "${campaignName}"` : 'Find Your Next Placement'}
         </h2>
@@ -211,6 +208,7 @@ export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinde
 
       {/* Search Box */}
       <div className="glass-strong rounded-3xl p-6 card-shadow mb-6 animate-fade-in stagger-2 relative overflow-hidden">
+        <img src={medileadLogo} alt="MediLead" className="absolute top-4 right-4 w-10 h-10 object-contain z-10" />
         <div className="absolute top-0 right-0 w-64 h-64 opacity-20 -translate-y-1/2 translate-x-1/2">
           <AbstractBlob className="w-full h-full" />
         </div>
@@ -231,6 +229,8 @@ export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinde
               className="border-0 bg-transparent text-base placeholder:text-muted-foreground/60 focus-visible:ring-0 px-0"
             />
           </div>
+
+          <p className="text-sm text-muted-foreground mt-2 mb-2">Paste a full job description or describe the role, location, and requirements. Be as specific as possible.</p>
 
           {/* Examples */}
           <div className="mt-3">
