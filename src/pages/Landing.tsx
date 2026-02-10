@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
+import { useTheme } from 'next-themes';
 import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -228,6 +229,11 @@ export default function Landing() {
   const { appName } = useBrandConfig();
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [isFreeLeadSampleOpen, setIsFreeLeadSampleOpen] = useState(false);
+  const { setTheme } = useTheme();
+
+  useEffect(() => {
+    setTheme("light");
+  }, [setTheme]);
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: heroRef,

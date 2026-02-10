@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTheme } from 'next-themes';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { OAuthCallback } from '@/components/OAuthCallback';
 import { Sidebar } from '@/components/Sidebar';
@@ -36,7 +37,12 @@ import { useBrandConfig } from '@/hooks/useBrandConfig';
 
 export default function Index() {
   const { appName } = useBrandConfig();
+  const { setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('dashboard');
+
+  useEffect(() => {
+    setTheme("light");
+  }, [setTheme]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<LegacyLead | null>(null);
   const [dbLeads, setDbLeads] = useState<ApiLead[]>([]);
