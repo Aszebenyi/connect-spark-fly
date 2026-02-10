@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 serve(async (req) => {
@@ -127,56 +127,65 @@ serve(async (req) => {
     console.log('Profile context length:', profileContext.length);
     console.log('Has LinkedIn data:', !!linkedinData);
 
-    const systemPrompt = `You are an elite cold email copywriter. Your messages get 40%+ open rates and 15%+ reply rates. You write like a human, not a marketer.
+    // Extract healthcare-specific data for the Oracle method
+    const matchScore = lead.profile_data?.match_score;
+    const scoringNotes = lead.profile_data?.scoring_notes || '';
+    const licenses = lead.profile_data?.licenses || '';
+    const certifications = lead.profile_data?.certifications || '';
+    const specialty = lead.profile_data?.specialty || '';
+    const yearsExperience = lead.profile_data?.years_experience || '';
 
-Your style:
-- Short, punchy sentences. Never more than 2 lines per paragraph
-- No generic phrases like "I hope this finds you well" or "I came across your profile"
-- Pattern interrupt opening lines that make them curious
-- Reference SPECIFIC details from their background - be precise
-- Connect their experience to value, don't sell features
-- Soft CTAs that are easy to say yes to
-- Write like you're texting a colleague, not writing a formal letter
-- Use their first name naturally, not repeatedly
+    const systemPrompt = `You are a healthcare recruiter writing cold outreach emails. You follow the Oracle Method: 3 paragraphs, 4-6 sentences total. Every email must be ASSUMPTIVE — never passive.
 
-Tone: ${tone || 'professional but human'}
+STRUCTURE (exactly 3 paragraphs):
 
-CRITICAL: The outreach must feel 1:1 personalized, not templated. Reference actual things from their profile.
+Paragraph 1 - Who You Are (1-2 sentences):
+Introduce yourself, your company, and what you specialize in. Keep it brief and credible.
 
-PERSONALIZATION PRIORITIES:
-1. Their "About" section - shows what they care about
-2. Specific job responsibilities or achievements
-3. Their skills and how they connect to your value
-4. Career trajectory and transitions
-5. Education (especially for alumni connection)
-6. Company context (industry, size, challenges)`;
+Paragraph 2 - Why You're Reaching Out (2-3 sentences):
+Reference the specific job opening, the candidate's credentials (licenses, certifications, specialty, years of experience), and why they're a match. Use REAL data from their profile.
 
-    const userPrompt = `Write a high-converting cold outreach for this lead:
+Paragraph 3 - What You Want (1-2 sentences):
+Be ASSUMPTIVE. Ask for specific availability. Never use passive language.
 
-**LEAD PROFILE:**
-Name: ${lead.name}
-Title: ${lead.title || linkedinData?.jobTitle || 'Professional'}
-Company: ${lead.company || linkedinData?.companyName || 'their company'}
+CRITICAL RULES:
+- Total email MUST be under 6 sentences
+- ASSUMPTIVE language ONLY: "What does your availability look like Thursday or Friday?" / "Looking forward to connecting" / "Thanks in advance"
+- NEVER use passive: "Would this be interesting?" / "Is this worth exploring?" / "If you're open to it" / "Worth a chat?"
+- Pull REAL data from the candidate profile (licenses, certs, specialty, experience, employer)
+- Pull job context from the campaign goal
+- Keep it professional but warm — not salesy
+
+Tone: ${tone || 'professional and direct'}`;
+
+    const firstName = lead.name?.split(' ')[0] || lead.name;
+
+    const userPrompt = `Write a cold recruitment email using the Oracle Method for this candidate:
+
+**CANDIDATE:**
+Name: ${lead.name} (first name: ${firstName})
+Title: ${lead.title || linkedinData?.jobTitle || 'Healthcare Professional'}
+Current Employer: ${lead.company || linkedinData?.companyName || 'their current facility'}
 Location: ${lead.location || linkedinData?.jobLocation || 'Unknown'}
-Industry: ${lead.industry || linkedinData?.companyIndustry || ''}
+Specialty: ${specialty || lead.industry || ''}
+Licenses: ${licenses || 'Not specified'}
+Certifications: ${certifications || 'Not specified'}
+Years Experience: ${yearsExperience || 'Not specified'}
+Match Score: ${matchScore ? `${matchScore}/100` : 'N/A'}
+Scoring Notes: ${scoringNotes || 'None'}
 
-**RICH BACKGROUND DATA (USE THIS for deep personalization):**
-${profileContext || 'No detailed background available - use general professional context'}
+**BACKGROUND DATA:**
+${profileContext || 'No detailed background available'}
 
-**CAMPAIGN GOAL:**
-${campaignGoal || 'Connect and explore potential collaboration'}
+**JOB OPENING / CAMPAIGN GOAL:**
+${campaignGoal || 'Healthcare recruitment opportunity'}
 
-Write outreach that:
-1. Opens with something specific about THEM (reference their about section, skills, or recent role)
-2. Connects their expertise/background to your value proposition
-3. Shows you understand their world (use industry/role context)
-4. Has a low-friction CTA aligned with the campaign goal
-5. Feels like it was written by someone who actually researched them
+Write the email following the Oracle Method structure exactly. Use the candidate's REAL credentials and data.
 
 Return JSON with:
-- subject: Compelling, curiosity-driven subject line (max 50 chars, reference something specific about them)
-- body: Email body in clean HTML format. Use <p> tags for paragraphs (2-3 short sentences max per paragraph). Do NOT use <br> between paragraphs. Keep it conversational and punchy. Example: <p>First paragraph here.</p><p>Second paragraph here.</p>
-- linkedin_message: Shorter LinkedIn version (max 280 chars) - direct, personal, reference one specific thing from their profile`;
+- subject: Short, specific subject line referencing the opportunity or their specialty (max 50 chars)
+- body: Email body in clean HTML. Use <p> tags for each paragraph. Exactly 3 paragraphs, 4-6 sentences total. Example: <p>Paragraph 1.</p><p>Paragraph 2.</p><p>Paragraph 3.</p>
+- linkedin_message: Shorter LinkedIn version (max 280 chars) - direct, assumptive, reference their credentials`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',

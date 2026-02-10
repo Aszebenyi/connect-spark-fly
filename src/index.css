@@ -180,7 +180,7 @@
 @layer components {
   /* Stat Card */
   .stat-card {
-    @apply relative rounded-2xl p-5 card-shadow transition-all duration-500 overflow-hidden bg-card border border-border;
+    @apply relative rounded-2xl p-4 card-shadow transition-all duration-500 overflow-hidden bg-card border border-border;
   }
 
   .stat-card::before {
@@ -216,7 +216,7 @@
 
   /* Action Card */
   .action-card {
-    @apply relative rounded-2xl p-5 card-shadow transition-all duration-500 cursor-pointer overflow-hidden bg-card border border-border;
+    @apply relative rounded-2xl p-4 card-shadow transition-all duration-500 cursor-pointer overflow-hidden bg-card border border-border;
   }
 
   .action-card::before {
@@ -319,19 +319,19 @@
 
   /* Page Layout */
   .page-header {
-    @apply mb-6;
+    @apply mb-4;
   }
 
   .page-title {
-    @apply text-3xl font-bold text-foreground tracking-tight leading-none;
+    @apply text-2xl font-bold text-foreground tracking-tight leading-none;
   }
 
   .page-subtitle {
-    @apply text-muted-foreground text-base mt-1;
+    @apply text-muted-foreground text-sm mt-1;
   }
 
   .section-header {
-    @apply flex items-center justify-between mb-4;
+    @apply flex items-center justify-between mb-3;
   }
 
   .section-title {
