@@ -7,18 +7,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useBrandConfig } from '@/hooks/useBrandConfig';
 import { ContactDialog } from '@/components/ContactDialog';
 import { FreeLeadSampleModal } from '@/components/lead-magnets/FreeLeadSampleModal';
-import { Users, Sparkles } from 'lucide-react';
+import { Users } from 'lucide-react';
 import {
   PulseOrb, 
-  SparkBurst, 
-  TargetRings, 
   DataFlow, 
-  CircuitLines,
   MagnetPull,
   StackedBars,
-  ChatBubbles,
-  GlowDot,
-  DiamondShape,
 } from '@/components/ui/visual-elements';
 
 // Animated section component
@@ -244,14 +238,10 @@ export default function Landing() {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
   
   const features = [
-    { visual: MagnetPull, title: "AI-Powered Candidate Search", description: "No more sifting through hundreds of unqualified profiles. MediLead finds nurses matching your criteria (like 'ICU nurses in California with 3-5 years experience and CCRN certification'), filters for requirements, and shows you only the top candidates. Quality over quantity." },
-    { visual: CircuitLines, title: "Instant Profile Enrichment", description: "Every candidate is enriched with verified email, phone number, LinkedIn profile, and license verification—automatically in seconds." },
-    { visual: DataFlow, title: "Smart Job Openings", description: "Manage multiple roles simultaneously. Create openings for each position you're filling - 3 ICU roles, 2 ER positions, 5 travel contracts. Track which candidates you've contacted, who responded, and who's interview-ready across all your jobs." },
-    { visual: StackedBars, title: "Personalized Email Outreach", description: `AI reads each candidate's LinkedIn profile, skills, and career history — then writes a unique recruitment email. Send it via Gmail without leaving ${appName}.` },
-    { visual: TargetRings, title: "License Verification", description: "Every candidate shows current license status, certifications (BLS, ACLS, etc.), and years of experience. No manual verification needed." },
-    { visual: PulseOrb, title: "AI Match Scoring", description: "See exactly why each candidate fits your role. '85% match - 5 years ICU experience, has CCRN, CA license active, currently at similar-sized hospital.' Know who to contact first and why they're qualified." },
-    { visual: ChatBubbles, title: "Email Performance Tracking", description: "Track opens, clicks, and replies in real-time. See which candidates engaged with your outreach. AI-optimized email structure proven to increase reply rates by 15-25% vs generic recruiting emails." },
-    { visual: SparkBurst, title: "Complete Workflow", description: `Find candidates, verify credentials, save to job openings, and send personalized emails—all without leaving ${appName}.` },
+    { visual: MagnetPull, title: "AI-Powered Search & Filtering", description: "Describe the role you need filled. MediLead finds nurses matching your exact criteria, verifies credentials, and ranks by match score—so you only see top candidates." },
+    { visual: PulseOrb, title: "Match Scoring & Verification", description: "Every candidate gets a qualification score with reasoning. Licenses, certifications, and experience verified automatically—saving 20+ hours per week." },
+    { visual: StackedBars, title: "Personalized Outreach", description: `AI writes unique emails using each candidate's background. Send via Gmail, track opens and replies. 15-25% response rates vs 5% industry average.` },
+    { visual: DataFlow, title: "Multi-Role Management", description: "Manage ICU, ER, travel contracts simultaneously. Track contacted, responded, and interview-ready candidates across all your openings in one dashboard." },
   ];
   
   const steps = [
@@ -263,8 +253,8 @@ export default function Landing() {
   
   const pricing = [
     { name: "Starter", price: "$299", leads: "100 searches/mo", features: ["~1,000-1,500 qualified candidates", "AI-powered candidate search", "License & certification verification", "Gmail integration", "AI-generated email outreach", "Job opening management", "Email tracking (opens, replies)"] },
-    { name: "Growth", price: "$599", leads: "300 searches/mo", popular: true, features: ["~3,000-4,500 qualified candidates", "Everything in Starter, plus:", "Priority enrichment", "Advanced candidate filters", "Match scoring with AI reasoning", "Enhanced email analytics", "Multiple job opening management"] },
-    { name: "Agency", price: "$999", leads: "600 searches/mo", features: ["~6,000-9,000 qualified candidates", "Everything in Growth, plus:", "Dedicated account support", "Weekly performance reports", "Unlimited job openings", "CSV export", "Premium support"] },
+    { name: "Growth", price: "$599", leads: "300 searches/mo", popular: true, features: ["~3,000-4,500 qualified candidates", "Everything in Starter, plus:", "Priority enrichment", "Advanced candidate filters", "Match scoring with AI reasoning", "Enhanced email analytics", "Multiple job opening management", "Weekly performance reports"] },
+    { name: "Agency", price: "$999", leads: "600 searches/mo", features: ["~6,000-9,000 qualified candidates", "Everything in Growth, plus:", "Dedicated account support", "Unlimited job openings", "CSV export", "Priority support"] },
   ];
   
   return (
@@ -424,7 +414,7 @@ export default function Landing() {
             transition={{ duration: 1, delay: 0.6 }}
             className="mt-16 text-sm text-muted-foreground/60"
           >
-            Trusted by 100+ healthcare recruiters
+            Join healthcare recruiters filling roles 3x faster
           </motion.div>
         </motion.div>
         
@@ -434,19 +424,19 @@ export default function Landing() {
       <div className="h-32 bg-gradient-to-b from-transparent via-background/50 to-background" />
       
       {/* Stats Section */}
-      <section className="py-24 px-6">
+      <section className="py-28 px-6">
         <div className="max-w-5xl mx-auto">
           <AnimatedSection className="text-center mb-12">
             <h2 className="text-2xl md:text-3xl font-bold text-foreground">Proven Results for Healthcare Recruiters</h2>
           </AnimatedSection>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16">
-            <StatItem value="15-25%" label="Reply Rate" index={0} />
+            <StatItem value="Up to 25%" label="Reply Rate" index={0} />
             <StatItem value="60%" label="Faster Placements" index={1} />
-            <StatItem value="98%" label="Contact Accuracy" index={2} />
-            <StatItem value="$1-2" label="Per Candidate" index={3} />
+            <StatItem value="95%+" label="Contact Accuracy" index={2} />
+            <StatItem value="$0.30-2" label="Per Candidate" index={3} />
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16 mt-2">
-            <p className="text-center text-xs text-muted-foreground/70">3-5× industry average</p>
+            <p className="text-center text-xs text-muted-foreground/70">vs 5% industry average</p>
             <p className="text-center text-xs text-muted-foreground/70">Hours, not months</p>
             <p className="text-center text-xs text-muted-foreground/70">Verified emails & phones</p>
             <p className="text-center text-xs text-muted-foreground/70">vs $1,500-3,000 agencies</p>
@@ -455,9 +445,9 @@ export default function Landing() {
       </section>
       
       {/* Features Section */}
-      <section id="features" className="py-24 px-6">
-        <div className="max-w-6xl mx-auto">
-          <AnimatedSection className="text-center mb-16">
+      <section id="features" className="py-32 px-6">
+        <div className="max-w-5xl mx-auto">
+          <AnimatedSection className="text-center mb-20">
             <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
               Built for Healthcare Recruiters
             </span>
@@ -469,27 +459,10 @@ export default function Landing() {
             </p>
           </AnimatedSection>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-2 gap-8">
             {features.map((feature, i) => (
               <FeatureCard key={feature.title} {...feature} index={i} />
             ))}
-          </div>
-          
-          {/* Benefits Section */}
-          <AnimatedSection className="text-center mt-24 mb-16">
-            <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-              Why MediLead Works
-            </span>
-            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-              Results backed by data
-            </h2>
-          </AnimatedSection>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <FeatureCard visual={SparkBurst} title="Reduce Time-to-Fill by 60%" description="Stop waiting months to fill nursing roles. MediLead finds qualified candidates in minutes. Average time from search to first candidate contact: under 2 hours. Traditional placements take 5+ months—we get you interviews in days." index={0} />
-            <FeatureCard visual={ChatBubbles} title="15-25% Reply Rate (3-5x Average)" description="Average healthcare recruiting emails get 5% replies. MediLead's AI-optimized email structure and deep personalization achieve 15-25% response rates—proven to book 3-5× more interviews per campaign." index={1} />
-            <FeatureCard visual={CircuitLines} title="Automated Credential Verification" description="Manual license checking takes 2+ hours per candidate. MediLead verifies licenses, certifications, and experience automatically—saving 20+ hours per week." index={2} />
-            <FeatureCard visual={StackedBars} title="Lower Cost Per Hire" description="Traditional placement agencies charge $1,500-3,000 per hire. MediLead costs $1-2 per qualified candidate. Fill 10 roles and save $25,000+ vs agencies." index={3} />
           </div>
         </div>
       </section>
@@ -502,7 +475,7 @@ export default function Landing() {
       </div>
       
       {/* How it Works Section - Light theme */}
-      <section id="how-it-works" className="py-24 px-6 relative bg-white overflow-hidden">
+      <section id="how-it-works" className="py-32 px-6 relative bg-white overflow-hidden">
         {/* Decorative elements */}
         <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
@@ -557,7 +530,7 @@ export default function Landing() {
       </div>
       
       {/* Pricing Section */}
-      <section id="pricing" className="py-24 px-6">
+      <section id="pricing" className="py-32 px-6">
         <div className="max-w-5xl mx-auto">
           <AnimatedSection className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
@@ -591,7 +564,7 @@ export default function Landing() {
             <span className="gradient-text">3x faster?</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-10">
-            Join hundreds of healthcare recruiters using {appName} to source, qualify, and reach qualified candidates in minutes.
+            Join healthcare recruiters using {appName} to source, qualify, and reach candidates in minutes.
           </p>
           <p className="text-sm text-muted-foreground/60 mt-2">
             First 5 candidates free. No credit card required.
