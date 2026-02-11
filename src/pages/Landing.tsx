@@ -244,25 +244,27 @@ export default function Landing() {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
   
   const features = [
-    { visual: MagnetPull, title: "AI-Powered Candidate Search", description: "Describe who you're looking for in plain English. 'ICU nurses in California with 3+ years experience.' Our AI understands licensing, certifications, and healthcare context." },
+    { visual: MagnetPull, title: "AI-Powered Candidate Search", description: "No more sifting through hundreds of unqualified profiles. MediLead finds nurses matching your criteria (like 'ICU nurses in California with 3-5 years experience and CCRN certification'), filters for requirements, and shows you only the top candidates. Quality over quantity." },
     { visual: CircuitLines, title: "Instant Profile Enrichment", description: "Every candidate is enriched with verified email, phone number, LinkedIn profile, and license verification—automatically in seconds." },
-    { visual: DataFlow, title: "Smart Job Openings", description: "Create job openings for each role you're filling. Track which candidates you've contacted, who responded, and who's interview-ready." },
+    { visual: DataFlow, title: "Smart Job Openings", description: "Manage multiple roles simultaneously. Create openings for each position you're filling - 3 ICU roles, 2 ER positions, 5 travel contracts. Track which candidates you've contacted, who responded, and who's interview-ready across all your jobs." },
     { visual: StackedBars, title: "Personalized Email Outreach", description: `AI reads each candidate's LinkedIn profile, skills, and career history — then writes a unique recruitment email. Send it via Gmail without leaving ${appName}.` },
     { visual: TargetRings, title: "License Verification", description: "Every candidate shows current license status, certifications (BLS, ACLS, etc.), and years of experience. No manual verification needed." },
+    { visual: PulseOrb, title: "AI Match Scoring", description: "See exactly why each candidate fits your role. '85% match - 5 years ICU experience, has CCRN, CA license active, currently at similar-sized hospital.' Know who to contact first and why they're qualified." },
+    { visual: ChatBubbles, title: "Email Performance Tracking", description: "Track opens, clicks, and replies in real-time. See which candidates engaged with your outreach. AI-optimized email structure proven to increase reply rates by 15-25% vs generic recruiting emails." },
     { visual: SparkBurst, title: "Complete Workflow", description: `Find candidates, verify credentials, save to job openings, and send personalized emails—all without leaving ${appName}.` },
   ];
   
   const steps = [
     { title: "Describe Who You Need", description: "Use natural language to describe the role. 'Travel ICU nurse, 13-week contract, Phoenix, BLS/ACLS required.' Our AI understands healthcare terminology and requirements." },
-    { title: "AI Searches LinkedIn", description: "Our technology searches across millions of healthcare professionals to find candidates who match your exact requirements—location, license, certifications, and experience." },
+    { title: "AI Searches & Filters Candidates", description: "Our AI searches across millions of healthcare professionals, filters for required credentials and experience, then ranks by match score. You see only the top qualified candidates—not hundreds of unqualified results." },
     { title: "Get Verified Contact Info", description: "Each candidate is automatically enriched with email, phone, license verification, and current employment status. 98% contact accuracy guaranteed." },
     { title: "Send Personalized Emails", description: "Generate personalized outreach with AI, or write your own. Send directly from the platform using your Gmail account. Track opens and responses." },
   ];
   
   const pricing = [
-    { name: "Starter", price: "$299", leads: "100 searches/mo", features: ["~1,000-1,500 qualified candidates", "AI-powered candidate search", "Gmail integration", "Email outreach", "Job opening management", "Basic analytics"], description: "Perfect for solo recruiters and new agencies" },
-    { name: "Growth", price: "$599", leads: "300 searches/mo", popular: true, features: ["~3,000-4,500 qualified candidates", "Everything in Starter, plus:", "Priority enrichment", "Advanced candidate filters", "Team collaboration", "Email templates", "Campaign analytics"], description: "For growing recruiting teams" },
-    { name: "Agency", price: "$999", leads: "600 searches/mo", features: ["~6,000-9,000 qualified candidates", "Everything in Growth, plus:", "Dedicated support", "Custom integrations", "Unlimited job openings", "Advanced reporting"], description: "For established agencies" },
+    { name: "Starter", price: "$299", leads: "100 searches/mo", features: ["~1,000-1,500 qualified candidates", "AI-powered candidate search", "License & certification verification", "Gmail integration", "AI-generated email outreach", "Job opening management", "Email tracking (opens, replies)"] },
+    { name: "Growth", price: "$599", leads: "300 searches/mo", popular: true, features: ["~3,000-4,500 qualified candidates", "Everything in Starter, plus:", "Priority enrichment", "Advanced candidate filters", "Match scoring with AI reasoning", "Enhanced email analytics", "Multiple job opening management"] },
+    { name: "Agency", price: "$999", leads: "600 searches/mo", features: ["~6,000-9,000 qualified candidates", "Everything in Growth, plus:", "Dedicated account support", "Weekly performance reports", "Unlimited job openings", "CSV export", "Premium support"] },
   ];
   
   return (
@@ -458,7 +460,7 @@ export default function Landing() {
             </p>
           </AnimatedSection>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((feature, i) => (
               <FeatureCard key={feature.title} {...feature} index={i} />
             ))}
