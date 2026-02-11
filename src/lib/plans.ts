@@ -48,6 +48,7 @@ export const PLANS = {
       'Match scoring with AI reasoning',
       'Enhanced email analytics',
       'Multiple job opening management',
+      'Weekly performance reports',
     ],
   },
   scale: {
@@ -62,10 +63,9 @@ export const PLANS = {
       '~6,000-9,000 qualified candidates',
       'Everything in Growth',
       'Dedicated account support',
-      'Weekly performance reports',
       'Unlimited job openings',
       'CSV export',
-      'Premium support',
+      'Priority support',
     ],
   },
 } as const;

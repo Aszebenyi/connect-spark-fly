@@ -87,6 +87,16 @@ function getEmployer(lead: Lead): string {
   return lead.company || pd.company || pd.linkedin?.company || pd.linkedin?.latestCompany || '-';
 }
 
+function getEmploymentStatus(lead: Lead): { status: 'employed' | 'available'; employer: string | null } {
+  const pd = getProfileData(lead);
+  const employer = lead.company || pd.company || pd.linkedin?.company || pd.linkedin?.latestCompany || null;
+  const isCurrentlyEmployed = employer && employer !== '-';
+  return {
+    status: isCurrentlyEmployed ? 'employed' : 'available',
+    employer: isCurrentlyEmployed ? employer : null,
+  };
+}
+
 function getLocation(lead: Lead): string {
   const pd = getProfileData(lead);
   return lead.location || pd.location || pd.linkedin?.location || '-';
@@ -430,7 +440,7 @@ export function LeadTable({
               <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '10%' }}>Location</th>
               <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '10%' }}>License</th>
               <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '15%' }}>Certifications</th>
-              <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '10%' }}>
+              <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '8%' }}>
                 <button 
                   onClick={() => handleSort('experience')}
                   className="flex items-center gap-2 hover:text-foreground transition-colors"
@@ -439,7 +449,8 @@ export function LeadTable({
                   <span className="text-[10px]">↕</span>
                 </button>
               </th>
-              <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '8%' }}>
+              <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '10%' }}>Emp. Status</th>
+              <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '7%' }}>
                 <button 
                   onClick={() => handleSort('match_score')}
                   className="flex items-center gap-2 hover:text-foreground transition-colors"
@@ -449,14 +460,14 @@ export function LeadTable({
                 </button>
               </th>
               <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '10%' }}>Job Opening</th>
-              <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '7%' }}>Status</th>
-              <th className="text-right p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '5%' }}>Actions</th>
+              <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '6%' }}>Status</th>
+              <th className="text-right p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '4%' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredLeads.length === 0 ? (
               <tr>
-                <td colSpan={11} className="p-0">
+                <td colSpan={12} className="p-0">
                   {leads.length === 0 ? (
                     <EmptyState
                       icon={<Users className="w-8 h-8" />}
@@ -602,6 +613,19 @@ export function LeadTable({
                     </td>
                     <td className="p-3 align-middle">
                       <span className="text-sm text-foreground">{getExperienceLabel(lead)}</span>
+                    </td>
+                    <td className="p-3 align-middle">
+                      {(() => {
+                        const emp = getEmploymentStatus(lead);
+                        return emp.status === 'employed' ? (
+                          <div>
+                            <Badge className="border bg-emerald-500/15 text-emerald-600 border-emerald-500/30 text-xs">Currently Employed</Badge>
+                            {emp.employer && <p className="text-xs text-muted-foreground mt-1 truncate max-w-[120px]">{emp.employer}</p>}
+                          </div>
+                        ) : (
+                          <Badge className="border bg-primary/15 text-primary border-primary/30 text-xs">Available</Badge>
+                        );
+                      })()}
                     </td>
                     <td className="p-3 align-middle">
                       {(() => {
