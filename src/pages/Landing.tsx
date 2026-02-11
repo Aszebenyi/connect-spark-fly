@@ -255,10 +255,10 @@ export default function Landing() {
   ];
   
   const steps = [
-    { title: "Describe Who You Need", description: "Use natural language to describe the role. 'Travel ICU nurse, 13-week contract, Phoenix, BLS/ACLS required.' Our AI understands healthcare terminology and requirements." },
-    { title: "AI Searches & Filters Candidates", description: "Our AI searches across millions of healthcare professionals, filters for required credentials and experience, then ranks by match score. You see only the top qualified candidates—not hundreds of unqualified results." },
-    { title: "Get Verified Contact Info", description: "Each candidate is automatically enriched with email, phone, license verification, and current employment status. 98% contact accuracy guaranteed." },
-    { title: "Send Personalized Emails", description: "Generate personalized outreach with AI, or write your own. Send directly from the platform using your Gmail account. Track opens and responses." },
+    { title: "Describe Who You Need", description: "Use natural language to describe the role. 'Travel ICU nurse, 13-week contract, Phoenix, BLS/ACLS required.' Our AI understands healthcare terminology and requirements.", time: "⏱️ Takes 30 seconds" },
+    { title: "AI Searches & Filters Candidates", description: "Our AI searches across millions of healthcare professionals, filters for required credentials and experience, then ranks by match score. You see only the top qualified candidates—not hundreds of unqualified results.", time: "⏱️ Takes 2 minutes" },
+    { title: "Get Verified Contact Info", description: "Each candidate is automatically enriched with email, phone, license verification, and current employment status. 98% contact accuracy guaranteed.", time: "⏱️ Instant enrichment" },
+    { title: "Send Personalized Emails", description: "Generate personalized outreach with AI, or write your own. Send directly from the platform using your Gmail account. Track opens and responses.", time: "⏱️ First responses in 24-48 hours" },
   ];
   
   const pricing = [
@@ -436,11 +436,20 @@ export default function Landing() {
       {/* Stats Section */}
       <section className="py-24 px-6">
         <div className="max-w-5xl mx-auto">
+          <AnimatedSection className="text-center mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground">Proven Results for Healthcare Recruiters</h2>
+          </AnimatedSection>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16">
-            <StatItem value="10K+" label="Candidates Found" index={0} />
-            <StatItem value="98%" label="Contact Accuracy" index={1} />
-            <StatItem value="3x" label="Faster Placements" index={2} />
-            <StatItem value="2min" label="Avg. Search Time" index={3} />
+            <StatItem value="15-25%" label="Reply Rate" index={0} />
+            <StatItem value="60%" label="Faster Placements" index={1} />
+            <StatItem value="98%" label="Contact Accuracy" index={2} />
+            <StatItem value="$1-2" label="Per Candidate" index={3} />
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16 mt-2">
+            <p className="text-center text-xs text-muted-foreground/70">3-5× industry average</p>
+            <p className="text-center text-xs text-muted-foreground/70">Hours, not months</p>
+            <p className="text-center text-xs text-muted-foreground/70">Verified emails & phones</p>
+            <p className="text-center text-xs text-muted-foreground/70">vs $1,500-3,000 agencies</p>
           </div>
         </div>
       </section>
@@ -464,6 +473,23 @@ export default function Landing() {
             {features.map((feature, i) => (
               <FeatureCard key={feature.title} {...feature} index={i} />
             ))}
+          </div>
+          
+          {/* Benefits Section */}
+          <AnimatedSection className="text-center mt-24 mb-16">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
+              Why MediLead Works
+            </span>
+            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+              Results backed by data
+            </h2>
+          </AnimatedSection>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <FeatureCard visual={SparkBurst} title="Reduce Time-to-Fill by 60%" description="Stop waiting months to fill nursing roles. MediLead finds qualified candidates in minutes. Average time from search to first candidate contact: under 2 hours. Traditional placements take 5+ months—we get you interviews in days." index={0} />
+            <FeatureCard visual={ChatBubbles} title="15-25% Reply Rate (3-5x Average)" description="Average healthcare recruiting emails get 5% replies. MediLead's AI-optimized email structure and deep personalization achieve 15-25% response rates—proven to book 3-5× more interviews per campaign." index={1} />
+            <FeatureCard visual={CircuitLines} title="Automated Credential Verification" description="Manual license checking takes 2+ hours per candidate. MediLead verifies licenses, certifications, and experience automatically—saving 20+ hours per week." index={2} />
+            <FeatureCard visual={StackedBars} title="Lower Cost Per Hire" description="Traditional placement agencies charge $1,500-3,000 per hire. MediLead costs $1-2 per qualified candidate. Fill 10 roles and save $25,000+ vs agencies." index={3} />
           </div>
         </div>
       </section>
@@ -510,8 +536,11 @@ export default function Landing() {
                     {i + 1}
                   </div>
                 </div>
-                <div className="pt-2">
-                  <h3 className="text-lg font-semibold text-neutral-900 mb-2">{step.title}</h3>
+                <div className="pt-2 flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="text-lg font-semibold text-neutral-900">{step.title}</h3>
+                    <span className="text-xs font-medium text-primary bg-primary/10 px-2.5 py-1 rounded-full whitespace-nowrap">{step.time}</span>
+                  </div>
                   <p className="text-neutral-500 text-sm leading-relaxed">{step.description}</p>
                 </div>
               </motion.div>
