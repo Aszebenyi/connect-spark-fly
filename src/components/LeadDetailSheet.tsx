@@ -31,9 +31,10 @@ import {
   Crown,
   Heart,
   ChevronRight,
-  AlertCircle
+  AlertCircle,
+  ChevronDown,
 } from 'lucide-react';
-import { enrichLeadWithLinkedIn, LinkedInProfile } from '@/lib/api';
+import { enrichLeadWithLinkedIn, LinkedInProfile, getOutreachMessages, OutreachMessage } from '@/lib/api';
 import { toast } from 'sonner';
 import { useEmailConnection } from '@/hooks/useEmailConnection';
 import { generateOutreach, GeneratedOutreach } from '@/lib/api';
@@ -64,8 +65,8 @@ const SectionHeader = ({ icon: Icon, children, count }: { icon: any; children: R
 );
 
 // Card wrapper for items
-const ItemCard = ({ children, className = "", hover = false }: { children: React.ReactNode; className?: string; hover?: boolean }) => (
-  <div className={`rounded-xl bg-muted/30 border border-border/50 p-3.5 ${hover ? 'hover:bg-muted/50 transition-colors cursor-pointer' : ''} ${className}`}>
+const ItemCard = ({ children, className = "", hover = false, onClick }: { children: React.ReactNode; className?: string; hover?: boolean; onClick?: () => void }) => (
+  <div onClick={onClick} className={`rounded-xl bg-muted/30 border border-border/50 p-3.5 ${hover ? 'hover:bg-muted/50 transition-colors cursor-pointer' : ''} ${className}`}>
     {children}
   </div>
 );
@@ -98,13 +99,26 @@ export function LeadDetailSheet({ lead, open, onClose, onLeadUpdated }: LeadDeta
   const [editedSubject, setEditedSubject] = useState('');
   const [editedBody, setEditedBody] = useState('');
   const { isConnected, sendEmail } = useEmailConnection();
+  const [emailHistory, setEmailHistory] = useState<OutreachMessage[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [expandedEmailId, setExpandedEmailId] = useState<string | null>(null);
 
   // Sync local state when lead changes or when sheet opens
   useEffect(() => {
     if (lead && open) {
       setLocalProfileData(lead.profile_data || lead.profileData || null);
+      // Load email history
+      setIsLoadingHistory(true);
+      getOutreachMessages(lead.id).then(result => {
+        if (result.success && result.messages) {
+          setEmailHistory(result.messages.slice(0, 10));
+        }
+      }).finally(() => setIsLoadingHistory(false));
+    } else {
+      setEmailHistory([]);
+      setExpandedEmailId(null);
     }
-  }, [lead?.id, lead?.profile_data, lead?.profileData, open]);
+  }, [lead?.id, open]);
 
   // Sync edited values when outreach is generated
   useEffect(() => {
@@ -576,7 +590,40 @@ export function LeadDetailSheet({ lead, open, onClose, onLeadUpdated }: LeadDeta
               </Section>
             )}
 
-            {/* Activity */}
+            {/* Email History */}
+            <Section>
+              <SectionHeader icon={Mail} count={emailHistory.length}>Email History</SectionHeader>
+              {isLoadingHistory ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Loading...
+                </div>
+              ) : emailHistory.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No emails sent yet</p>
+              ) : (
+                <div className="space-y-2 relative">
+                  <div className="absolute left-5 top-4 bottom-4 w-px bg-border/50" />
+                  {emailHistory.map((msg) => (
+                    <div key={msg.id} className="relative pl-8">
+                      <div className="absolute left-3.5 top-3 w-3 h-3 rounded-full bg-primary/20 border-2 border-primary z-10" />
+                      <ItemCard hover className="cursor-pointer" onClick={() => setExpandedEmailId(expandedEmailId === msg.id ? null : msg.id!)}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs text-muted-foreground">
+                            ✉️ {msg.sent_at ? new Date(msg.sent_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Draft'}
+                          </span>
+                          <Badge variant="outline" className="text-[10px] capitalize">{msg.status || 'sent'}</Badge>
+                        </div>
+                        <p className="text-sm font-medium text-foreground truncate">{msg.subject || 'No subject'}</p>
+                        {expandedEmailId === msg.id && (
+                          <p className="text-xs text-muted-foreground mt-2 whitespace-pre-wrap">{msg.body}</p>
+                        )}
+                      </ItemCard>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Section>
+
             <Section>
               <SectionHeader icon={Calendar}>Activity</SectionHeader>
               <div className="flex items-center gap-4 text-xs text-muted-foreground">
@@ -668,10 +715,9 @@ export function LeadDetailSheet({ lead, open, onClose, onLeadUpdated }: LeadDeta
             </div>
             
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {/* Test mode notice */}
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-600">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/10 border border-primary/20 text-primary">
                 <Send className="w-4 h-4 flex-shrink-0" />
-                <p className="text-xs">Test mode: Sending to <strong>luukalleman@gmail.com</strong></p>
+                <p className="text-xs">Sending to <strong>{lead.email || linkedinData?.email || 'No email'}</strong></p>
               </div>
 
               <div>
@@ -702,16 +748,20 @@ export function LeadDetailSheet({ lead, open, onClose, onLeadUpdated }: LeadDeta
                 onClick={async () => {
                   setIsSendingEmail(true);
                   try {
-                    // TEST: Send to luukalleman@gmail.com
+                    const recipientEmail = lead.email || linkedinData?.email;
+                    if (!recipientEmail) {
+                      toast.error('No email address available');
+                      return;
+                    }
                     const result = await sendEmail({
                       leadId: lead.id,
-                      to: 'luukalleman@gmail.com', // TEST OVERRIDE
+                      to: recipientEmail,
                       subject: editedSubject,
                       body: editedBody,
                     });
 
                     if (result.success) {
-                      toast.success('Email sent to luukalleman@gmail.com (test mode)');
+                      toast.success(`Email sent to ${lead.name}`);
                       setShowOutreachDialog(false);
                       onLeadUpdated?.();
                     }

@@ -39,6 +39,7 @@ export default function Index() {
   const { appName } = useBrandConfig();
   const { setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [statusFilterFromStats, setStatusFilterFromStats] = useState<string | null>(null);
 
   useEffect(() => {
     setTheme("light");
@@ -360,6 +361,7 @@ export default function Index() {
                 changeType="positive"
                 visual="users"
                 className="animate-fade-in stagger-1"
+                onClick={() => { setStatusFilterFromStats(null); setActiveTab('leads'); }}
               />
               <StatCard
                 title="Contacted"
@@ -368,6 +370,7 @@ export default function Index() {
                 changeType="positive"
                 visual="send"
                 className="animate-fade-in stagger-2"
+                onClick={() => { setStatusFilterFromStats('contacted'); setActiveTab('leads'); }}
               />
               <StatCard
                 title="Replied"
@@ -376,6 +379,7 @@ export default function Index() {
                 changeType="positive"
                 visual="chat"
                 className="animate-fade-in stagger-3"
+                onClick={() => { setStatusFilterFromStats('replied'); setActiveTab('leads'); }}
               />
               <StatCard
                 title="Reply Rate"
@@ -485,6 +489,11 @@ export default function Index() {
                 </p>
               </div>
               <div className="flex items-center gap-3">
+                {statusFilterFromStats && (
+                  <Button variant="outline" size="sm" onClick={() => setStatusFilterFromStats(null)} className="rounded-xl gap-1.5 text-primary border-primary/30">
+                    Filtered: {statusFilterFromStats} ✕
+                  </Button>
+                )}
                 <Button variant="outline" onClick={() => { setSelectedCampaignId(null); loadData(); }} className="rounded-xl">
                   Refresh
                 </Button>
@@ -510,6 +519,9 @@ export default function Index() {
               onBulkRemove={handleBulkRemove}
               onCreateCampaign={() => setShowCreateCampaign(true)}
               onFindLeads={() => setActiveTab('finder')}
+              initialStatusFilter={statusFilterFromStats}
+              onClearStatusFilter={() => setStatusFilterFromStats(null)}
+              activeCampaign={campaigns?.find(c => c.id === selectedCampaignId) || null}
             />
           </div>
         )}

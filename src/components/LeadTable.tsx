@@ -1,14 +1,22 @@
-import { useState, useMemo, useRef, useCallback } from 'react';
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { Lead } from '@/types/lead';
-import { Campaign } from '@/lib/api';
+import { Campaign, getOutreachMessages, OutreachMessage } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { CheckCircle2, Download, Users, Search, Sparkles, ShieldCheck, X, Trash2, Plus } from 'lucide-react';
+import { CheckCircle2, Download, Users, Search, Sparkles, ShieldCheck, X, Trash2, Plus, Mail } from 'lucide-react';
 import { exportLeadsToCSV } from '@/lib/csv-export';
+import { EmailModal } from '@/components/EmailModal';
+import { BulkEmailModal } from '@/components/BulkEmailModal';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { EmptyState } from '@/components/EmptyState';
 import {
@@ -45,6 +53,9 @@ interface LeadTableProps {
   onBulkRemove?: (leadIds: string[], campaignId: string) => void;
   onCreateCampaign?: () => void;
   onFindLeads?: () => void;
+  initialStatusFilter?: string | null;
+  onClearStatusFilter?: () => void;
+  activeCampaign?: Campaign | null;
 }
 
 const statusConfig: Record<string, { label: string; color: string }> = {
@@ -53,6 +64,9 @@ const statusConfig: Record<string, { label: string; color: string }> = {
   responded: { label: 'Responded', color: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30' },
   replied: { label: 'Replied', color: 'bg-success/15 text-success border-success/30' },
   qualified: { label: 'Qualified', color: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' },
+  interview_scheduled: { label: 'Interview', color: 'bg-purple-500/15 text-purple-400 border-purple-500/30' },
+  offer_sent: { label: 'Offer Sent', color: 'bg-amber-500/15 text-amber-400 border-amber-500/30' },
+  hired: { label: 'Hired', color: 'bg-emerald-600/15 text-emerald-600 border-emerald-600/30' },
   unqualified: { label: 'Unqualified', color: 'bg-muted text-muted-foreground border-border' },
   lost: { label: 'Lost', color: 'bg-destructive/15 text-destructive border-destructive/30' },
 };
@@ -141,13 +155,47 @@ export function LeadTable({
   onBulkRemove,
   onCreateCampaign,
   onFindLeads,
+  initialStatusFilter,
+  onClearStatusFilter,
+  activeCampaign,
 }: LeadTableProps) {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>(initialStatusFilter || 'all');
   const [sortField, setSortField] = useState<string>('match_score');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [emailModalLead, setEmailModalLead] = useState<Lead | null>(null);
+  const [showBulkEmail, setShowBulkEmail] = useState(false);
+  const [outreachCounts, setOutreachCounts] = useState<Record<string, { count: number; lastSent: string | null }>>({});
+
+  // Sync initial status filter from parent
+  useEffect(() => {
+    if (initialStatusFilter) {
+      setStatusFilter(initialStatusFilter);
+    }
+  }, [initialStatusFilter]);
+
+  // Fetch outreach message counts for all leads (batch)
+  useEffect(() => {
+    if (leads.length === 0) return;
+    getOutreachMessages().then(result => {
+      if (result.success && result.messages) {
+        const counts: Record<string, { count: number; lastSent: string | null }> = {};
+        for (const msg of result.messages) {
+          if (!msg.lead_id) continue;
+          if (!counts[msg.lead_id]) {
+            counts[msg.lead_id] = { count: 0, lastSent: null };
+          }
+          counts[msg.lead_id].count++;
+          if (msg.sent_at && (!counts[msg.lead_id].lastSent || msg.sent_at > counts[msg.lead_id].lastSent!)) {
+            counts[msg.lead_id].lastSent = msg.sent_at;
+          }
+        }
+        setOutreachCounts(counts);
+      }
+    });
+  }, [leads]);
 
   // Build a map: leadId -> campaign names
   const leadCampaignMap = useMemo(() => {
@@ -551,7 +599,24 @@ export function LeadTable({
                           )}
                         </div>
                         <div>
-                          <p className="font-semibold text-foreground">{lead.name}</p>
+                          <div className="flex items-center gap-1.5">
+                            <p className="font-semibold text-foreground">{lead.name}</p>
+                            {outreachCounts[lead.id] && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="inline-flex items-center">
+                                      <Mail className="w-3.5 h-3.5 text-blue-400" />
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{outreachCounts[lead.id].count} email{outreachCounts[lead.id].count > 1 ? 's' : ''} sent
+                                    {outreachCounts[lead.id].lastSent && `, last on ${new Date(outreachCounts[lead.id].lastSent!).toLocaleDateString()}`}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+                          </div>
                           <p className="text-sm text-muted-foreground mt-0.5">
                             {lead.title || 'No title'}
                             {(() => {
@@ -673,6 +738,15 @@ export function LeadTable({
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="glass-strong border-border/80 w-48">
+                          {lead.email && (
+                            <DropdownMenuItem onClick={(e) => {
+                              e.stopPropagation();
+                              setEmailModalLead(lead);
+                            }}>
+                              <Mail className="w-4 h-4 mr-2" />
+                              Send Email
+                            </DropdownMenuItem>
+                          )}
                           {lead.linkedin && (
                             <DropdownMenuItem onClick={(e) => {
                               e.stopPropagation();
@@ -684,23 +758,23 @@ export function LeadTable({
                           {onStatusChange && (
                             <>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={(e) => {
-                                e.stopPropagation();
-                                onStatusChange(lead.id, 'contacted');
-                              }}>
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onStatusChange(lead.id, 'contacted'); }}>
                                 Mark Contacted
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={(e) => {
-                                e.stopPropagation();
-                                onStatusChange(lead.id, 'replied');
-                              }}>
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onStatusChange(lead.id, 'replied'); }}>
                                 Mark Replied
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={(e) => {
-                                e.stopPropagation();
-                                onStatusChange(lead.id, 'qualified');
-                              }}>
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onStatusChange(lead.id, 'qualified'); }}>
                                 Mark Qualified
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onStatusChange(lead.id, 'interview_scheduled'); }}>
+                                Mark Interview Scheduled
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onStatusChange(lead.id, 'offer_sent'); }}>
+                                Mark Offer Sent
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onStatusChange(lead.id, 'hired'); }}>
+                                Mark Hired
                               </DropdownMenuItem>
                             </>
                           )}
@@ -781,6 +855,12 @@ export function LeadTable({
             </Button>
           )}
 
+          {/* Send Emails */}
+          <Button variant="outline" size="sm" className="gap-1.5 rounded-xl" onClick={() => setShowBulkEmail(true)}>
+            <Mail className="w-3.5 h-3.5" />
+            Send Emails ({selectedIds.size})
+          </Button>
+
           {/* Delete */}
           {onBulkDelete && (
             <Button variant="outline" size="sm" className="gap-1.5 rounded-xl text-destructive hover:text-destructive" onClick={handleBulkDelete}>
@@ -801,6 +881,47 @@ export function LeadTable({
           </Button>
         </div>
       )}
+
+      {/* Email Modal */}
+      <EmailModal
+        lead={emailModalLead}
+        campaign={activeCampaign}
+        isOpen={!!emailModalLead}
+        onClose={() => setEmailModalLead(null)}
+        onSent={() => {
+          setOutreachCounts(prev => {
+            const id = emailModalLead?.id;
+            if (!id) return prev;
+            return { ...prev, [id]: { count: (prev[id]?.count || 0) + 1, lastSent: new Date().toISOString() } };
+          });
+        }}
+      />
+
+      {/* Bulk Email Modal */}
+      <BulkEmailModal
+        leads={filteredLeads.filter(l => selectedIds.has(l.id))}
+        campaign={activeCampaign}
+        isOpen={showBulkEmail}
+        onClose={() => setShowBulkEmail(false)}
+        onSent={() => {
+          clearSelection();
+          // Refresh outreach counts
+          getOutreachMessages().then(result => {
+            if (result.success && result.messages) {
+              const counts: Record<string, { count: number; lastSent: string | null }> = {};
+              for (const msg of result.messages) {
+                if (!msg.lead_id) continue;
+                if (!counts[msg.lead_id]) counts[msg.lead_id] = { count: 0, lastSent: null };
+                counts[msg.lead_id].count++;
+                if (msg.sent_at && (!counts[msg.lead_id].lastSent || msg.sent_at > counts[msg.lead_id].lastSent!)) {
+                  counts[msg.lead_id].lastSent = msg.sent_at;
+                }
+              }
+              setOutreachCounts(counts);
+            }
+          });
+        }}
+      />
     </div>
   );
 }
