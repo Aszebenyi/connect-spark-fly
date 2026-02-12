@@ -7,6 +7,7 @@ interface StatCardProps {
   changeType?: 'positive' | 'negative' | 'neutral';
   visual: 'users' | 'send' | 'chat' | 'trend';
   className?: string;
+  onClick?: () => void;
 }
 
 function StatVisual({ type }: { type: string }) {
@@ -60,10 +61,11 @@ export function StatCard({
   change, 
   changeType = 'neutral',
   visual,
-  className 
+  className,
+  onClick,
 }: StatCardProps) {
   return (
-    <div className={cn('stat-card group', className)}>
+    <div className={cn('stat-card group', onClick && 'cursor-pointer', className)} onClick={onClick}>
       <div className="relative z-10 flex items-start justify-between">
         <div className="flex-1">
           <p className="text-sm font-medium text-muted-foreground mb-1">{title}</p>
