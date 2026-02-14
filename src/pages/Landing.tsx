@@ -82,7 +82,7 @@ function FeatureCard({ visual: Visual, title, description, index }: { visual: Re
 }
 
 // Stats item
-function StatItem({ value, label, index }: { value: string; label: string; index: number }) {
+function StatItem({ value, label, sub, index }: { value: string; label: string; sub: string; index: number }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-50px" });
   
@@ -94,8 +94,9 @@ function StatItem({ value, label, index }: { value: string; label: string; index
       transition={{ duration: 0.5, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
       className="text-center"
     >
-      <div className="text-5xl md:text-6xl font-bold gradient-text mb-2">{value}</div>
-      <div className="text-muted-foreground text-lg">{label}</div>
+      <div className="text-5xl md:text-6xl font-bold gradient-text mb-3">{value}</div>
+      <div className="text-sm font-medium text-foreground mb-1">{label}</div>
+      <div className="text-xs text-muted-foreground">{sub}</div>
     </motion.div>
   );
 }
@@ -424,22 +425,20 @@ export default function Landing() {
       <div className="h-32 bg-gradient-to-b from-transparent via-background/50 to-background" />
       
       {/* Stats Section */}
-      <section className="py-28 px-6">
-        <div className="max-w-5xl mx-auto">
-          <AnimatedSection className="text-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground">Proven Results for Healthcare Recruiters</h2>
-          </AnimatedSection>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16">
-            <StatItem value="Up to 25%" label="Reply Rate" index={0} />
-            <StatItem value="60%" label="Faster Placements" index={1} />
-            <StatItem value="95%+" label="Contact Accuracy" index={2} />
-            <StatItem value="$0.30-2" label="Per Candidate" index={3} />
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16 mt-2">
-            <p className="text-center text-xs text-muted-foreground/70">vs 5% industry average</p>
-            <p className="text-center text-xs text-muted-foreground/70">Hours, not months</p>
-            <p className="text-center text-xs text-muted-foreground/70">Verified emails & phones</p>
-            <p className="text-center text-xs text-muted-foreground/70">vs $1,500-3,000 agencies</p>
+      <section className="py-16 px-6 bg-muted/40">
+        <div className="max-w-6xl mx-auto">
+          <p className="text-center text-sm font-medium text-muted-foreground uppercase tracking-wide mb-12">
+            Proven Results for Healthcare Recruiters
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
+            {[
+              { value: "25%", label: "Reply Rate", sub: "vs 5-8% average" },
+              { value: "3x", label: "Faster Fill", sub: "vs 3-6 months" },
+              { value: "13hrs", label: "Saved Weekly", sub: "LinkedIn searching" },
+              { value: "95%+", label: "License Accuracy", sub: "Auto-verified" },
+            ].map((stat, i) => (
+              <StatItem key={stat.label} value={stat.value} label={stat.label} sub={stat.sub} index={i} />
+            ))}
           </div>
         </div>
       </section>
