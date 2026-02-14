@@ -53,7 +53,7 @@ function FloatingOrb({ className, delay = 0 }: { className?: string; delay?: num
   );
 }
 
-// Feature card with custom visual
+// Feature card with glass effect
 function FeatureCard({ visual: Visual, title, description, index }: { visual: React.ComponentType<{ className?: string }>; title: string; description: string; index: number }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-50px" });
@@ -64,14 +64,16 @@ function FeatureCard({ visual: Visual, title, description, index }: { visual: Re
       initial={{ opacity: 0, y: 40 }}
       animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
       transition={{ duration: 0.6, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
-      whileHover={{ y: -8, transition: { duration: 0.3 } }}
-      className="group relative p-8 rounded-3xl border border-border/50 bg-card/60 backdrop-blur-xl overflow-hidden"
+      whileHover={{ y: -6, transition: { duration: 0.3 } }}
+      className="group relative p-8 rounded-2xl bg-white/80 backdrop-blur-sm border border-border/40 shadow-lg hover:shadow-xl overflow-hidden transition-shadow duration-300"
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      {/* Gradient border top on hover */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary via-purple-500 to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      {/* Subtle gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] via-transparent to-purple-500/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       
       <div className="relative z-10">
-        <div className="w-14 h-14 rounded-2xl bg-background border border-border/80 flex items-center justify-center mb-6 group-hover:border-primary/40 group-hover:shadow-lg group-hover:shadow-primary/10 transition-all duration-300">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-purple-500/10 border border-primary/20 flex items-center justify-center mb-6 group-hover:from-primary/20 group-hover:to-purple-500/20 group-hover:shadow-lg group-hover:shadow-primary/10 transition-all duration-300">
           <Visual className="w-7 h-7" />
         </div>
         <h3 className="text-lg font-semibold text-foreground mb-2">{title}</h3>
@@ -94,14 +96,14 @@ function StatItem({ value, label, sub, index }: { value: string; label: string; 
       transition={{ duration: 0.5, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
       className="text-center"
     >
-      <div className="text-5xl md:text-6xl font-bold gradient-text mb-3">{value}</div>
+      <div className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent mb-3">{value}</div>
       <div className="text-sm font-medium text-foreground mb-1">{label}</div>
       <div className="text-xs text-muted-foreground">{sub}</div>
     </motion.div>
   );
 }
 
-// Pricing card with custom check visual
+// Pricing card
 function PricingCard({ name, price, leads, features, popular, index }: { name: string; price: string; leads: string; features: string[]; popular?: boolean; index: number }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-50px" });
@@ -113,31 +115,31 @@ function PricingCard({ name, price, leads, features, popular, index }: { name: s
       initial={{ opacity: 0, y: 50 }}
       animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
       transition={{ duration: 0.6, delay: index * 0.15, ease: [0.22, 1, 0.36, 1] }}
-      whileHover={{ y: -8, scale: 1.02 }}
-      className={`relative flex flex-col p-8 rounded-3xl border backdrop-blur-xl transition-all duration-300 ${
+      whileHover={{ y: -6, transition: { duration: 0.3 } }}
+      className={`relative flex flex-col p-8 rounded-2xl border-2 transition-all duration-300 ${
         popular 
-          ? 'border-primary/60 bg-gradient-to-b from-primary/15 via-card to-card shadow-2xl shadow-primary/20 ring-1 ring-primary/20' 
-          : 'border-border bg-card/80 hover:border-primary/20 hover:shadow-xl ring-1 ring-border/50'
+          ? 'border-primary bg-white shadow-2xl shadow-primary/15 ring-1 ring-primary/20' 
+          : 'border-border/60 bg-white shadow-lg hover:shadow-xl hover:border-primary/30'
       }`}
     >
-      {/* Glow effect for popular */}
+      {/* Subtle glow for popular */}
       {popular && (
         <>
-          <div className="absolute -inset-px rounded-3xl bg-gradient-to-b from-primary/30 via-transparent to-transparent opacity-50 blur-sm pointer-events-none" />
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent" />
+          <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-primary/20 via-transparent to-transparent opacity-50 blur-sm pointer-events-none" />
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary via-purple-500 to-primary" />
         </>
       )}
       
       {/* Popular badge */}
       {popular && (
         <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
-          <span className="px-5 py-2 rounded-full text-xs font-bold bg-primary text-primary-foreground whitespace-nowrap shadow-lg shadow-primary/40 border border-primary-foreground/10">
+          <span className="px-5 py-2 rounded-full text-xs font-bold bg-gradient-to-r from-primary to-purple-600 text-white whitespace-nowrap shadow-lg shadow-primary/30">
             Most Popular
           </span>
         </div>
       )}
       
-      {/* Content wrapper with flex-grow to push button down */}
+      {/* Content wrapper */}
       <div className={`flex flex-col flex-1 ${popular ? 'pt-2' : ''}`}>
         {/* Header */}
         <div className="mb-6">
@@ -148,7 +150,7 @@ function PricingCard({ name, price, leads, features, popular, index }: { name: s
           </div>
           <div className={`inline-flex items-center gap-2 mt-3 px-3 py-1.5 rounded-full text-sm font-semibold ${
             popular 
-              ? 'bg-primary/20 text-primary border border-primary/30' 
+              ? 'bg-primary/10 text-primary border border-primary/20' 
               : 'bg-muted text-muted-foreground border border-border'
           }`}>
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -158,16 +160,16 @@ function PricingCard({ name, price, leads, features, popular, index }: { name: s
           </div>
         </div>
         
-        {/* Features list - flex-1 to fill available space */}
+        {/* Features list */}
         <ul className="space-y-4 mb-8 flex-1">
           {features.map((feature, i) => (
             <li key={i} className="flex items-start gap-3 text-foreground/80 text-sm">
               <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
                 popular 
-                  ? 'bg-primary/20 border border-primary/40' 
+                  ? 'bg-primary/15 border border-primary/30' 
                   : 'bg-muted border border-border'
               }`}>
-                <svg className={`w-3 h-3 ${popular ? 'text-primary' : 'text-foreground/60'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <svg className={`w-3 h-3 ${popular ? 'text-primary' : 'text-muted-foreground'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
@@ -176,43 +178,17 @@ function PricingCard({ name, price, leads, features, popular, index }: { name: s
           ))}
         </ul>
         
-        {/* Button - always at bottom due to flex layout */}
+        {/* Button */}
         <button 
           onClick={() => navigate('/auth')}
-          className={`w-full h-14 rounded-2xl font-semibold text-base transition-all duration-300 ${
+          className={`w-full h-14 rounded-xl font-semibold text-base transition-all duration-300 ${
             popular 
-              ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:scale-[1.02]' 
+              ? 'bg-gradient-to-r from-primary to-purple-600 text-white shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 hover:scale-[1.02]' 
               : 'bg-foreground text-background hover:opacity-90 hover:scale-[1.02]'
           }`}
         >
           Get Started
         </button>
-      </div>
-    </motion.div>
-  );
-}
-
-// Step item with visual number
-function StepItem({ number, title, description, index }: { number: number; title: string; description: string; index: number }) {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-50px" });
-  
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, x: index % 2 === 0 ? -40 : 40 }}
-      animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: index % 2 === 0 ? -40 : 40 }}
-      transition={{ duration: 0.6, delay: index * 0.15, ease: [0.22, 1, 0.36, 1] }}
-      className="flex gap-6 items-start"
-    >
-      <div className="flex-shrink-0">
-        <div className="w-12 h-12 rounded-xl bg-background border border-border/80 flex items-center justify-center text-lg font-bold text-primary">
-          {number}
-        </div>
-      </div>
-      <div className="pt-1">
-        <h3 className="text-lg font-semibold text-foreground mb-1.5">{title}</h3>
-        <p className="text-muted-foreground text-sm leading-relaxed">{description}</p>
       </div>
     </motion.div>
   );
@@ -260,7 +236,7 @@ export default function Landing() {
   
   return (
     <div className="min-h-screen bg-background overflow-hidden">
-      {/* Navigation - Ultra Premium */}
+      {/* Navigation */}
       <motion.nav 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -268,25 +244,22 @@ export default function Landing() {
         className="fixed top-4 inset-x-0 z-50 px-4"
       >
         <div className="mx-auto max-w-5xl">
-          <div className="relative px-2 py-2 rounded-2xl bg-background/60 backdrop-blur-2xl border border-border/60 shadow-[0_4px_24px_rgba(0,0,0,0.06),0_1px_4px_rgba(0,0,0,0.04)]">
-            {/* Subtle top shine */}
-            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-black/[0.04] to-transparent rounded-t-2xl" />
-            
+          <div className="relative px-2 py-2 rounded-2xl bg-white/70 backdrop-blur-xl border border-border/50 shadow-[0_4px_24px_rgba(0,0,0,0.06),0_1px_4px_rgba(0,0,0,0.04)]">
             <div className="grid grid-cols-[1fr_auto_1fr] items-center">
               {/* Left: Logo */}
               <div className="flex items-center gap-3 pl-2 justify-start min-w-0">
                 <div className="relative group flex-shrink-0">
-                  <div className="absolute inset-0 rounded-xl bg-primary/40 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-primary via-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25">
+                  <div className="absolute inset-0 rounded-xl bg-primary/30 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center shadow-md shadow-primary/20">
                     <div className="w-4 h-4 rounded-full bg-white/90 shadow-inner" />
                   </div>
                 </div>
                 <span className="text-lg font-semibold text-foreground tracking-tight truncate">{appName}</span>
               </div>
               
-              {/* Center: Nav Links (always centered) */}
+              {/* Center: Nav Links */}
               <div className="hidden md:flex items-center justify-center">
-                <div className="flex items-center bg-black/[0.03] rounded-xl p-1">
+                <div className="flex items-center bg-muted/50 rounded-xl p-1">
                   {[
                     { label: 'Features', href: '#features' },
                     { label: 'How it Works', href: '#how-it-works' },
@@ -295,14 +268,14 @@ export default function Landing() {
                     <a
                       key={link.label}
                       href={link.href}
-                      className="relative px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 rounded-lg hover:bg-black/[0.04]"
+                      className="relative px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 rounded-lg hover:bg-white/80"
                     >
                       {link.label}
                     </a>
                   ))}
                   <button
                     onClick={() => setIsContactOpen(true)}
-                    className="relative px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 rounded-lg hover:bg-black/[0.04]"
+                    className="relative px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 rounded-lg hover:bg-white/80"
                   >
                     Contact
                   </button>
@@ -314,7 +287,7 @@ export default function Landing() {
                 {user ? (
                   <button 
                     onClick={() => navigate('/dashboard')} 
-                  className="h-9 px-5 rounded-xl text-sm font-medium bg-gradient-to-b from-primary to-primary/90 text-primary-foreground shadow-[0_2px_8px_rgba(41,121,209,0.35),inset_0_1px_0_rgba(255,255,255,0.15)] hover:shadow-[0_4px_16px_rgba(41,121,209,0.45),inset_0_1px_0_rgba(255,255,255,0.15)] transition-all duration-300 hover:-translate-y-0.5"
+                    className="h-9 px-5 rounded-xl text-sm font-medium bg-gradient-to-r from-primary to-purple-600 text-white shadow-md shadow-primary/25 hover:shadow-lg hover:shadow-primary/35 transition-all duration-300 hover:-translate-y-0.5"
                   >
                     Dashboard
                   </button>
@@ -328,8 +301,8 @@ export default function Landing() {
                     </button>
                     <button 
                       onClick={() => navigate('/auth')} 
-                    className="h-9 px-5 rounded-xl text-sm font-medium bg-gradient-to-b from-primary to-primary/90 text-primary-foreground shadow-[0_2px_8px_rgba(41,121,209,0.35),inset_0_1px_0_rgba(255,255,255,0.15)] hover:shadow-[0_4px_16px_rgba(41,121,209,0.45),inset_0_1px_0_rgba(255,255,255,0.15)] transition-all duration-300 hover:-translate-y-0.5"
-                  >
+                      className="h-9 px-5 rounded-xl text-sm font-medium bg-gradient-to-r from-primary to-purple-600 text-white shadow-md shadow-primary/25 hover:shadow-lg hover:shadow-primary/35 transition-all duration-300 hover:-translate-y-0.5"
+                    >
                       Get Started
                     </button>
                   </>
@@ -342,14 +315,19 @@ export default function Landing() {
       
       {/* Hero Section */}
       <section ref={heroRef} className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
-        {/* Background effects */}
+        {/* Gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-purple-50" />
+        {/* Radial accent */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_hsl(var(--primary)_/_0.08)_0%,_transparent_60%)]" />
-        <FloatingOrb className="w-96 h-96 bg-primary/30 -top-48 -right-48" delay={0} />
-        <FloatingOrb className="w-80 h-80 bg-primary/20 -bottom-40 -left-40" delay={2} />
-        <FloatingOrb className="w-64 h-64 bg-primary/25 top-1/3 right-1/4" delay={4} />
+        
+        {/* Floating shapes */}
+        <FloatingOrb className="w-96 h-96 bg-primary/20 -top-48 -right-48" delay={0} />
+        <FloatingOrb className="w-80 h-80 bg-purple-400/15 -bottom-40 -left-40" delay={2} />
+        <FloatingOrb className="w-64 h-64 bg-primary/15 top-1/3 right-1/4" delay={4} />
+        <FloatingOrb className="w-48 h-48 bg-purple-300/10 top-1/4 left-1/6" delay={6} />
         
         {/* Grid pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:100px_100px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:80px_80px]" />
         
         <motion.div 
           style={{ y: heroY, opacity: heroOpacity }}
@@ -360,7 +338,7 @@ export default function Landing() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-card/80 border border-border/50 text-sm font-medium mb-8 backdrop-blur-sm">
+            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/80 backdrop-blur-sm border border-border/40 text-sm font-medium mb-8 shadow-sm">
               <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
               <span className="text-muted-foreground">Healthcare Candidate Sourcing</span>
             </div>
@@ -370,11 +348,11 @@ export default function Landing() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-            className="text-5xl md:text-7xl lg:text-8xl font-bold text-foreground tracking-tight leading-[0.95] mb-8"
+            className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[0.95] mb-8"
           >
-            Fill healthcare roles
+            <span className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent">Fill healthcare roles</span>
             <br />
-            <span className="gradient-text">3x faster</span>
+            <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">3x faster</span>
           </motion.h1>
           
           <motion.p
@@ -392,7 +370,11 @@ export default function Landing() {
             transition={{ duration: 0.8, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <Button onClick={() => navigate('/auth')} size="lg" className="apple-button h-14 px-8 text-lg gap-2">
+            <Button 
+              onClick={() => navigate('/auth')} 
+              size="lg" 
+              className="h-14 px-8 text-lg gap-2 bg-gradient-to-r from-primary to-purple-600 text-white shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 hover:scale-105 transition-all duration-300 border-0"
+            >
               Get Started
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -402,7 +384,7 @@ export default function Landing() {
               onClick={() => setIsFreeLeadSampleOpen(true)} 
               variant="outline" 
               size="lg" 
-              className="h-14 px-8 text-lg gap-2 border-primary/30 hover:bg-primary/10 hover:border-primary/50"
+              className="h-14 px-8 text-lg gap-2 bg-white/80 backdrop-blur-sm border-border/60 shadow-md hover:shadow-lg hover:bg-white hover:border-primary/30 transition-all duration-300"
             >
               <Users className="w-5 h-5 text-primary" />
               👥 Get 5 Free Candidates
@@ -422,12 +404,14 @@ export default function Landing() {
       </section>
       
       {/* Smooth transition gradient */}
-      <div className="h-32 bg-gradient-to-b from-transparent via-background/50 to-background" />
+      <div className="h-32 bg-gradient-to-b from-purple-50/30 via-background/50 to-background" />
       
       {/* Stats Section */}
-      <section className="py-16 px-6 bg-muted/40">
-        <div className="max-w-6xl mx-auto">
-          <p className="text-center text-sm font-medium text-muted-foreground uppercase tracking-wide mb-12">
+      <section className="py-16 px-6 bg-gradient-to-b from-muted/30 to-muted/50 relative">
+        {/* Subtle dot pattern */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,_rgba(0,0,0,0.03)_1px,_transparent_0)] bg-[size:24px_24px]" />
+        <div className="max-w-6xl mx-auto relative z-10">
+          <p className="text-center text-sm font-medium text-muted-foreground uppercase tracking-widest mb-12">
             Proven Results for Healthcare Recruiters
           </p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
@@ -444,10 +428,14 @@ export default function Landing() {
       </section>
       
       {/* Features Section */}
-      <section id="features" className="py-32 px-6">
-        <div className="max-w-5xl mx-auto">
+      <section id="features" className="py-32 px-6 relative">
+        {/* Decorative blobs */}
+        <div className="absolute top-20 right-0 w-96 h-96 bg-primary/[0.04] rounded-full blur-3xl" />
+        <div className="absolute bottom-20 left-0 w-80 h-80 bg-purple-400/[0.04] rounded-full blur-3xl" />
+        
+        <div className="max-w-5xl mx-auto relative z-10">
           <AnimatedSection className="text-center mb-20">
-            <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6 tracking-wide">
               Built for Healthcare Recruiters
             </span>
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
@@ -458,7 +446,7 @@ export default function Landing() {
             </p>
           </AnimatedSection>
           
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 gap-6">
             {features.map((feature, i) => (
               <FeatureCard key={feature.title} {...feature} index={i} />
             ))}
@@ -473,16 +461,15 @@ export default function Landing() {
         </svg>
       </div>
       
-      {/* How it Works Section - Light theme */}
+      {/* How it Works Section */}
       <section id="how-it-works" className="py-32 px-6 relative bg-muted/50 overflow-hidden">
         {/* Decorative elements */}
         <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-primary/3 to-transparent rounded-full" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-400/5 rounded-full blur-3xl" />
         
         <div className="max-w-4xl mx-auto relative z-10">
           <AnimatedSection className="text-center mb-16">
-            <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6 tracking-wide">
               Simple Process
             </span>
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
@@ -493,7 +480,7 @@ export default function Landing() {
             </p>
           </AnimatedSection>
           
-          <div className="space-y-8">
+          <div className="space-y-6">
             {steps.map((step, i) => (
               <motion.div
                 key={step.title}
@@ -501,10 +488,10 @@ export default function Landing() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.5, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
-                className="flex gap-6 items-start p-6 rounded-2xl bg-card border border-border/80 hover:bg-card hover:shadow-xl hover:shadow-border/30 transition-all duration-300"
+                className="flex gap-6 items-start p-6 rounded-2xl bg-white/80 backdrop-blur-sm border border-border/40 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
               >
                 <div className="flex-shrink-0">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-xl font-bold text-white shadow-lg shadow-primary/25">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-xl font-bold text-white shadow-lg shadow-primary/20">
                     {i + 1}
                   </div>
                 </div>
@@ -529,8 +516,10 @@ export default function Landing() {
       </div>
       
       {/* Pricing Section */}
-      <section id="pricing" className="py-32 px-6">
-        <div className="max-w-5xl mx-auto">
+      <section id="pricing" className="py-32 px-6 relative">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/[0.04] rounded-full blur-3xl" />
+        
+        <div className="max-w-5xl mx-auto relative z-10">
           <AnimatedSection className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
               Simple, Transparent Pricing
@@ -550,26 +539,28 @@ export default function Landing() {
       
       {/* CTA Section */}
       <section className="py-32 px-6 relative">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_hsl(var(--primary)_/_0.1)_0%,_transparent_60%)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/[0.04] to-purple-500/[0.04]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_hsl(var(--primary)_/_0.08)_0%,_transparent_60%)]" />
         
         <AnimatedSection className="max-w-4xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-card border border-border/50 mb-8">
-            <div className="w-8 h-8 rounded-full bg-primary shadow-lg shadow-primary/30" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-purple-500/10 border border-primary/20 mb-8">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-purple-600 shadow-lg shadow-primary/25" />
           </div>
           
           <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
             Ready to fill roles
             <br />
-            <span className="gradient-text">3x faster?</span>
+            <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">3x faster?</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-10">
             Join healthcare recruiters using {appName} to source, qualify, and reach candidates in minutes.
           </p>
-          <p className="text-sm text-muted-foreground/60 mt-2">
-            First 5 candidates free. No credit card required.
-          </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button onClick={() => navigate('/auth')} size="lg" className="apple-button h-14 px-10 text-lg gap-2">
+            <Button 
+              onClick={() => navigate('/auth')} 
+              size="lg" 
+              className="h-14 px-10 text-lg gap-2 bg-gradient-to-r from-primary to-purple-600 text-white shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 hover:scale-105 transition-all duration-300 border-0"
+            >
               Start Finding Candidates
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -579,36 +570,39 @@ export default function Landing() {
               onClick={() => setIsFreeLeadSampleOpen(true)} 
               variant="outline" 
               size="lg" 
-              className="h-14 px-8 text-lg gap-2 border-primary/30 hover:bg-primary/10 hover:border-primary/50"
+              className="h-14 px-8 text-lg gap-2 bg-white/80 backdrop-blur-sm border-border/60 shadow-md hover:shadow-lg hover:bg-white hover:border-primary/30 transition-all duration-300"
             >
               👥 Get 5 Free Candidates
             </Button>
           </div>
+          <p className="text-sm text-muted-foreground/60 mt-6">
+            First 5 candidates free. No credit card required.
+          </p>
         </AnimatedSection>
       </section>
       
-      {/* Footer */}
-      <footer className="py-12 px-6 border-t border-border/30">
+      {/* Footer - Dark */}
+      <footer className="py-12 px-6 bg-gray-900 text-white">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
-              <div className="w-3 h-3 rounded-full bg-primary-foreground/90" />
+            <div className="w-7 h-7 rounded-md bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center">
+              <div className="w-3 h-3 rounded-full bg-white/90" />
             </div>
-            <span className="font-medium text-foreground">{appName}</span>
+            <span className="font-medium text-white">{appName}</span>
           </div>
           
-          <div className="flex items-center gap-8 text-sm text-muted-foreground">
-            <a href="/privacy" className="hover:text-foreground transition-colors">Privacy</a>
-            <a href="/terms" className="hover:text-foreground transition-colors">Terms</a>
+          <div className="flex items-center gap-8 text-sm text-gray-400">
+            <a href="/privacy" className="hover:text-white transition-colors">Privacy</a>
+            <a href="/terms" className="hover:text-white transition-colors">Terms</a>
             <button 
               onClick={() => setIsContactOpen(true)} 
-              className="hover:text-foreground transition-colors"
+              className="hover:text-white transition-colors"
             >
               Contact
             </button>
           </div>
           
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-gray-500">
             © 2025 {appName}. All rights reserved.
           </p>
         </div>
