@@ -1,54 +1,23 @@
 
 
-## Add 4 New Sections to Landing Page
+## Fix Landing Page Issues
 
-All changes in `src/pages/Landing.tsx`. Nothing existing gets removed or rewritten.
+### 1. Make the Logo Smaller
+Reduce the navbar logo from `h-8` to `h-6` (line 251 in Landing.tsx).
 
-### 1. Update Stats Values (lines 429-433)
-Replace current stat values with the user's requested numbers:
-- "25%" / "Reply Rate" / "vs 5% industry avg"
-- "3x" / "Faster Fill" / "vs manual sourcing"  
-- "13hrs" / "Saved Weekly" / "per recruiter"
-- "95%+" / "Accuracy" / "contact verified"
+### 2. Fix Statistics Section
+The screenshot shows three problems with the stats bar:
 
-### 2. Add 3 New Feature Cards (line 227)
-Append three new entries to the existing `features` array (currently 4 cards, will become 7). Uses existing `FeatureCard` component and existing visual element components. The grid will naturally reflow.
-
-- **One-Click Job Import** -- "Paste any job posting URL from Indeed, LinkedIn, or career pages and we auto-extract title, requirements, and search query in seconds."
-- **Email Deliverability Protection** -- "Smart daily sending limits based on your Gmail account age prevent spam folder issues and protect your sender reputation."
-- **International Recruitment** -- "Works across US, UK, Canada, Australia, and UAE. Auto-adjusts license formats, currency, and regional medical terminology."
-
-New icons imported from lucide-react: `Link`, `ShieldCheck`, `Globe`.
-
-Since these use icons (not the custom visual elements), the `FeatureCard` component interface stays the same -- the lucide icons accept `className` just like the visual elements do.
-
-### 3. Add "Works in Your Country" Section (after features, before wave divider -- line 466)
-A new standalone section with country flags and bullet points:
-
-```text
-Works in Your Country
-
-[flag chips: US, UK, Canada, Australia, UAE]
-
-Automatically adjusts to show:
-- Local license formats (State boards, NMC, AHPRA, etc.)
-- Your currency (USD, GBP, CAD, AUD, AED)
-- Regional terminology (ER vs A&E, ICU vs ITU)
-```
-
-Styled as an `AnimatedSection` with the same blue-cyan gradient accent as other sections. Country data pulled from `src/lib/countries.ts`.
+- **Inconsistent visual size**: The stat values ("25%", "5x", "13hrs", "95%+") vary in character count, making them look uneven. Fix by ensuring each stat card has a uniform minimum height and consistent layout.
+- **Not vertically centered**: The text inside each stat item is not properly centered. Add `items-center` and `justify-center` with consistent height to each stat cell.
+- **All grey, needs color**: The stats section background is a plain grey (`bg-gradient-to-b from-muted/30 to-muted/50`). Replace with a white card-based design where each stat sits in its own card with a subtle colored accent or give the section a white background with colored stat values (which already exist via the gradient text).
 
 ### Technical Details
 
-**File:** `src/pages/Landing.tsx`
+**File: `src/pages/Landing.tsx`**
 
-**New imports (line 10):**
-- `Link`, `ShieldCheck`, `Globe` from `lucide-react`
-- `COUNTRIES` from `@/lib/countries`
-
-**Features array (line 227):** Add 3 objects after the existing 4. Each uses a lucide icon component as the `visual` prop since lucide icons accept `className` just like the custom visual elements.
-
-**Stats data (lines 429-433):** Update the 4 stat objects with new values/labels/subs.
-
-**New section (insert after line 465):** "Works in Your Country" section wrapped in `AnimatedSection`, containing flag chips mapped from `COUNTRIES` and a bullet list of localization features. Placed between the features grid and the wave divider.
+- **Line 251**: Change `h-8` to `h-6` on the logo `<img>` tag.
+- **Lines 87-103 (StatItem component)**: Add a white card wrapper with rounded corners, padding, a subtle top border accent using the primary-to-cyan gradient, and ensure all items have equal height via `min-h` and flex centering.
+- **Line 416**: Change the section background from grey muted tones to a cleaner look -- use `bg-white` or a light blue-tinted gradient (`bg-gradient-to-b from-blue-50/50 to-white`) to add warmth and differentiate from other sections.
+- **Line 423**: Add `items-stretch` to the grid so all stat cards are equal height.
 

@@ -7,8 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useBrandConfig } from '@/hooks/useBrandConfig';
 import { ContactDialog } from '@/components/ContactDialog';
 import { FreeLeadSampleModal } from '@/components/lead-magnets/FreeLeadSampleModal';
-import { Users, Link, ShieldCheck, Globe } from 'lucide-react';
-import { COUNTRIES } from '@/lib/countries';
+import { Users } from 'lucide-react';
 import {
   PulseOrb, 
   DataFlow, 
@@ -95,14 +94,9 @@ function StatItem({ value, label, sub, index }: { value: string; label: string; 
       initial={{ opacity: 0, scale: 0.8 }}
       animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
       transition={{ duration: 0.5, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
-      className="relative flex flex-col items-center justify-center text-center p-6"
+      className="text-center"
     >
-      {/* Glow orb behind stat */}
-      {/* Primary glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full bg-gradient-to-br from-primary/30 to-cyan-400/25 blur-2xl pointer-events-none" />
-      {/* Wider secondary glow for depth */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full bg-gradient-to-br from-primary/10 to-cyan-400/10 blur-3xl pointer-events-none" />
-      <div className="relative text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary to-cyan-600 bg-clip-text text-transparent mb-3">{value}</div>
+      <div className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary to-cyan-600 bg-clip-text text-transparent mb-3">{value}</div>
       <div className="text-sm font-medium text-foreground mb-1">{label}</div>
       <div className="text-xs text-muted-foreground">{sub}</div>
     </motion.div>
@@ -225,9 +219,6 @@ export default function Landing() {
     { visual: PulseOrb, title: "Match Scoring & Verification", description: "Every candidate gets a qualification score with reasoning. Licenses, certifications, and experience verified automatically—saving 20+ hours per week." },
     { visual: StackedBars, title: "Personalized Outreach", description: `AI writes unique emails using each candidate's background. Send via Gmail, track opens and replies. 15-25% response rates vs 5% industry average.` },
     { visual: DataFlow, title: "Multi-Role Management", description: "Manage ICU, ER, travel contracts simultaneously. Track contacted, responded, and interview-ready candidates across all your openings in one dashboard." },
-    { visual: Link, title: "One-Click Job Import", description: "Paste any job posting URL from Indeed, LinkedIn, or career pages and we auto-extract title, requirements, and search query in seconds." },
-    { visual: ShieldCheck, title: "Email Deliverability Protection", description: "Smart daily sending limits based on your Gmail account age prevent spam folder issues and protect your sender reputation." },
-    { visual: Globe, title: "International Recruitment", description: "Works across US, UK, Canada, Australia, and UAE. Auto-adjusts license formats, currency, and regional medical terminology." },
   ];
   
   const steps = [
@@ -257,7 +248,7 @@ export default function Landing() {
             <div className="grid grid-cols-[1fr_auto_1fr] items-center">
               {/* Left: Logo */}
               <div className="flex items-center pl-2 justify-start min-w-0">
-                <img src="/medilead-logo.png" alt={appName} className="h-6 object-contain flex-shrink-0" />
+                <img src="/medilead-logo.png" alt={appName} className="h-8 object-contain flex-shrink-0" />
               </div>
               
               {/* Center: Nav Links */}
@@ -419,22 +410,22 @@ export default function Landing() {
       </section>
       
       {/* Smooth transition gradient */}
-      <div className="h-20 bg-gradient-to-b from-blue-100/40 via-cyan-50/30 to-white" />
+      <div className="h-32 bg-gradient-to-b from-cyan-50/30 via-background/50 to-background" />
       
       {/* Stats Section */}
-      <section className="py-16 px-6 bg-gradient-to-b from-white via-blue-50/30 to-white relative">
+      <section className="py-16 px-6 bg-gradient-to-b from-muted/30 to-muted/50 relative">
         {/* Subtle dot pattern */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,_rgba(0,0,0,0.03)_1px,_transparent_0)] bg-[size:24px_24px]" />
         <div className="max-w-6xl mx-auto relative z-10">
           <p className="text-center text-sm font-medium text-muted-foreground uppercase tracking-widest mb-12">
             Proven Results for Healthcare Recruiters
           </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 items-stretch">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
             {[
-              { value: "25%", label: "Reply Rate", sub: "vs 5% industry avg" },
-              { value: "3x", label: "Faster Fill", sub: "vs manual sourcing" },
-              { value: "13hrs", label: "Saved Weekly", sub: "per recruiter" },
-              { value: "95%+", label: "Accuracy", sub: "contact verified" },
+              { value: "25%", label: "Reply Rate", sub: "vs 5-8% average" },
+              { value: "5x", label: "Faster Fill", sub: "vs 3-6 months" },
+              { value: "13hrs", label: "Saved Weekly", sub: "LinkedIn searching" },
+              { value: "95%+", label: "License Accuracy", sub: "Auto-verified" },
             ].map((stat, i) => (
               <StatItem key={stat.label} value={stat.value} label={stat.label} sub={stat.sub} index={i} />
             ))}
@@ -443,7 +434,7 @@ export default function Landing() {
       </section>
       
       {/* Features Section */}
-      <section id="features" className="py-32 px-6 relative bg-gradient-to-b from-white to-blue-50/20">
+      <section id="features" className="py-32 px-6 relative">
         {/* Decorative blobs */}
         <div className="absolute top-20 right-0 w-96 h-96 bg-primary/[0.04] rounded-full blur-3xl" />
         <div className="absolute bottom-20 left-0 w-80 h-80 bg-cyan-400/[0.04] rounded-full blur-3xl" />
@@ -468,58 +459,16 @@ export default function Landing() {
           </div>
         </div>
       </section>
-
-      {/* Works in Your Country Section */}
-      <section className="py-20 px-6 bg-gradient-to-b from-blue-50/20 to-white relative">
-        <div className="max-w-4xl mx-auto relative z-10">
-          <AnimatedSection className="text-center">
-            <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6 tracking-wide">
-              Global Coverage
-            </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-8">
-              Works in Your Country
-            </h2>
-            <div className="flex flex-wrap justify-center gap-3 mb-10">
-              {Object.values(COUNTRIES).map((country) => (
-                <span
-                  key={country.code}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-border/50 shadow-sm text-sm font-medium text-foreground"
-                >
-                  <span className="text-lg">{country.flag}</span>
-                  {country.name}
-                </span>
-              ))}
-            </div>
-            <p className="text-muted-foreground text-sm font-medium uppercase tracking-widest mb-6">
-              Automatically adjusts to show
-            </p>
-            <div className="grid sm:grid-cols-3 gap-4 max-w-2xl mx-auto text-left">
-              <div className="p-4 rounded-xl bg-white border border-border/40 shadow-sm">
-                <p className="text-sm font-semibold text-foreground mb-1">Local License Formats</p>
-                <p className="text-xs text-muted-foreground">State boards, NMC, AHPRA, DHA &amp; more</p>
-              </div>
-              <div className="p-4 rounded-xl bg-white border border-border/40 shadow-sm">
-                <p className="text-sm font-semibold text-foreground mb-1">Your Currency</p>
-                <p className="text-xs text-muted-foreground">USD, GBP, CAD, AUD, AED</p>
-              </div>
-              <div className="p-4 rounded-xl bg-white border border-border/40 shadow-sm">
-                <p className="text-sm font-semibold text-foreground mb-1">Regional Terminology</p>
-                <p className="text-xs text-muted-foreground">ER vs A&amp;E, ICU vs ITU, OR vs Theatre</p>
-              </div>
-            </div>
-          </AnimatedSection>
-        </div>
-      </section>
       
       {/* Wave divider - top */}
-      <div className="relative h-24 bg-white">
+      <div className="relative h-24 bg-background">
         <svg className="absolute bottom-0 w-full h-24" viewBox="0 0 1440 96" preserveAspectRatio="none" fill="none">
-          <path d="M0,96 L0,40 Q360,0 720,40 T1440,40 L1440,96 Z" fill="hsl(210 60% 97%)" />
+          <path d="M0,96 L0,40 Q360,0 720,40 T1440,40 L1440,96 Z" fill="hsl(220 10% 95%)" />
         </svg>
       </div>
       
       {/* How it Works Section */}
-      <section id="how-it-works" className="py-32 px-6 relative bg-gradient-to-b from-blue-50/40 to-white overflow-hidden">
+      <section id="how-it-works" className="py-32 px-6 relative bg-muted/50 overflow-hidden">
         {/* Decorative elements */}
         <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-cyan-400/5 rounded-full blur-3xl" />
@@ -566,10 +515,14 @@ export default function Landing() {
       </section>
       
       {/* Wave divider - bottom */}
-      <div className="relative h-16 bg-white" />
+      <div className="relative h-24 bg-background">
+        <svg className="absolute top-0 w-full h-24" viewBox="0 0 1440 96" preserveAspectRatio="none" fill="none">
+          <path d="M0,0 L0,56 Q360,96 720,56 T1440,56 L1440,0 Z" fill="hsl(220 10% 95%)" />
+        </svg>
+      </div>
       
       {/* Pricing Section */}
-      <section id="pricing" className="py-32 px-6 relative bg-white">
+      <section id="pricing" className="py-32 px-6 relative">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/[0.04] rounded-full blur-3xl" />
         
         <div className="max-w-5xl mx-auto relative z-10">
@@ -591,7 +544,7 @@ export default function Landing() {
       </section>
       
       {/* CTA Section */}
-      <section className="py-32 px-6 relative bg-white">
+      <section className="py-32 px-6 relative">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/[0.04] to-cyan-500/[0.04]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_hsl(var(--primary)_/_0.08)_0%,_transparent_60%)]" />
         
@@ -603,7 +556,7 @@ export default function Landing() {
           <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
             Ready to fill roles
             <br />
-            <span className="bg-gradient-to-r from-primary to-cyan-600 bg-clip-text text-transparent">5x faster?</span>
+            <span className="bg-gradient-to-r from-primary to-cyan-600 bg-clip-text text-transparent">3x faster?</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-10">
             Join healthcare recruiters using {appName} to source, qualify, and reach candidates in minutes.
@@ -656,7 +609,7 @@ export default function Landing() {
           </div>
           
           <p className="text-sm text-gray-500">
-            © 2026 {appName}. All rights reserved.
+            © 2025 {appName}. All rights reserved.
           </p>
         </div>
       </footer>
