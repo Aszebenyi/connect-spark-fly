@@ -3,9 +3,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 export interface OnboardingProgress {
+  hasEmailConnection: boolean;
+  hasCompanyProfile: boolean;
   hasCampaign: boolean;
   hasLeads: boolean;
-  hasEmailConnection: boolean;
   hasSentOutreach: boolean;
   isComplete: boolean;
   isLoading: boolean;
@@ -16,9 +17,10 @@ export interface OnboardingProgress {
 export function useOnboardingProgress(): OnboardingProgress & { refresh: () => void } {
   const { user } = useAuth();
   const [progress, setProgress] = useState<Omit<OnboardingProgress, 'isComplete' | 'completedCount' | 'totalSteps'>>({
+    hasEmailConnection: false,
+    hasCompanyProfile: false,
     hasCampaign: false,
     hasLeads: false,
-    hasEmailConnection: false,
     hasSentOutreach: false,
     isLoading: true,
   });
@@ -31,18 +33,20 @@ export function useOnboardingProgress(): OnboardingProgress & { refresh: () => v
 
     try {
       // Fetch all data in parallel
-      const [campaignsResult, leadsResult, emailResult, contactedResult] = await Promise.all([
+      const [emailResult, profileResult, campaignsResult, leadsResult, outreachResult] = await Promise.all([
+        supabase.from('email_connections').select('id').eq('is_active', true).limit(1),
+        supabase.from('profiles').select('company').eq('user_id', user.id).not('company', 'is', null).limit(1),
         supabase.from('campaigns').select('id').limit(1),
         supabase.from('leads').select('id').limit(1),
-        supabase.from('email_connections').select('id').eq('is_active', true).limit(1),
-        supabase.from('leads').select('id').eq('status', 'contacted').limit(1),
+        supabase.from('outreach_messages').select('id').limit(1),
       ]);
 
       setProgress({
+        hasEmailConnection: (emailResult.data?.length ?? 0) > 0,
+        hasCompanyProfile: (profileResult.data?.length ?? 0) > 0,
         hasCampaign: (campaignsResult.data?.length ?? 0) > 0,
         hasLeads: (leadsResult.data?.length ?? 0) > 0,
-        hasEmailConnection: (emailResult.data?.length ?? 0) > 0,
-        hasSentOutreach: (contactedResult.data?.length ?? 0) > 0,
+        hasSentOutreach: (outreachResult.data?.length ?? 0) > 0,
         isLoading: false,
       });
     } catch (error) {
@@ -56,13 +60,14 @@ export function useOnboardingProgress(): OnboardingProgress & { refresh: () => v
   }, [fetchProgress]);
 
   const completedCount = [
+    progress.hasEmailConnection,
+    progress.hasCompanyProfile,
     progress.hasCampaign,
     progress.hasLeads,
-    progress.hasEmailConnection,
     progress.hasSentOutreach,
   ].filter(Boolean).length;
 
-  const totalSteps = 4;
+  const totalSteps = 5;
   const isComplete = completedCount === totalSteps;
 
   return {

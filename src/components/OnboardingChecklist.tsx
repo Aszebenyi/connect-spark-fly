@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, Circle, ChevronDown, ChevronUp, X, Sparkles, Mail, Users, Send } from 'lucide-react';
+import { CheckCircle2, Circle, ChevronDown, ChevronUp, X, Mail, Building2, Briefcase, Search, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
@@ -11,6 +11,7 @@ interface OnboardingChecklistProps {
   onCreateCampaign: () => void;
   onNavigateToFinder: () => void;
   onNavigateToSettings: () => void;
+  onNavigateToCompanyProfile: () => void;
   onNavigateToLeads: () => void;
 }
 
@@ -20,6 +21,7 @@ export function OnboardingChecklist({
   onCreateCampaign,
   onNavigateToFinder,
   onNavigateToSettings,
+  onNavigateToCompanyProfile,
   onNavigateToLeads,
 }: OnboardingChecklistProps) {
   const progress = useOnboardingProgress();
@@ -46,36 +48,45 @@ export function OnboardingChecklist({
 
   const steps = [
     {
-      id: 'campaign',
-      title: 'Create your first job opening',
-      description: 'Set up a job opening to find and organize candidates',
-      completed: progress.hasCampaign,
-      icon: Sparkles,
-      action: onCreateCampaign,
-      actionLabel: 'Create Opening',
-    },
-    {
-      id: 'leads',
-      title: 'Find your first candidates',
-      description: 'Use AI-powered search to discover qualified healthcare professionals',
-      completed: progress.hasLeads,
-      icon: Users,
-      action: onNavigateToFinder,
-      actionLabel: 'Search',
-    },
-    {
       id: 'email',
-      title: 'Connect Gmail',
-      description: 'Link your Gmail account to send personalized recruitment outreach',
+      title: 'Connect your Gmail',
+      description: 'Link Gmail to send personalized outreach emails',
       completed: progress.hasEmailConnection,
       icon: Mail,
       action: onNavigateToSettings,
       actionLabel: 'Connect Gmail',
     },
     {
+      id: 'company',
+      title: 'Set up company profile',
+      description: 'Tell us about your agency for personalized emails',
+      completed: progress.hasCompanyProfile,
+      icon: Building2,
+      action: onNavigateToCompanyProfile,
+      actionLabel: 'Set Up Profile',
+    },
+    {
+      id: 'campaign',
+      title: 'Create your first job opening',
+      description: 'Set up a role you\'re trying to fill',
+      completed: progress.hasCampaign,
+      icon: Briefcase,
+      action: onCreateCampaign,
+      actionLabel: 'Create Job',
+    },
+    {
+      id: 'leads',
+      title: 'Find your first candidates',
+      description: 'Use AI search to discover qualified professionals',
+      completed: progress.hasLeads,
+      icon: Search,
+      action: onNavigateToFinder,
+      actionLabel: 'Search',
+    },
+    {
       id: 'outreach',
       title: 'Send your first outreach',
-      description: 'Reach out to a candidate and start booking interviews',
+      description: 'Reach out to candidates and start conversations',
       completed: progress.hasSentOutreach,
       icon: Send,
       action: onNavigateToLeads,
@@ -94,7 +105,7 @@ export function OnboardingChecklist({
       >
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Sparkles className="w-5 h-5 text-primary" />
+            <CheckCircle2 className="w-5 h-5 text-primary" />
           </div>
           <div>
             <h3 className="font-semibold text-foreground">Get Started with {appName}</h3>

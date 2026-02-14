@@ -68,12 +68,12 @@ function FeatureCard({ visual: Visual, title, description, index }: { visual: Re
       className="group relative p-8 rounded-2xl bg-white/80 backdrop-blur-sm border border-border/40 shadow-lg hover:shadow-xl overflow-hidden transition-shadow duration-300"
     >
       {/* Gradient border top on hover */}
-      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary via-purple-500 to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary via-cyan-500 to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       {/* Subtle gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] via-transparent to-purple-500/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] via-transparent to-cyan-500/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       
       <div className="relative z-10">
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-purple-500/10 border border-primary/20 flex items-center justify-center mb-6 group-hover:from-primary/20 group-hover:to-purple-500/20 group-hover:shadow-lg group-hover:shadow-primary/10 transition-all duration-300">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-cyan-500/10 border border-primary/20 flex items-center justify-center mb-6 group-hover:from-primary/20 group-hover:to-cyan-500/20 group-hover:shadow-lg group-hover:shadow-primary/10 transition-all duration-300">
           <Visual className="w-7 h-7" />
         </div>
         <h3 className="text-lg font-semibold text-foreground mb-2">{title}</h3>
@@ -96,7 +96,7 @@ function StatItem({ value, label, sub, index }: { value: string; label: string; 
       transition={{ duration: 0.5, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
       className="text-center"
     >
-      <div className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent mb-3">{value}</div>
+      <div className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary to-cyan-600 bg-clip-text text-transparent mb-3">{value}</div>
       <div className="text-sm font-medium text-foreground mb-1">{label}</div>
       <div className="text-xs text-muted-foreground">{sub}</div>
     </motion.div>
@@ -126,14 +126,14 @@ function PricingCard({ name, price, leads, features, popular, index }: { name: s
       {popular && (
         <>
           <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-primary/20 via-transparent to-transparent opacity-50 blur-sm pointer-events-none" />
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary via-purple-500 to-primary" />
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary via-cyan-500 to-primary" />
         </>
       )}
       
       {/* Popular badge */}
       {popular && (
         <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
-          <span className="px-5 py-2 rounded-full text-xs font-bold bg-gradient-to-r from-primary to-purple-600 text-white whitespace-nowrap shadow-lg shadow-primary/30">
+          <span className="px-5 py-2 rounded-full text-xs font-bold bg-gradient-to-r from-primary to-cyan-600 text-white whitespace-nowrap shadow-lg shadow-primary/30">
             Most Popular
           </span>
         </div>
@@ -183,7 +183,7 @@ function PricingCard({ name, price, leads, features, popular, index }: { name: s
           onClick={() => navigate('/auth')}
           className={`w-full h-14 rounded-xl font-semibold text-base transition-all duration-300 ${
             popular 
-              ? 'bg-gradient-to-r from-primary to-purple-600 text-white shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 hover:scale-[1.02]' 
+              ? 'bg-gradient-to-r from-primary to-cyan-600 text-white shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 hover:scale-[1.02]' 
               : 'bg-foreground text-background hover:opacity-90 hover:scale-[1.02]'
           }`}
         >
@@ -250,7 +250,7 @@ export default function Landing() {
               <div className="flex items-center gap-3 pl-2 justify-start min-w-0">
                 <div className="relative group flex-shrink-0">
                   <div className="absolute inset-0 rounded-xl bg-primary/30 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center shadow-md shadow-primary/20">
+                  <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-cyan-600 flex items-center justify-center shadow-md shadow-primary/20">
                     <div className="w-4 h-4 rounded-full bg-white/90 shadow-inner" />
                   </div>
                 </div>
@@ -287,7 +287,7 @@ export default function Landing() {
                 {user ? (
                   <button 
                     onClick={() => navigate('/dashboard')} 
-                    className="h-9 px-5 rounded-xl text-sm font-medium bg-gradient-to-r from-primary to-purple-600 text-white shadow-md shadow-primary/25 hover:shadow-lg hover:shadow-primary/35 transition-all duration-300 hover:-translate-y-0.5"
+                    className="h-9 px-5 rounded-xl text-sm font-medium bg-gradient-to-r from-primary to-cyan-600 text-white shadow-md shadow-primary/25 hover:shadow-lg hover:shadow-primary/35 transition-all duration-300 hover:-translate-y-0.5"
                   >
                     Dashboard
                   </button>
@@ -301,7 +301,7 @@ export default function Landing() {
                     </button>
                     <button 
                       onClick={() => navigate('/auth')} 
-                      className="h-9 px-5 rounded-xl text-sm font-medium bg-gradient-to-r from-primary to-purple-600 text-white shadow-md shadow-primary/25 hover:shadow-lg hover:shadow-primary/35 transition-all duration-300 hover:-translate-y-0.5"
+                      className="h-9 px-5 rounded-xl text-sm font-medium bg-gradient-to-r from-primary to-cyan-600 text-white shadow-md shadow-primary/25 hover:shadow-lg hover:shadow-primary/35 transition-all duration-300 hover:-translate-y-0.5"
                     >
                       Get Started
                     </button>
@@ -316,15 +316,15 @@ export default function Landing() {
       {/* Hero Section */}
       <section ref={heroRef} className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
         {/* Gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-purple-50" />
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-cyan-50" />
         {/* Radial accent */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_hsl(var(--primary)_/_0.08)_0%,_transparent_60%)]" />
         
         {/* Floating shapes */}
         <FloatingOrb className="w-96 h-96 bg-primary/20 -top-48 -right-48" delay={0} />
-        <FloatingOrb className="w-80 h-80 bg-purple-400/15 -bottom-40 -left-40" delay={2} />
+        <FloatingOrb className="w-80 h-80 bg-cyan-400/15 -bottom-40 -left-40" delay={2} />
         <FloatingOrb className="w-64 h-64 bg-primary/15 top-1/3 right-1/4" delay={4} />
-        <FloatingOrb className="w-48 h-48 bg-purple-300/10 top-1/4 left-1/6" delay={6} />
+        <FloatingOrb className="w-48 h-48 bg-cyan-300/10 top-1/4 left-1/6" delay={6} />
         
         {/* Grid pattern */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:80px_80px]" />
@@ -352,7 +352,7 @@ export default function Landing() {
           >
             <span className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent">Fill healthcare roles</span>
             <br />
-            <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">3x faster</span>
+            <span className="bg-gradient-to-r from-primary to-cyan-600 bg-clip-text text-transparent">3x faster</span>
           </motion.h1>
           
           <motion.p
@@ -373,7 +373,7 @@ export default function Landing() {
             <Button 
               onClick={() => navigate('/auth')} 
               size="lg" 
-              className="h-14 px-8 text-lg gap-2 bg-gradient-to-r from-primary to-purple-600 text-white shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 hover:scale-105 transition-all duration-300 border-0"
+              className="h-14 px-8 text-lg gap-2 bg-gradient-to-r from-primary to-cyan-600 text-white shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 hover:scale-105 transition-all duration-300 border-0"
             >
               Get Started
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -404,7 +404,7 @@ export default function Landing() {
       </section>
       
       {/* Smooth transition gradient */}
-      <div className="h-32 bg-gradient-to-b from-purple-50/30 via-background/50 to-background" />
+      <div className="h-32 bg-gradient-to-b from-cyan-50/30 via-background/50 to-background" />
       
       {/* Stats Section */}
       <section className="py-16 px-6 bg-gradient-to-b from-muted/30 to-muted/50 relative">
@@ -431,7 +431,7 @@ export default function Landing() {
       <section id="features" className="py-32 px-6 relative">
         {/* Decorative blobs */}
         <div className="absolute top-20 right-0 w-96 h-96 bg-primary/[0.04] rounded-full blur-3xl" />
-        <div className="absolute bottom-20 left-0 w-80 h-80 bg-purple-400/[0.04] rounded-full blur-3xl" />
+        <div className="absolute bottom-20 left-0 w-80 h-80 bg-cyan-400/[0.04] rounded-full blur-3xl" />
         
         <div className="max-w-5xl mx-auto relative z-10">
           <AnimatedSection className="text-center mb-20">
@@ -465,7 +465,7 @@ export default function Landing() {
       <section id="how-it-works" className="py-32 px-6 relative bg-muted/50 overflow-hidden">
         {/* Decorative elements */}
         <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-400/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-cyan-400/5 rounded-full blur-3xl" />
         
         <div className="max-w-4xl mx-auto relative z-10">
           <AnimatedSection className="text-center mb-16">
@@ -491,7 +491,7 @@ export default function Landing() {
                 className="flex gap-6 items-start p-6 rounded-2xl bg-white/80 backdrop-blur-sm border border-border/40 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
               >
                 <div className="flex-shrink-0">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-xl font-bold text-white shadow-lg shadow-primary/20">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-cyan-600 flex items-center justify-center text-xl font-bold text-white shadow-lg shadow-primary/20">
                     {i + 1}
                   </div>
                 </div>
@@ -539,18 +539,18 @@ export default function Landing() {
       
       {/* CTA Section */}
       <section className="py-32 px-6 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/[0.04] to-purple-500/[0.04]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/[0.04] to-cyan-500/[0.04]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_hsl(var(--primary)_/_0.08)_0%,_transparent_60%)]" />
         
         <AnimatedSection className="max-w-4xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-purple-500/10 border border-primary/20 mb-8">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-purple-600 shadow-lg shadow-primary/25" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-cyan-500/10 border border-primary/20 mb-8">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-cyan-600 shadow-lg shadow-primary/25" />
           </div>
           
           <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
             Ready to fill roles
             <br />
-            <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">3x faster?</span>
+            <span className="bg-gradient-to-r from-primary to-cyan-600 bg-clip-text text-transparent">3x faster?</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-10">
             Join healthcare recruiters using {appName} to source, qualify, and reach candidates in minutes.
@@ -559,7 +559,7 @@ export default function Landing() {
             <Button 
               onClick={() => navigate('/auth')} 
               size="lg" 
-              className="h-14 px-10 text-lg gap-2 bg-gradient-to-r from-primary to-purple-600 text-white shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 hover:scale-105 transition-all duration-300 border-0"
+              className="h-14 px-10 text-lg gap-2 bg-gradient-to-r from-primary to-cyan-600 text-white shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 hover:scale-105 transition-all duration-300 border-0"
             >
               Start Finding Candidates
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -585,7 +585,7 @@ export default function Landing() {
       <footer className="py-12 px-6 bg-gray-900 text-white">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-md bg-gradient-to-br from-primary to-cyan-600 flex items-center justify-center">
               <div className="w-3 h-3 rounded-full bg-white/90" />
             </div>
             <span className="font-medium text-white">{appName}</span>
