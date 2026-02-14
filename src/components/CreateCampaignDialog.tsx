@@ -344,20 +344,56 @@ export function CreateCampaignDialog({ open, onOpenChange, onCreated }: CreateCa
             {/* Step 1: Campaign Name */}
             {step === 'name' && (
               <div className="space-y-6">
-                <p className="text-muted-foreground text-base leading-relaxed">
-                  {config.subtitle}
-                </p>
-                <div className="space-y-3">
-                  <Input
-                    placeholder="ICU Travel Nurse — Los Angeles, Q2 2026"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    className="apple-input h-14 text-lg"
-                    autoFocus
-                  />
+                {/* Quick Start: URL Extraction */}
+                <div className="space-y-3 p-4 rounded-xl bg-primary/5 border border-primary/10">
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-semibold text-foreground">Quick Start</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Paste a job posting URL to auto-fill all steps
+                  </p>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="https://indeed.com/viewjob?jk=..."
+                      value={jobPostingUrl}
+                      onChange={(e) => setJobPostingUrl(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={handleExtractJobPosting}
+                      disabled={isExtracting || !jobPostingUrl}
+                      className="rounded-xl gap-2"
+                    >
+                      {isExtracting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Extracting...
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="w-4 h-4" />
+                          Extract
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
-                <div className="pt-4">
+
+                <div className="border-t border-border/30 pt-4">
+                  <p className="text-sm text-muted-foreground mb-3">Or enter the job title manually:</p>
+                </div>
+
+                <Input
+                  placeholder="ICU Travel Nurse — Los Angeles, Q2 2026"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className="apple-input h-14 text-lg"
+                  autoFocus
+                />
+                <div className="pt-2">
                   <p className="text-xs text-muted-foreground/60 font-medium uppercase tracking-wider mb-3">
                     Quick tips
                   </p>
@@ -415,47 +451,6 @@ export function CreateCampaignDialog({ open, onOpenChange, onCreated }: CreateCa
             {/* Step 3: Search */}
             {step === 'search' && (
               <div className="space-y-6">
-                {/* Quick Start: URL Extraction */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Link className="w-4 h-4 text-primary" />
-                    <span className="text-sm font-semibold text-foreground">Quick Start</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Paste a job posting URL to auto-fill the details
-                  </p>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="https://indeed.com/viewjob?jk=..."
-                      value={jobPostingUrl}
-                      onChange={(e) => setJobPostingUrl(e.target.value)}
-                      className="flex-1"
-                    />
-                    <Button
-                      variant="outline"
-                      onClick={handleExtractJobPosting}
-                      disabled={isExtracting || !jobPostingUrl}
-                      className="rounded-xl gap-2"
-                    >
-                      {isExtracting ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Extracting...
-                        </>
-                      ) : (
-                        <>
-                          <Zap className="w-4 h-4" />
-                          Extract
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="border-t border-border/30 pt-4">
-                  <p className="text-sm text-muted-foreground mb-3">Or describe the role manually:</p>
-                </div>
-
                 <Input
                   placeholder="ICU Nurse — Los Angeles, CA — 3+ years experience, BLS/ACLS, CA RN license..."
                   value={searchQuery}
