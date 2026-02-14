@@ -14,9 +14,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, Send, Mail, AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
+import { Loader2, Send, Mail, AlertCircle, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 import { generateOutreach } from '@/lib/api';
 import { useEmailConnection } from '@/hooks/useEmailConnection';
+import { useEmailStats } from '@/hooks/useEmailStats';
 import { useToast } from '@/hooks/use-toast';
 
 interface BulkEmailModalProps {
@@ -49,6 +50,7 @@ export function BulkEmailModal({ leads, campaign, isOpen, onClose, onSent }: Bul
   const [failCount, setFailCount] = useState(0);
   const [personalizedEmails, setPersonalizedEmails] = useState<PersonalizedEmail[]>([]);
   const { isConnected, sendEmail } = useEmailConnection();
+  const { stats, refresh: refreshStats } = useEmailStats();
   const { toast } = useToast();
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -177,6 +179,30 @@ export function BulkEmailModal({ leads, campaign, isOpen, onClose, onSent }: Bul
         {/* Phase: Edit */}
         {phase === 'edit' && (
           <div className="space-y-4 py-2">
+            {/* Over limit warning for bulk */}
+            {stats?.over_limit && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm text-red-900 font-medium">
+                    You've already sent {stats.emails_sent_today} emails today.
+                    Sending {cappedLeads.length} more will put you at {stats.emails_sent_today + cappedLeads.length}{' '}
+                    (recommended: {stats.recommended_limit}/day).
+                  </span>
+                </div>
+              </div>
+            )}
+            {stats?.approaching_limit && !stats?.over_limit && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm text-amber-900 font-medium">
+                    You've sent {stats.emails_sent_today}/{stats.recommended_limit} emails today.
+                    Sending {cappedLeads.length} more may exceed your recommended limit.
+                  </span>
+                </div>
+              </div>
+            )}
             <p className="text-sm text-muted-foreground">
               Each email will be AI-personalized for every candidate's qualifications, experience, and specialty.
             </p>
@@ -286,7 +312,7 @@ export function BulkEmailModal({ leads, campaign, isOpen, onClose, onSent }: Bul
                 className="gap-2 rounded-xl"
               >
                 <Loader2 className="w-4 h-4" />
-                Generate & Preview
+                {stats?.over_limit ? 'Continue Anyway ⚠️' : 'Generate & Preview'}
               </Button>
             </>
           )}

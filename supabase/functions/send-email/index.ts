@@ -288,6 +288,39 @@ serve(async (req) => {
 
     console.log("Email sent successfully, message ID:", sendResult.id);
 
+    // Track daily email count
+    const today = new Date().toISOString().split("T")[0];
+    const { data: existingLimit } = await supabaseAdmin
+      .from("email_send_limits")
+      .select("emails_sent")
+      .eq("user_id", user.id)
+      .eq("date", today)
+      .maybeSingle();
+
+    if (existingLimit) {
+      await supabaseAdmin
+        .from("email_send_limits")
+        .update({ emails_sent: existingLimit.emails_sent + 1 })
+        .eq("user_id", user.id)
+        .eq("date", today);
+    } else {
+      await supabaseAdmin
+        .from("email_send_limits")
+        .insert({ user_id: user.id, date: today, emails_sent: 1 });
+    }
+
+    const emailsSentToday = (existingLimit?.emails_sent || 0) + 1;
+
+    // Calculate recommended limit based on account age
+    const accountAgeDays = connection.created_at
+      ? Math.floor((Date.now() - new Date(connection.created_at).getTime()) / (1000 * 60 * 60 * 24))
+      : 999;
+
+    let recommendedLimit = 50;
+    if (accountAgeDays < 7) recommendedLimit = 10;
+    else if (accountAgeDays < 14) recommendedLimit = 20;
+    else if (accountAgeDays < 30) recommendedLimit = 30;
+
     // Update lead status to 'contacted' if leadId provided
     if (leadId) {
       const { error: leadError } = await supabaseClient
@@ -330,7 +363,16 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, messageId: sendResult.id }),
+      JSON.stringify({ 
+        success: true, 
+        messageId: sendResult.id,
+        warning: emailsSentToday >= recommendedLimit ? {
+          emails_sent_today: emailsSentToday,
+          recommended_limit: recommendedLimit,
+          account_age_days: accountAgeDays,
+          over_limit: true,
+        } : null,
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 

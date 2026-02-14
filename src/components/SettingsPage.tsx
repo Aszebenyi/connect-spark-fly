@@ -13,7 +13,8 @@ import { PricingPlans } from '@/components/PricingPlans';
 import { PLANS, PlanId } from '@/lib/plans';
 import { EmailConnectionCard } from '@/components/EmailConnectionCard';
 import { CompanyProfileTab } from '@/components/CompanyProfileTab';
-import { AlertCircle, ExternalLink } from 'lucide-react';
+import { useEmailStats } from '@/hooks/useEmailStats';
+import { AlertCircle, ExternalLink, Loader2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -85,6 +86,7 @@ export function SettingsPage() {
   
   useSubscriptionRealtime();
   
+  const { stats: emailStats, isLoading: emailStatsLoading } = useEmailStats();
   const [activeTab, setActiveTab] = useState<SettingsTab>('account');
   const [showPricing, setShowPricing] = useState(false);
   const [managingBilling, setManagingBilling] = useState(false);
@@ -623,6 +625,43 @@ export function SettingsPage() {
               Connect your Gmail account to send personalized outreach emails directly from your own email address.
               Replies will come back to your inbox.
             </p>
+          </SettingsSection>
+
+          {/* Email Safety Stats */}
+          <SettingsSection
+            title="Email Safety"
+            description="Monitor your daily sending activity and recommended limits"
+          >
+            {emailStatsLoading ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Loading stats...
+              </div>
+            ) : emailStats?.has_connection ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-foreground">Today's Activity</h4>
+                  <span className={`text-xs font-medium px-2 py-1 rounded ${
+                    emailStats.over_limit
+                      ? 'bg-red-100 text-red-700'
+                      : emailStats.approaching_limit
+                      ? 'bg-amber-100 text-amber-700'
+                      : 'bg-emerald-100 text-emerald-700'
+                  }`}>
+                    {emailStats.emails_sent_today}/{emailStats.recommended_limit} today
+                  </span>
+                </div>
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  <p>Account age: {emailStats.account_age_days} days</p>
+                  <p>Recommended daily limit: {emailStats.recommended_limit} emails</p>
+                  <p className="text-xs">
+                    Limit increases as your account ages (10/day → 50/day over 30 days)
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Connect your Gmail to see email safety stats.</p>
+            )}
           </SettingsSection>
 
           <SettingsSection 

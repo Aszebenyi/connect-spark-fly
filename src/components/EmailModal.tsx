@@ -12,9 +12,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Loader2, Send, Mail } from 'lucide-react';
+import { Loader2, Send, Mail, AlertTriangle, AlertCircle } from 'lucide-react';
 import { generateOutreach } from '@/lib/api';
 import { useEmailConnection } from '@/hooks/useEmailConnection';
+import { useEmailStats } from '@/hooks/useEmailStats';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
@@ -32,6 +33,7 @@ export function EmailModal({ lead, campaign, isOpen, onClose, onSent }: EmailMod
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const { isConnected, sendEmail } = useEmailConnection();
+  const { stats, refresh: refreshStats } = useEmailStats();
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -41,6 +43,7 @@ export function EmailModal({ lead, campaign, isOpen, onClose, onSent }: EmailMod
     setSubject('');
     setBody('');
     setIsGenerating(true);
+    refreshStats();
 
     generateOutreach({
       lead: {
@@ -111,6 +114,46 @@ export function EmailModal({ lead, campaign, isOpen, onClose, onSent }: EmailMod
         </DialogHeader>
 
         <div className="space-y-4 py-2">
+          {/* Approaching limit warning */}
+          {stats?.approaching_limit && !stats?.over_limit && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="font-medium text-amber-900 text-sm mb-1">
+                    You've sent {stats.emails_sent_today} emails today
+                  </p>
+                  <p className="text-sm text-amber-700">
+                    {stats.account_age_days < 30
+                      ? `Your Gmail is ${stats.account_age_days} days old. We recommend max ${stats.recommended_limit} emails/day for accounts under 30 days to avoid spam filters.`
+                      : `Recommended daily limit: ${stats.recommended_limit} emails.`
+                    }
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Over limit warning */}
+          {stats?.over_limit && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="font-medium text-red-900 text-sm mb-1">
+                    ⚠️ Over Recommended Limit
+                  </p>
+                  <p className="text-sm text-red-700 mb-2">
+                    Sending more than {stats.recommended_limit} emails/day from a {stats.account_age_days}-day-old account may trigger spam filters and damage your sender reputation.
+                  </p>
+                  <p className="text-xs text-red-600 font-medium">
+                    Continue at your own risk. Consider using Warmy.io to warm up your account first.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label className="text-xs text-muted-foreground">From</Label>
@@ -171,7 +214,7 @@ export function EmailModal({ lead, campaign, isOpen, onClose, onSent }: EmailMod
             ) : (
               <>
                 <Send className="w-4 h-4" />
-                Send Email
+                {stats?.over_limit ? 'Send Anyway (Not Recommended)' : 'Send Email'}
               </>
             )}
           </Button>
