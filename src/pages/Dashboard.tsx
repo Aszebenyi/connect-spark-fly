@@ -13,6 +13,7 @@ import { SettingsPage } from '@/components/SettingsPage';
 import { OnboardingChecklist } from '@/components/OnboardingChecklist';
 import { Button } from '@/components/ui/button';
 import { RingLoader, AbstractBlob, TargetRings, SparkBurst, DataFlow } from '@/components/ui/visual-elements';
+import { Flame, Mail, CalendarDays, Clock } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import { 
   getLeads, 
@@ -351,6 +352,56 @@ export default function Index() {
               onNavigateToSettings={() => setActiveTab('settings')}
               onNavigateToLeads={() => setActiveTab('leads')}
             />
+
+            {/* Today's Priorities */}
+            {(() => {
+              const now = new Date();
+              const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+              const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+              const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+              const needResponse = dbLeads.filter(l => l.status === 'replied' && new Date(l.updated_at) < oneDayAgo).length;
+              const followUpsDue = dbLeads.filter(l => l.status === 'contacted' && new Date(l.updated_at) < threeDaysAgo).length;
+              const interviewsThisWeek = dbLeads.filter(l => l.status === 'interview_scheduled').length;
+              const staleLeads = dbLeads.filter(l => new Date(l.updated_at) < sevenDaysAgo && !['hired', 'lost'].includes(l.status || '')).length;
+              const hasAny = needResponse + followUpsDue + interviewsThisWeek + staleLeads > 0;
+
+              if (!hasAny) return null;
+
+              const cards = [
+                { count: needResponse, label: 'Need Response', action: 'Replied but no follow-up yet', status: 'replied', icon: <Flame className="w-8 h-8" />, border: 'border-destructive/40' },
+                { count: followUpsDue, label: 'Follow-ups Due', action: 'No activity in 3+ days', status: 'contacted', icon: <Mail className="w-8 h-8" />, border: 'border-warning/40' },
+                { count: interviewsThisWeek, label: 'Interviews', action: 'Scheduled interviews', status: 'interview_scheduled', icon: <CalendarDays className="w-8 h-8" />, border: 'border-accent/40' },
+                { count: staleLeads, label: 'Stale Leads', action: 'No updates in 7+ days', status: null as string | null, icon: <Clock className="w-8 h-8" />, border: 'border-muted-foreground/30' },
+              ];
+
+              return (
+                <div className="mb-4 animate-fade-in">
+                  <div className="section-header">
+                    <h2 className="section-title">Today's Priorities</h2>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    {cards.map((card) => (
+                      <button
+                        key={card.label}
+                        onClick={() => { if (card.status) setStatusFilterFromStats(card.status); setActiveTab('leads'); }}
+                        className={`action-card text-left group border ${card.border}`}
+                      >
+                        <div className="relative z-10">
+                          <div className="visual-badge visual-badge-lg mb-3">
+                            {card.icon}
+                          </div>
+                          <div className="flex items-baseline gap-2 mb-1">
+                            <span className="text-2xl font-bold text-foreground">{card.count}</span>
+                            <span className="text-sm text-muted-foreground">{card.label}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">{card.action}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
