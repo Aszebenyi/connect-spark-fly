@@ -53,7 +53,7 @@ export function OnboardingChecklist({
       description: 'Set your base country for localized recruiting',
       completed: progress.hasCountrySet,
       icon: Globe,
-      action: onNavigateToSettings,
+      action: onNavigateToCompanyProfile,
       actionLabel: 'Set Country',
     },
     {
