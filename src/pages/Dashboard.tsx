@@ -353,6 +353,7 @@ export default function Index() {
               onCreateCampaign={() => setShowCreateCampaign(true)}
               onNavigateToFinder={() => setActiveTab('finder')}
               onNavigateToSettings={() => setActiveTab('settings')}
+              onNavigateToCompanyProfile={() => setActiveTab('settings')}
               onNavigateToLeads={() => setActiveTab('leads')}
             />
 
