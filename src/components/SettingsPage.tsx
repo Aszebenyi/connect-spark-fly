@@ -13,6 +13,7 @@ import { PricingPlans } from '@/components/PricingPlans';
 import { PLANS, PlanId } from '@/lib/plans';
 import { EmailConnectionCard } from '@/components/EmailConnectionCard';
 import { CompanyProfileTab } from '@/components/CompanyProfileTab';
+import { InternationalSettingsTab } from '@/components/InternationalSettingsTab';
 import { useEmailStats } from '@/hooks/useEmailStats';
 import { AlertCircle, ExternalLink, Loader2 } from 'lucide-react';
 import {
@@ -75,9 +76,10 @@ const settingsTabs = [
   { key: 'billing' as const, label: 'Billing' },
   { key: 'integrations' as const, label: 'Integrations' },
   { key: 'company' as const, label: 'Company Profile' },
+  { key: 'international' as const, label: 'International' },
 ];
 
-type SettingsTab = 'account' | 'billing' | 'integrations' | 'company';
+type SettingsTab = 'account' | 'billing' | 'integrations' | 'company' | 'international';
 
 export function SettingsPage() {
   const { toast } = useToast();
@@ -716,6 +718,11 @@ export function SettingsPage() {
             <CompanyProfileTab />
           </SettingsSection>
         </div>
+      )}
+
+      {/* International Tab */}
+      {activeTab === 'international' && (
+        <InternationalSettingsTab />
       )}
 
       {/* Pricing Modal */}

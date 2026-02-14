@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+import { COUNTRIES, CountryCode, getCountryFlag } from '@/lib/countries';
 import { Lead } from '@/types/lead';
 import { Campaign, getOutreachMessages, OutreachMessage } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
@@ -631,7 +632,12 @@ export function LeadTable({
                       <p className="text-foreground">{getEmployer(lead)}</p>
                     </td>
                     <td className="p-3 align-middle">
-                      <p className="text-foreground text-sm">{getLocation(lead)}</p>
+                      <div className="flex items-center gap-1">
+                        <p className="text-foreground text-sm">{getLocation(lead)}</p>
+                        {(lead as any).nationality && (
+                          <span className="text-sm">{getCountryFlag((lead as any).nationality)}</span>
+                        )}
+                      </div>
                     </td>
                     <td className="p-3 align-middle">
                       {(() => {
