@@ -403,6 +403,60 @@ export default function Index() {
               );
             })()}
 
+            {/* Candidate Pipeline */}
+            {dbLeads.length > 0 && (() => {
+              const sourced = dbLeads.length;
+              const contactedStatuses = ['contacted','replied','qualified','interview_scheduled','offer_sent','hired'];
+              const repliedStatuses = ['replied','qualified','interview_scheduled','offer_sent','hired'];
+              const interviewStatuses = ['interview_scheduled','offer_sent','hired'];
+              const offerStatuses = ['offer_sent','hired'];
+
+              const contacted = dbLeads.filter(l => contactedStatuses.includes(l.status || '')).length;
+              const replied = dbLeads.filter(l => repliedStatuses.includes(l.status || '')).length;
+              const interviewing = dbLeads.filter(l => interviewStatuses.includes(l.status || '')).length;
+              const offers = dbLeads.filter(l => offerStatuses.includes(l.status || '')).length;
+              const hired = dbLeads.filter(l => l.status === 'hired').length;
+
+              const stages = [
+                { name: 'Sourced', count: sourced, percentage: 100, rate: 100, status: null as string | null },
+                { name: 'Contacted', count: contacted, percentage: sourced ? (contacted / sourced) * 100 : 0, rate: sourced ? Math.round((contacted / sourced) * 100) : 0, status: 'contacted' },
+                { name: 'Replied', count: replied, percentage: sourced ? (replied / sourced) * 100 : 0, rate: contacted ? Math.round((replied / contacted) * 100) : 0, status: 'replied' },
+                { name: 'Interviewing', count: interviewing, percentage: sourced ? (interviewing / sourced) * 100 : 0, rate: replied ? Math.round((interviewing / replied) * 100) : 0, status: 'interview_scheduled' },
+                { name: 'Offers', count: offers, percentage: sourced ? (offers / sourced) * 100 : 0, rate: interviewing ? Math.round((offers / interviewing) * 100) : 0, status: 'offer_sent' },
+                { name: 'Hired', count: hired, percentage: sourced ? (hired / sourced) * 100 : 0, rate: offers ? Math.round((hired / offers) * 100) : 0, status: 'hired' },
+              ];
+
+              return (
+                <div className="mb-4 animate-fade-in">
+                  <div className="section-header">
+                    <h2 className="section-title">Candidate Pipeline</h2>
+                  </div>
+                  <div className="glass-strong rounded-2xl p-6">
+                    {stages.map((stage) => (
+                      <div
+                        key={stage.name}
+                        className="flex items-center gap-4 mb-3 last:mb-0 cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => { if (stage.status) setStatusFilterFromStats(stage.status); setActiveTab('leads'); }}
+                      >
+                        <span className="text-sm font-medium w-24 text-foreground">{stage.name}</span>
+                        <div className="flex-1 h-8 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-700"
+                            style={{
+                              width: `${Math.max(stage.percentage, stage.count > 0 ? 3 : 0)}%`,
+                              background: 'linear-gradient(90deg, hsl(var(--primary)), hsl(var(--success)))',
+                            }}
+                          />
+                        </div>
+                        <span className="text-sm font-semibold w-16 text-right text-foreground">{stage.count}</span>
+                        <span className="text-xs text-muted-foreground w-12 text-right">{stage.rate}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
                 <StatCard
