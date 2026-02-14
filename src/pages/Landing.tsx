@@ -7,7 +7,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useBrandConfig } from '@/hooks/useBrandConfig';
 import { ContactDialog } from '@/components/ContactDialog';
 import { FreeLeadSampleModal } from '@/components/lead-magnets/FreeLeadSampleModal';
-import { Users } from 'lucide-react';
+import { Users, Link, ShieldCheck, Globe } from 'lucide-react';
+import { COUNTRIES } from '@/lib/countries';
 import {
   PulseOrb, 
   DataFlow, 
@@ -224,6 +225,9 @@ export default function Landing() {
     { visual: PulseOrb, title: "Match Scoring & Verification", description: "Every candidate gets a qualification score with reasoning. Licenses, certifications, and experience verified automatically—saving 20+ hours per week." },
     { visual: StackedBars, title: "Personalized Outreach", description: `AI writes unique emails using each candidate's background. Send via Gmail, track opens and replies. 15-25% response rates vs 5% industry average.` },
     { visual: DataFlow, title: "Multi-Role Management", description: "Manage ICU, ER, travel contracts simultaneously. Track contacted, responded, and interview-ready candidates across all your openings in one dashboard." },
+    { visual: Link, title: "One-Click Job Import", description: "Paste any job posting URL from Indeed, LinkedIn, or career pages and we auto-extract title, requirements, and search query in seconds." },
+    { visual: ShieldCheck, title: "Email Deliverability Protection", description: "Smart daily sending limits based on your Gmail account age prevent spam folder issues and protect your sender reputation." },
+    { visual: Globe, title: "International Recruitment", description: "Works across US, UK, Canada, Australia, and UAE. Auto-adjusts license formats, currency, and regional medical terminology." },
   ];
   
   const steps = [
@@ -427,10 +431,10 @@ export default function Landing() {
           </p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 items-stretch">
             {[
-              { value: "25%", label: "Reply Rate", sub: "vs 5-8% average" },
-              { value: "5x", label: "Faster Fill", sub: "vs 3-6 months" },
-              { value: "13hrs", label: "Saved Weekly", sub: "LinkedIn searching" },
-              { value: "95%+", label: "License Accuracy", sub: "Auto-verified" },
+              { value: "25%", label: "Reply Rate", sub: "vs 5% industry avg" },
+              { value: "3x", label: "Faster Fill", sub: "vs manual sourcing" },
+              { value: "13hrs", label: "Saved Weekly", sub: "per recruiter" },
+              { value: "95%+", label: "Accuracy", sub: "contact verified" },
             ].map((stat, i) => (
               <StatItem key={stat.label} value={stat.value} label={stat.label} sub={stat.sub} index={i} />
             ))}
@@ -462,6 +466,48 @@ export default function Landing() {
               <FeatureCard key={feature.title} {...feature} index={i} />
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Works in Your Country Section */}
+      <section className="py-20 px-6 bg-gradient-to-b from-blue-50/20 to-white relative">
+        <div className="max-w-4xl mx-auto relative z-10">
+          <AnimatedSection className="text-center">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6 tracking-wide">
+              Global Coverage
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-8">
+              Works in Your Country
+            </h2>
+            <div className="flex flex-wrap justify-center gap-3 mb-10">
+              {Object.values(COUNTRIES).map((country) => (
+                <span
+                  key={country.code}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-border/50 shadow-sm text-sm font-medium text-foreground"
+                >
+                  <span className="text-lg">{country.flag}</span>
+                  {country.name}
+                </span>
+              ))}
+            </div>
+            <p className="text-muted-foreground text-sm font-medium uppercase tracking-widest mb-6">
+              Automatically adjusts to show
+            </p>
+            <div className="grid sm:grid-cols-3 gap-4 max-w-2xl mx-auto text-left">
+              <div className="p-4 rounded-xl bg-white border border-border/40 shadow-sm">
+                <p className="text-sm font-semibold text-foreground mb-1">Local License Formats</p>
+                <p className="text-xs text-muted-foreground">State boards, NMC, AHPRA, DHA &amp; more</p>
+              </div>
+              <div className="p-4 rounded-xl bg-white border border-border/40 shadow-sm">
+                <p className="text-sm font-semibold text-foreground mb-1">Your Currency</p>
+                <p className="text-xs text-muted-foreground">USD, GBP, CAD, AUD, AED</p>
+              </div>
+              <div className="p-4 rounded-xl bg-white border border-border/40 shadow-sm">
+                <p className="text-sm font-semibold text-foreground mb-1">Regional Terminology</p>
+                <p className="text-xs text-muted-foreground">ER vs A&amp;E, ICU vs ITU, OR vs Theatre</p>
+              </div>
+            </div>
+          </AnimatedSection>
         </div>
       </section>
       
