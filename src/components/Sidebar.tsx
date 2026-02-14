@@ -16,9 +16,9 @@ interface SidebarProps {
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', visual: 'bars' },
-  { id: 'leads', label: 'Candidates', visual: 'dots' },
-  { id: 'finder', label: 'Find Candidates', visual: 'pulse' },
   { id: 'campaigns', label: 'Job Openings', visual: 'arrow' },
+  { id: 'finder', label: 'Search', visual: 'pulse' },
+  { id: 'leads', label: 'Candidates', visual: 'dots' },
   { id: 'settings', label: 'Settings', visual: 'gear' },
 ];
 

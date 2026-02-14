@@ -61,7 +61,7 @@ export function OnboardingChecklist({
       completed: progress.hasLeads,
       icon: Users,
       action: onNavigateToFinder,
-      actionLabel: 'Find Candidates',
+      actionLabel: 'Search',
     },
     {
       id: 'email',

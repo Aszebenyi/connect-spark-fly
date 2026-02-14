@@ -391,41 +391,6 @@ export default function Index() {
               />
             </div>
 
-            {/* Quick Actions */}
-            <div className="mb-4">
-              <div className="section-header">
-                <h2 className="section-title">Quick Actions</h2>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <button onClick={() => setShowCreateCampaign(true)} className="action-card text-left">
-                  <div className="relative z-10">
-                    <div className="visual-badge visual-badge-lg mb-3">
-                      <SparkBurst className="w-8 h-8" />
-                    </div>
-                    <h3 className="font-semibold text-foreground text-base mb-1">New Job Opening</h3>
-                    <p className="text-muted-foreground text-sm">Create job opening with candidates</p>
-                  </div>
-                </button>
-                <button onClick={() => setActiveTab('leads')} className="action-card text-left">
-                  <div className="relative z-10">
-                    <div className="visual-badge visual-badge-lg mb-3">
-                      <TargetRings className="w-8 h-8" />
-                    </div>
-                    <h3 className="font-semibold text-foreground text-base mb-1">View Candidates</h3>
-                    <p className="text-muted-foreground text-sm">{dbLeads.length} in your pipeline</p>
-                  </div>
-                </button>
-                <button onClick={() => setActiveTab('campaigns')} className="action-card text-left">
-                  <div className="relative z-10">
-                    <div className="visual-badge visual-badge-lg mb-3">
-                      <DataFlow className="w-8 h-8" />
-                    </div>
-                    <h3 className="font-semibold text-foreground text-base mb-1">Manage Openings</h3>
-                    <p className="text-muted-foreground text-sm">{campaigns.length} job openings</p>
-                  </div>
-                </button>
-              </div>
-            </div>
 
 
             {/* Active Campaigns */}
