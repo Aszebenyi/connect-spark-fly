@@ -10,7 +10,7 @@ import { createCampaign, searchLeadsWithExa } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { useLeadSubscription } from '@/hooks/useLeadSubscription';
 import { cn } from '@/lib/utils';
-import { ArrowRight, ArrowLeft, Sparkles, Target, Search, Check, Users, Zap, Eye, Loader2, Link } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Sparkles, Target, Search, Check, Users, Zap, Eye, Loader2, Link, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface CampaignData {
@@ -91,6 +91,7 @@ export function CreateCampaignDialog({ open, onOpenChange, onCreated }: CreateCa
   const [createdCampaignData, setCreatedCampaignData] = useState<CampaignData | null>(null);
   const [jobPostingUrl, setJobPostingUrl] = useState('');
   const [isExtracting, setIsExtracting] = useState(false);
+  const [autoFilledFields, setAutoFilledFields] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   // Real-time lead subscription
@@ -111,6 +112,7 @@ export function CreateCampaignDialog({ open, onOpenChange, onCreated }: CreateCa
     setCreatedCampaignData(null);
     setJobPostingUrl('');
     setIsExtracting(false);
+    setAutoFilledFields(new Set());
   }, []);
 
   const handleExtractJobPosting = async () => {
@@ -122,12 +124,14 @@ export function CreateCampaignDialog({ open, onOpenChange, onCreated }: CreateCa
       });
       if (error) throw error;
       if (data?.success && data?.data) {
-        if (data.data.job_title && !name) setName(data.data.job_title);
-        if (data.data.job_goal && !goal) setGoal(data.data.job_goal);
-        if (data.data.search_query) setSearchQuery(data.data.search_query);
+        const filled = new Set<string>();
+        if (data.data.job_title) { setName(data.data.job_title); filled.add('name'); }
+        if (data.data.job_goal) { setGoal(data.data.job_goal); filled.add('goal'); }
+        if (data.data.search_query) { setSearchQuery(data.data.search_query); filled.add('search'); }
+        setAutoFilledFields(filled);
         toast({
           title: 'Details extracted!',
-          description: `Found: ${data.data.job_title}`,
+          description: `Auto-filled ${filled.size} field${filled.size !== 1 ? 's' : ''} from the job posting`,
         });
       }
     } catch (err) {
@@ -333,6 +337,20 @@ export function CreateCampaignDialog({ open, onOpenChange, onCreated }: CreateCa
               <h2 className="text-2xl font-semibold text-foreground tracking-tight mt-0.5">
                 {config.title}
               </h2>
+              {step === 'name' && autoFilledFields.size > 0 && (
+                <div className="flex items-center gap-2 mt-1">
+                  {autoFilledFields.has('goal') && (
+                    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-success/10 text-success border border-success/20">
+                      <CheckCircle2 className="w-3 h-3" /> Goal
+                    </span>
+                  )}
+                  {autoFilledFields.has('search') && (
+                    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-success/10 text-success border border-success/20">
+                      <CheckCircle2 className="w-3 h-3" /> Search
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -385,12 +403,18 @@ export function CreateCampaignDialog({ open, onOpenChange, onCreated }: CreateCa
                   <p className="text-sm text-muted-foreground mb-3">Or enter the job title manually:</p>
                 </div>
 
+                {autoFilledFields.has('name') && (
+                  <div className="flex items-center gap-2 text-sm text-success">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Auto-filled from job posting</span>
+                  </div>
+                )}
                 <Input
                   placeholder="ICU Travel Nurse — Los Angeles, Q2 2026"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => { setName(e.target.value); setAutoFilledFields(prev => { const n = new Set(prev); n.delete('name'); return n; }); }}
                   onKeyDown={handleKeyDown}
-                  className="apple-input h-14 text-lg"
+                  className={cn("apple-input h-14 text-lg", autoFilledFields.has('name') && "border-success/40 bg-success/5")}
                   autoFocus
                 />
                 <div className="pt-2">
@@ -414,15 +438,21 @@ export function CreateCampaignDialog({ open, onOpenChange, onCreated }: CreateCa
             {/* Step 2: Goal */}
             {step === 'goal' && (
               <div className="space-y-6">
+                {autoFilledFields.has('goal') && (
+                  <div className="flex items-center gap-2 text-sm text-success">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Auto-filled from job posting</span>
+                  </div>
+                )}
                 <p className="text-muted-foreground text-base leading-relaxed">
                   {config.subtitle}
                 </p>
                 <Textarea
                   placeholder="Fill ICU travel nurse contract, 3-month assignment starting next month..."
                   value={goal}
-                  onChange={(e) => setGoal(e.target.value)}
+                  onChange={(e) => { setGoal(e.target.value); setAutoFilledFields(prev => { const n = new Set(prev); n.delete('goal'); return n; }); }}
                   onKeyDown={handleKeyDown}
-                  className="apple-input min-h-[120px] text-base resize-none"
+                  className={cn("apple-input min-h-[120px] text-base resize-none", autoFilledFields.has('goal') && "border-success/40 bg-success/5")}
                   autoFocus
                 />
                 <div className="pt-2">
@@ -451,12 +481,18 @@ export function CreateCampaignDialog({ open, onOpenChange, onCreated }: CreateCa
             {/* Step 3: Search */}
             {step === 'search' && (
               <div className="space-y-6">
+                {autoFilledFields.has('search') && (
+                  <div className="flex items-center gap-2 text-sm text-success">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Auto-filled from job posting</span>
+                  </div>
+                )}
                 <Input
                   placeholder="ICU Nurse — Los Angeles, CA — 3+ years experience, BLS/ACLS, CA RN license..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => { setSearchQuery(e.target.value); setAutoFilledFields(prev => { const n = new Set(prev); n.delete('search'); return n; }); }}
                   onKeyDown={handleKeyDown}
-                  className="apple-input h-14 text-lg"
+                  className={cn("apple-input h-14 text-lg", autoFilledFields.has('search') && "border-success/40 bg-success/5")}
                 />
                 <div className="pt-2">
                   <p className="text-xs text-muted-foreground/60 font-medium uppercase tracking-wider mb-3">
