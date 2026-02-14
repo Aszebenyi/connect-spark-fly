@@ -10,7 +10,8 @@ import { createCampaign, searchLeadsWithExa } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { useLeadSubscription } from '@/hooks/useLeadSubscription';
 import { cn } from '@/lib/utils';
-import { ArrowRight, ArrowLeft, Sparkles, Target, Search, Check, Users, Zap, Eye } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Sparkles, Target, Search, Check, Users, Zap, Eye, Loader2, Link } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CampaignData {
   id?: string;
@@ -88,6 +89,8 @@ export function CreateCampaignDialog({ open, onOpenChange, onCreated }: CreateCa
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [createdCampaignId, setCreatedCampaignId] = useState<string | null>(null);
   const [createdCampaignData, setCreatedCampaignData] = useState<CampaignData | null>(null);
+  const [jobPostingUrl, setJobPostingUrl] = useState('');
+  const [isExtracting, setIsExtracting] = useState(false);
   const { toast } = useToast();
 
   // Real-time lead subscription
@@ -106,7 +109,38 @@ export function CreateCampaignDialog({ open, onOpenChange, onCreated }: CreateCa
     setIsTransitioning(false);
     setCreatedCampaignId(null);
     setCreatedCampaignData(null);
+    setJobPostingUrl('');
+    setIsExtracting(false);
   }, []);
+
+  const handleExtractJobPosting = async () => {
+    if (!jobPostingUrl) return;
+    setIsExtracting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('extract-job-posting', {
+        body: { url: jobPostingUrl },
+      });
+      if (error) throw error;
+      if (data?.success && data?.data) {
+        if (data.data.job_title && !name) setName(data.data.job_title);
+        if (data.data.job_goal && !goal) setGoal(data.data.job_goal);
+        if (data.data.search_query) setSearchQuery(data.data.search_query);
+        toast({
+          title: 'Details extracted!',
+          description: `Found: ${data.data.job_title}`,
+        });
+      }
+    } catch (err) {
+      console.error('Extraction error:', err);
+      toast({
+        title: 'Extraction failed',
+        description: 'Could not extract details from URL. Try entering manually.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExtracting(false);
+    }
+  };
 
   const handleClose = () => {
     if (isSaving || isSearching) return;
@@ -381,16 +415,53 @@ export function CreateCampaignDialog({ open, onOpenChange, onCreated }: CreateCa
             {/* Step 3: Search */}
             {step === 'search' && (
               <div className="space-y-6">
-                <p className="text-muted-foreground text-base leading-relaxed">
-                  {config.subtitle}
-                </p>
+                {/* Quick Start: URL Extraction */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Link className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-semibold text-foreground">Quick Start</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Paste a job posting URL to auto-fill the details
+                  </p>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="https://indeed.com/viewjob?jk=..."
+                      value={jobPostingUrl}
+                      onChange={(e) => setJobPostingUrl(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={handleExtractJobPosting}
+                      disabled={isExtracting || !jobPostingUrl}
+                      className="rounded-xl gap-2"
+                    >
+                      {isExtracting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Extracting...
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="w-4 h-4" />
+                          Extract
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="border-t border-border/30 pt-4">
+                  <p className="text-sm text-muted-foreground mb-3">Or describe the role manually:</p>
+                </div>
+
                 <Input
                   placeholder="ICU Nurse — Los Angeles, CA — 3+ years experience, BLS/ACLS, CA RN license..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
                   className="apple-input h-14 text-lg"
-                  autoFocus
                 />
                 <div className="pt-2">
                   <p className="text-xs text-muted-foreground/60 font-medium uppercase tracking-wider mb-3">
