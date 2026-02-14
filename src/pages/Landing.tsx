@@ -463,14 +463,14 @@ export default function Landing() {
       </section>
       
       {/* Wave divider - top */}
-      <div className="relative h-24 bg-background">
+      <div className="relative h-24 bg-white">
         <svg className="absolute bottom-0 w-full h-24" viewBox="0 0 1440 96" preserveAspectRatio="none" fill="none">
-          <path d="M0,96 L0,40 Q360,0 720,40 T1440,40 L1440,96 Z" fill="hsl(220 10% 95%)" />
+          <path d="M0,96 L0,40 Q360,0 720,40 T1440,40 L1440,96 Z" fill="hsl(210 60% 97%)" />
         </svg>
       </div>
       
       {/* How it Works Section */}
-      <section id="how-it-works" className="py-32 px-6 relative bg-muted/50 overflow-hidden">
+      <section id="how-it-works" className="py-32 px-6 relative bg-gradient-to-b from-blue-50/40 to-white overflow-hidden">
         {/* Decorative elements */}
         <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-cyan-400/5 rounded-full blur-3xl" />
@@ -517,14 +517,10 @@ export default function Landing() {
       </section>
       
       {/* Wave divider - bottom */}
-      <div className="relative h-24 bg-background">
-        <svg className="absolute top-0 w-full h-24" viewBox="0 0 1440 96" preserveAspectRatio="none" fill="none">
-          <path d="M0,0 L0,56 Q360,96 720,56 T1440,56 L1440,0 Z" fill="hsl(220 10% 95%)" />
-        </svg>
-      </div>
+      <div className="relative h-16 bg-white" />
       
       {/* Pricing Section */}
-      <section id="pricing" className="py-32 px-6 relative">
+      <section id="pricing" className="py-32 px-6 relative bg-white">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/[0.04] rounded-full blur-3xl" />
         
         <div className="max-w-5xl mx-auto relative z-10">
@@ -546,7 +542,7 @@ export default function Landing() {
       </section>
       
       {/* CTA Section */}
-      <section className="py-32 px-6 relative">
+      <section className="py-32 px-6 relative bg-white">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/[0.04] to-cyan-500/[0.04]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_hsl(var(--primary)_/_0.08)_0%,_transparent_60%)]" />
         
@@ -558,7 +554,7 @@ export default function Landing() {
           <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
             Ready to fill roles
             <br />
-            <span className="bg-gradient-to-r from-primary to-cyan-600 bg-clip-text text-transparent">3x faster?</span>
+            <span className="bg-gradient-to-r from-primary to-cyan-600 bg-clip-text text-transparent">5x faster?</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-10">
             Join healthcare recruiters using {appName} to source, qualify, and reach candidates in minutes.
@@ -611,7 +607,7 @@ export default function Landing() {
           </div>
           
           <p className="text-sm text-gray-500">
-            © 2025 {appName}. All rights reserved.
+            © 2026 {appName}. All rights reserved.
           </p>
         </div>
       </footer>
