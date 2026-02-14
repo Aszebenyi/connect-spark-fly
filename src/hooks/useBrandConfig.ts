@@ -13,7 +13,7 @@ export interface BrandConfig {
 
 const DEFAULT_BRAND: Omit<BrandConfig, 'isLoading'> = {
   appName: 'MediLead',
-  tagline: 'Fill Healthcare Roles 3x Faster',
+  tagline: 'Fill Healthcare Roles 5x Faster',
   supportEmail: 'support@medilead.io',
   privacyEmail: 'privacy@medilead.io',
   termsUrl: '/terms',
