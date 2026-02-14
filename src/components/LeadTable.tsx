@@ -523,7 +523,7 @@ export function LeadTable({
                       description="Create a job opening to start discovering qualified candidates using AI-powered search."
                       actionLabel={onCreateCampaign ? "Create Job Opening" : undefined}
                       onAction={onCreateCampaign}
-                      secondaryActionLabel={onFindLeads ? "Find Candidates" : undefined}
+                      secondaryActionLabel={onFindLeads ? "Search" : undefined}
                       onSecondaryAction={onFindLeads}
                     />
                   ) : searchQuery || statusFilter !== 'all' ? (
@@ -542,7 +542,7 @@ export function LeadTable({
                       icon={<Sparkles className="w-8 h-8" />}
                       title="No candidates in this job opening"
                       description="This job opening doesn't have any candidates yet. Find candidates to add."
-                      actionLabel={onFindLeads ? "Find Candidates" : undefined}
+                      actionLabel={onFindLeads ? "Search" : undefined}
                       onAction={onFindLeads}
                       secondaryActionLabel="View All Candidates"
                       onSecondaryAction={() => onCampaignFilterChange?.(null)}

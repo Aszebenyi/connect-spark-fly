@@ -318,7 +318,7 @@ export function FreeLeadSampleModal({ open, onOpenChange }: FreeLeadSampleModalP
                     className="flex-[2] h-12 rounded-xl apple-button group"
                   >
                     <Sparkles className="w-5 h-5 mr-2" />
-                    Find Candidates
+                    Search
                   </Button>
                 </div>
               </motion.div>

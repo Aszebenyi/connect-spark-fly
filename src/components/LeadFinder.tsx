@@ -273,7 +273,7 @@ export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinde
             ) : !hasCredits ? (
               'No Searches Left — Upgrade Plan'
             ) : (
-              'Find Candidates →'
+              'Search →'
             )}
           </Button>
         </div>
