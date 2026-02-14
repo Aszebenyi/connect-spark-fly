@@ -19,40 +19,58 @@ export type Database = {
           created_at: string
           goal: string | null
           id: string
+          job_country: string | null
           lead_count: number | null
           name: string
           reply_count: number | null
+          required_credentials: Json | null
+          salary_currency: string | null
+          salary_max: number | null
+          salary_min: number | null
           search_query: string | null
           sent_count: number | null
           status: string | null
           updated_at: string
           user_id: string | null
+          visa_sponsorship: boolean | null
         }
         Insert: {
           created_at?: string
           goal?: string | null
           id?: string
+          job_country?: string | null
           lead_count?: number | null
           name: string
           reply_count?: number | null
+          required_credentials?: Json | null
+          salary_currency?: string | null
+          salary_max?: number | null
+          salary_min?: number | null
           search_query?: string | null
           sent_count?: number | null
           status?: string | null
           updated_at?: string
           user_id?: string | null
+          visa_sponsorship?: boolean | null
         }
         Update: {
           created_at?: string
           goal?: string | null
           id?: string
+          job_country?: string | null
           lead_count?: number | null
           name?: string
           reply_count?: number | null
+          required_credentials?: Json | null
+          salary_currency?: string | null
+          salary_max?: number | null
+          salary_min?: number | null
           search_query?: string | null
           sent_count?: number | null
           status?: string | null
           updated_at?: string
           user_id?: string | null
+          visa_sponsorship?: boolean | null
         }
         Relationships: []
       }
@@ -432,52 +450,67 @@ export type Database = {
           campaign_id: string | null
           company: string | null
           created_at: string
+          credentials: Json | null
           email: string | null
           id: string
           industry: string | null
+          languages: string[] | null
           linkedin_url: string | null
           location: string | null
           name: string
+          nationality: string | null
           phone: string | null
           profile_data: Json | null
           status: string | null
+          target_countries: string[] | null
           title: string | null
           updated_at: string
           user_id: string | null
+          willing_to_relocate: boolean | null
         }
         Insert: {
           campaign_id?: string | null
           company?: string | null
           created_at?: string
+          credentials?: Json | null
           email?: string | null
           id?: string
           industry?: string | null
+          languages?: string[] | null
           linkedin_url?: string | null
           location?: string | null
           name: string
+          nationality?: string | null
           phone?: string | null
           profile_data?: Json | null
           status?: string | null
+          target_countries?: string[] | null
           title?: string | null
           updated_at?: string
           user_id?: string | null
+          willing_to_relocate?: boolean | null
         }
         Update: {
           campaign_id?: string | null
           company?: string | null
           created_at?: string
+          credentials?: Json | null
           email?: string | null
           id?: string
           industry?: string | null
+          languages?: string[] | null
           linkedin_url?: string | null
           location?: string | null
           name?: string
+          nationality?: string | null
           phone?: string | null
           profile_data?: Json | null
           status?: string | null
+          target_countries?: string[] | null
           title?: string | null
           updated_at?: string
           user_id?: string | null
+          willing_to_relocate?: boolean | null
         }
         Relationships: [
           {
@@ -575,29 +608,44 @@ export type Database = {
       }
       profiles: {
         Row: {
+          base_country: string | null
           company: string | null
           created_at: string
+          currency: string | null
+          date_format: string | null
           email: string | null
           full_name: string | null
           id: string
+          international_recruiting: boolean | null
+          recruit_countries: string[] | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          base_country?: string | null
           company?: string | null
           created_at?: string
+          currency?: string | null
+          date_format?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
+          international_recruiting?: boolean | null
+          recruit_countries?: string[] | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          base_country?: string | null
           company?: string | null
           created_at?: string
+          currency?: string | null
+          date_format?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
+          international_recruiting?: boolean | null
+          recruit_countries?: string[] | null
           updated_at?: string
           user_id?: string
         }

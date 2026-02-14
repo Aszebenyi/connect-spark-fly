@@ -38,7 +38,17 @@ serve(async (req) => {
     }
 
     console.log('Authenticated user:', claims.claims.sub);
-    const { lead, campaignGoal, tone } = await req.json();
+    const { lead, campaignGoal, tone, jobCountry, salaryRange, visaSponsorship: visaSponsorshipAvailable } = await req.json();
+
+    // Country-specific terminology
+    const countryTerminology: Record<string, { er: string; icu: string; or: string }> = {
+      US: { er: 'ER', icu: 'ICU', or: 'OR' },
+      GB: { er: 'A&E', icu: 'ITU', or: 'Theatre' },
+      CA: { er: 'ER', icu: 'ICU', or: 'OR' },
+      AU: { er: 'ED', icu: 'ICU', or: 'Theatre' },
+      AE: { er: 'ER', icu: 'ICU', or: 'OT' },
+    };
+    const terminology = countryTerminology[jobCountry || 'US'] || countryTerminology.US;
     
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
@@ -135,7 +145,11 @@ serve(async (req) => {
     const specialty = lead.profile_data?.specialty || '';
     const yearsExperience = lead.profile_data?.years_experience || '';
 
-    const systemPrompt = `You are a healthcare recruiter writing cold outreach emails. You follow the Oracle Method: 3 paragraphs, 4-6 sentences total. Every email must be ASSUMPTIVE — never passive.
+    const countryContext = jobCountry && jobCountry !== 'US' 
+      ? `\n\nIMPORTANT COUNTRY CONTEXT for ${jobCountry}:\n- Use "${terminology.er}" instead of "ER"\n- Use "${terminology.icu}" instead of "ICU"\n- Use "${terminology.or}" instead of "OR/Operating Room"\n${salaryRange ? `- Salary range: ${salaryRange}` : ''}\n${visaSponsorshipAvailable ? '- Visa sponsorship is available for this position' : ''}`
+      : (salaryRange ? `\n\nSalary range: ${salaryRange}` : '') + (visaSponsorshipAvailable ? '\nVisa sponsorship is available for this position' : '');
+
+    const systemPrompt = `You are a healthcare recruiter writing cold outreach emails. You follow the Oracle Method: 3 paragraphs, 4-6 sentences total. Every email must be ASSUMPTIVE — never passive.${countryContext}
 
 STRUCTURE (exactly 3 paragraphs):
 
@@ -155,6 +169,7 @@ CRITICAL RULES:
 - Pull REAL data from the candidate profile (licenses, certs, specialty, experience, employer)
 - Pull job context from the campaign goal
 - Keep it professional but warm — not salesy
+- Use country-appropriate medical terminology (e.g., "${terminology.er}" not "ER", "${terminology.icu}" not "ICU")
 
 Tone: ${tone || 'professional and direct'}`;
 

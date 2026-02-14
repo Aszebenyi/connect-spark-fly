@@ -1,0 +1,25 @@
+
+-- Profile international fields
+ALTER TABLE profiles 
+ADD COLUMN IF NOT EXISTS base_country VARCHAR(2) DEFAULT 'US',
+ADD COLUMN IF NOT EXISTS recruit_countries TEXT[] DEFAULT ARRAY['US']::TEXT[],
+ADD COLUMN IF NOT EXISTS international_recruiting BOOLEAN DEFAULT false,
+ADD COLUMN IF NOT EXISTS currency VARCHAR(3) DEFAULT 'USD',
+ADD COLUMN IF NOT EXISTS date_format VARCHAR(20) DEFAULT 'MM/DD/YYYY';
+
+-- Campaign international fields
+ALTER TABLE campaigns
+ADD COLUMN IF NOT EXISTS job_country VARCHAR(2) DEFAULT 'US',
+ADD COLUMN IF NOT EXISTS salary_min DECIMAL,
+ADD COLUMN IF NOT EXISTS salary_max DECIMAL,
+ADD COLUMN IF NOT EXISTS salary_currency VARCHAR(3) DEFAULT 'USD',
+ADD COLUMN IF NOT EXISTS visa_sponsorship BOOLEAN DEFAULT false,
+ADD COLUMN IF NOT EXISTS required_credentials JSONB DEFAULT '[]'::JSONB;
+
+-- Lead international fields
+ALTER TABLE leads
+ADD COLUMN IF NOT EXISTS nationality VARCHAR(2),
+ADD COLUMN IF NOT EXISTS credentials JSONB DEFAULT '[]'::JSONB,
+ADD COLUMN IF NOT EXISTS languages TEXT[] DEFAULT ARRAY['English']::TEXT[],
+ADD COLUMN IF NOT EXISTS willing_to_relocate BOOLEAN DEFAULT false,
+ADD COLUMN IF NOT EXISTS target_countries TEXT[] DEFAULT ARRAY[]::TEXT[];
