@@ -12,8 +12,8 @@ import { CreateCampaignDialog } from '@/components/CreateCampaignDialog';
 import { SettingsPage } from '@/components/SettingsPage';
 import { OnboardingChecklist } from '@/components/OnboardingChecklist';
 import { Button } from '@/components/ui/button';
-import { RingLoader, AbstractBlob, TargetRings, SparkBurst, DataFlow } from '@/components/ui/visual-elements';
-import { Flame, Mail, CalendarDays, Clock } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Flame, Mail, CalendarDays, Clock, Loader2 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import { 
   getLeads, 
@@ -297,9 +297,9 @@ export default function Index() {
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center gap-6">
-          <RingLoader className="w-16 h-16" />
-          <p className="text-muted-foreground font-medium">Loading workspace...</p>
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Loading workspace...</p>
         </div>
       </div>
     );
@@ -314,7 +314,7 @@ export default function Index() {
     <div className="min-h-screen bg-background">
       {/* Mobile header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-background/80 backdrop-blur-xl border-b border-border flex items-center px-4 gap-3">
-        <button onClick={() => setMobileMenuOpen(true)} className="p-2 rounded-lg hover:bg-muted transition-colors">
+        <button onClick={() => setMobileMenuOpen(true)} className="p-2 rounded-md hover:bg-muted transition-colors">
           <svg className="w-5 h-5 text-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
           </svg>
@@ -337,7 +337,7 @@ export default function Index() {
         <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
       
-      <main className="lg:ml-72 p-4 pt-18 lg:pt-4">
+      <main className="lg:ml-72 p-6 pt-18 lg:pt-6">
         {activeTab === 'dashboard' && (
           <div className="animate-fade-in">
             <div className="page-header">
@@ -368,34 +368,36 @@ export default function Index() {
               if (!hasAny) return null;
 
               const cards = [
-                { count: needResponse, label: 'Need Response', action: 'Replied but no follow-up yet', status: 'replied', icon: <Flame className="w-8 h-8" />, border: 'border-destructive/40' },
-                { count: followUpsDue, label: 'Follow-ups Due', action: 'No activity in 3+ days', status: 'contacted', icon: <Mail className="w-8 h-8" />, border: 'border-warning/40' },
-                { count: interviewsThisWeek, label: 'Interviews', action: 'Scheduled interviews', status: 'interview_scheduled', icon: <CalendarDays className="w-8 h-8" />, border: 'border-accent/40' },
-                { count: staleLeads, label: 'Stale Leads', action: 'No updates in 7+ days', status: null as string | null, icon: <Clock className="w-8 h-8" />, border: 'border-muted-foreground/30' },
+                { count: needResponse, label: 'Need Response', action: 'Replied but no follow-up yet', status: 'replied', icon: <Flame className="w-5 h-5 text-destructive" />, border: 'border-destructive/20' },
+                { count: followUpsDue, label: 'Follow-ups Due', action: 'No activity in 3+ days', status: 'contacted', icon: <Mail className="w-5 h-5 text-warning" />, border: 'border-warning/20' },
+                { count: interviewsThisWeek, label: 'Interviews', action: 'Scheduled interviews', status: 'interview_scheduled', icon: <CalendarDays className="w-5 h-5 text-primary" />, border: 'border-primary/20' },
+                { count: staleLeads, label: 'Stale Leads', action: 'No updates in 7+ days', status: null as string | null, icon: <Clock className="w-5 h-5 text-muted-foreground" />, border: 'border-border' },
               ];
 
               return (
-                <div className="mb-4 animate-fade-in">
+                <div className="mb-8 animate-fade-in">
                   <div className="section-header">
                     <h2 className="section-title">Today's Priorities</h2>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     {cards.map((card) => (
                       <button
                         key={card.label}
                         onClick={() => { if (card.status) setStatusFilterFromStats(card.status); setActiveTab('leads'); }}
-                        className={`action-card text-left group border ${card.border}`}
+                        className={cn(
+                          'bg-card border rounded-lg p-5 text-left transition-colors duration-150 hover:border-muted-foreground/30',
+                          card.border
+                        )}
+                        style={{ boxShadow: '0 1px 2px hsl(220 10% 50% / 0.05)' }}
                       >
-                        <div className="relative z-10">
-                          <div className="visual-badge visual-badge-lg mb-3">
-                            {card.icon}
-                          </div>
-                          <div className="flex items-baseline gap-2 mb-1">
-                            <span className="text-2xl font-bold text-foreground">{card.count}</span>
-                            <span className="text-sm text-muted-foreground">{card.label}</span>
-                          </div>
-                          <p className="text-xs text-muted-foreground">{card.action}</p>
+                        <div className="mb-3">
+                          {card.icon}
                         </div>
+                        <div className="flex items-baseline gap-2 mb-1">
+                          <span className="text-2xl font-semibold text-foreground">{card.count}</span>
+                          <span className="text-sm text-muted-foreground">{card.label}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{card.action}</p>
                       </button>
                     ))}
                   </div>
@@ -427,11 +429,11 @@ export default function Index() {
               ];
 
               return (
-                <div className="mb-4 animate-fade-in">
+                <div className="mb-8 animate-fade-in">
                   <div className="section-header">
                     <h2 className="section-title">Candidate Pipeline</h2>
                   </div>
-                  <div className="glass-strong rounded-2xl p-6">
+                  <div className="bg-card border border-border rounded-lg p-6" style={{ boxShadow: '0 1px 2px hsl(220 10% 50% / 0.05)' }}>
                     {stages.map((stage) => (
                       <div
                         key={stage.name}
@@ -439,12 +441,12 @@ export default function Index() {
                         onClick={() => { if (stage.status) setStatusFilterFromStats(stage.status); setActiveTab('leads'); }}
                       >
                         <span className="text-sm font-medium w-24 text-foreground">{stage.name}</span>
-                        <div className="flex-1 h-8 bg-muted rounded-full overflow-hidden">
+                        <div className="flex-1 h-6 bg-muted rounded overflow-hidden">
                           <div
-                            className="h-full rounded-full transition-all duration-700"
+                            className="h-full rounded transition-all duration-500"
                             style={{
                               width: `${Math.max(stage.percentage, stage.count > 0 ? 3 : 0)}%`,
-                              background: 'linear-gradient(90deg, hsl(var(--primary)), hsl(var(--success)))',
+                              background: 'hsl(var(--primary))',
                             }}
                           />
                         </div>
@@ -458,7 +460,7 @@ export default function Index() {
             })()}
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 <StatCard
                   title="Total Candidates"
                   value={stats.totalLeads}
@@ -503,11 +505,11 @@ export default function Index() {
               <div className="animate-fade-in stagger-6">
                 <div className="section-header">
                   <h2 className="section-title">Job Openings</h2>
-                  <Button variant="outline" size="sm" onClick={() => setActiveTab('campaigns')} className="rounded-xl">
+                   <Button variant="outline" size="sm" onClick={() => setActiveTab('campaigns')} className="rounded-md">
                     View All →
                   </Button>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {campaigns.slice(0, 4).map((campaign, index) => (
                     <CampaignCard 
                       key={campaign.id} 
@@ -524,24 +526,14 @@ export default function Index() {
 
             {/* Empty State */}
             {convertedLeads.length === 0 && campaigns.length === 0 && (
-              <div className="empty-state animate-fade-in-up">
-                <div className="relative z-10">
-                  <div className="visual-badge visual-badge-lg mx-auto mb-8 animate-float">
-                    <div className="relative w-12 h-12">
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-primary/60" />
-                      </div>
-                      <div className="absolute inset-0 rounded-full border-2 border-primary/30 animate-ping" />
-                    </div>
-                  </div>
-                   <h3 className="text-3xl font-bold text-foreground mb-4">Welcome to {appName}</h3>
-                   <p className="text-muted-foreground mb-8 max-w-lg mx-auto text-lg">
+              <div className="bg-card border border-border rounded-lg p-12 text-center animate-fade-in-up">
+                   <h3 className="text-2xl font-semibold text-foreground mb-3">Welcome to {appName}</h3>
+                   <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
                      Start by creating a job opening to find qualified healthcare candidates using AI-powered search.
                    </p>
-                  <Button onClick={() => setShowCreateCampaign(true)} size="lg" className="rounded-xl px-8 h-14 text-base">
+                  <Button onClick={() => setShowCreateCampaign(true)} size="lg" className="rounded-md px-6">
                     Create Your First Job Opening →
                   </Button>
-                </div>
               </div>
             )}
           </div>
@@ -559,10 +551,10 @@ export default function Index() {
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <Button variant="outline" onClick={() => { setSelectedCampaignId(null); loadData(); }} className="rounded-xl">
+                <Button variant="outline" onClick={() => { setSelectedCampaignId(null); loadData(); }} className="rounded-md">
                   Refresh
                 </Button>
-                <Button variant="outline" className="rounded-xl">
+                <Button variant="outline" className="rounded-md">
                   Export
                 </Button>
               </div>
@@ -582,7 +574,7 @@ export default function Index() {
                   key={chip.label}
                   variant={statusFilterFromStats === chip.value ? 'default' : 'outline'}
                   size="sm"
-                  className="rounded-xl"
+                  className="rounded-md"
                   onClick={() => setStatusFilterFromStats(chip.value)}
                 >
                   {chip.label}
@@ -618,7 +610,7 @@ export default function Index() {
                   <Button 
                     variant="ghost" 
                     onClick={() => setFindMoreCampaign(null)}
-                    className="rounded-xl"
+                    className="rounded-md"
                   >
                     ← Back
                   </Button>
@@ -636,17 +628,17 @@ export default function Index() {
             ) : (
               <div className="max-w-2xl mx-auto">
                 <div className="text-center mb-8 animate-fade-in">
-                  <h2 className="text-2xl font-bold text-foreground mb-2 tracking-tight">Search for Candidates</h2>
-                  <p className="text-muted-foreground text-base">Select a job opening to add candidates to</p>
+                  <h2 className="text-xl font-semibold text-foreground mb-2 tracking-tight">Search for Candidates</h2>
+                  <p className="text-muted-foreground text-sm">Select a job opening to add candidates to</p>
                 </div>
-                <div className="glass-strong rounded-2xl p-6 card-shadow animate-fade-in stagger-2">
+                <div className="bg-card border border-border rounded-lg p-6 animate-fade-in stagger-2" style={{ boxShadow: '0 1px 2px hsl(220 10% 50% / 0.05)' }}>
                   <p className="text-sm font-medium text-muted-foreground mb-3">Which job opening is this for?</p>
                   <div className="space-y-2">
                     {campaigns.map((campaign) => (
                       <button
                         key={campaign.id}
                         onClick={() => setFindMoreCampaign(campaign)}
-                        className="w-full text-left p-4 rounded-xl border border-border/50 hover:border-primary/40 hover:bg-primary/5 transition-all duration-200 group"
+                        className="w-full text-left p-4 rounded-md border border-border hover:border-primary/40 hover:bg-primary/5 transition-colors duration-150 group"
                       >
                         <div className="flex items-center justify-between">
                           <div>
@@ -661,7 +653,7 @@ export default function Index() {
                     ))}
                     <button
                       onClick={() => setShowCreateCampaign(true)}
-                      className="w-full text-left p-4 rounded-xl border border-dashed border-border/50 hover:border-primary/40 hover:bg-primary/5 transition-all duration-200 group"
+                      className="w-full text-left p-4 rounded-md border border-dashed border-border hover:border-primary/40 hover:bg-primary/5 transition-colors duration-150 group"
                     >
                       <p className="font-semibold text-primary">+ Create new job opening</p>
                       <p className="text-xs text-muted-foreground mt-0.5">Set up a new role to search for</p>
@@ -675,17 +667,17 @@ export default function Index() {
 
         {activeTab === 'campaigns' && (
           <div className="animate-fade-in">
-            <div className="flex items-center justify-between mb-10">
+            <div className="flex items-center justify-between mb-8">
               <div className="page-header mb-0">
                 <h1 className="page-title">Job Openings</h1>
                 <p className="page-subtitle">{campaigns.length} job openings</p>
               </div>
-              <Button onClick={() => setShowCreateCampaign(true)} className="rounded-xl">
+              <Button onClick={() => setShowCreateCampaign(true)} className="rounded-md">
                 + New Job Opening
               </Button>
             </div>
             {campaigns.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {campaigns.map((campaign, index) => (
                   <CampaignCard 
                     key={campaign.id} 
@@ -698,32 +690,12 @@ export default function Index() {
                 ))}
               </div>
             ) : (
-              <div className="empty-state">
-                <div className="relative z-10">
-                  <div className="visual-badge visual-badge-lg mx-auto mb-6">
-                    <DataFlow className="w-10 h-10" />
-                  </div>
-                   <h3 className="text-2xl font-bold text-foreground mb-2">No job openings yet</h3>
-                   <p className="text-muted-foreground mb-3 max-w-md mx-auto">Job openings help you organize candidates by role. Create your first job opening to get started.</p>
-                   
-                   {/* Ghost preview cards */}
-                   <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto mb-6 opacity-40 pointer-events-none">
-                     <div className="rounded-xl border border-border/50 p-3 text-left bg-muted/10">
-                       <p className="text-xs font-semibold text-foreground mb-1">ICU Nurse</p>
-                       <p className="text-[11px] text-muted-foreground">Los Angeles, CA</p>
-                       <p className="text-[11px] text-muted-foreground mt-1">0 candidates</p>
-                     </div>
-                     <div className="rounded-xl border border-border/50 p-3 text-left bg-muted/10">
-                       <p className="text-xs font-semibold text-foreground mb-1">Travel ER Nurse</p>
-                       <p className="text-[11px] text-muted-foreground">Phoenix, AZ</p>
-                       <p className="text-[11px] text-muted-foreground mt-1">0 candidates</p>
-                     </div>
-                   </div>
-
-                   <Button onClick={() => setShowCreateCampaign(true)} size="lg" className="apple-button rounded-xl px-8">
+              <div className="bg-card border border-border rounded-lg p-10 text-center">
+                   <h3 className="text-xl font-semibold text-foreground mb-2">No job openings yet</h3>
+                   <p className="text-muted-foreground text-sm mb-6 max-w-md mx-auto">Job openings help you organize candidates by role. Create your first job opening to get started.</p>
+                   <Button onClick={() => setShowCreateCampaign(true)} size="lg" className="rounded-md px-6">
                      + Create Job Opening
-                  </Button>
-                </div>
+                   </Button>
               </div>
             )}
           </div>

@@ -2,11 +2,10 @@ import { useState } from 'react';
 import { Campaign, updateCampaign, deleteCampaign } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { RingLoader, SparkBurst } from '@/components/ui/visual-elements';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useLeadSubscription } from '@/hooks/useLeadSubscription';
-import { Zap, Users } from 'lucide-react';
+import { Search, Users, MoreVertical, Loader2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,23 +22,21 @@ interface CampaignCardProps {
 }
 
 const statusConfig = {
-  draft: { label: 'Draft', color: 'bg-muted text-muted-foreground' },
-  active: { label: 'Active', color: 'bg-success/15 text-success border-success/30' },
-  paused: { label: 'Paused', color: 'bg-warning/15 text-warning border-warning/30' },
-  completed: { label: 'Completed', color: 'bg-primary/15 text-primary border-primary/30' },
-  searching: { label: 'Searching', color: 'bg-primary/15 text-primary border-primary/30' },
+  draft: { label: 'Draft', className: 'bg-muted text-muted-foreground' },
+  active: { label: 'Active', className: 'bg-success/10 text-success border border-success/20' },
+  paused: { label: 'Paused', className: 'bg-warning/10 text-warning border border-warning/20' },
+  completed: { label: 'Completed', className: 'bg-muted text-muted-foreground' },
+  searching: { label: 'Searching...', className: 'bg-primary/10 text-primary border border-primary/20' },
 };
 
 export function CampaignCard({ campaign, onUpdate, onViewLeads, onFindMoreLeads, className }: CampaignCardProps) {
   const [isUpdating, setIsUpdating] = useState(false);
   const { toast } = useToast();
   
-  const { newLeadsCount, latestLead, isListening } = useLeadSubscription({
+  const { newLeadsCount, latestLead } = useLeadSubscription({
     campaignId: campaign.id,
     enabled: campaign.status === 'searching',
-    onLeadArrived: () => {
-      onUpdate?.();
-    },
+    onLeadArrived: () => onUpdate?.(),
   });
 
   const isSearching = campaign.status === 'searching';
@@ -91,144 +88,82 @@ export function CampaignCard({ campaign, onUpdate, onViewLeads, onFindMoreLeads,
   return (
     <div 
       className={cn(
-        'glass rounded-2xl p-7 card-shadow hover:shadow-elevated transition-all duration-500 group cursor-pointer',
-        isSearching && 'ring-1 ring-primary/20',
+        'bg-card border border-border rounded-lg p-5 transition-colors duration-150 cursor-pointer hover:border-muted-foreground/30',
         className
       )}
+      style={{ boxShadow: '0 1px 2px hsl(220 10% 50% / 0.05)' }}
       onClick={handleCardClick}
     >
       {/* Header */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-xl text-foreground truncate">{campaign.name}</h3>
-          {campaign.created_at && (
-            <p className="text-sm text-muted-foreground mt-1.5">
-              Created {new Date(campaign.created_at).toLocaleDateString('en-US', { 
-                month: 'short', 
-                day: 'numeric',
-                year: 'numeric'
-              })}
-            </p>
-          )}
-        </div>
-        <div className="flex items-center gap-3">
-          <Badge className={cn(
-            'border font-medium gap-1.5',
-            status.color,
-            isSearching && !hasNewLeads && 'animate-pulse'
-          )}>
-            {isSearching && !hasNewLeads && (
-              <div className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-            )}
-            {hasNewLeads && <Zap className="w-3 h-3" />}
-            {hasNewLeads ? 'Leads Arriving' : status.label}
+      <div className="flex items-start justify-between mb-1">
+        <h3 className="font-semibold text-foreground truncate flex-1 mr-2">{campaign.name}</h3>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Badge variant="secondary" className={cn('text-xs font-medium', status.className)}>
+            {status.label}
           </Badge>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" disabled={isUpdating}>
-                {isUpdating ? (
-                  <RingLoader className="w-4 h-4" />
-                ) : (
-                  <div className="flex flex-col gap-0.5">
-                    <div className="w-1 h-1 rounded-full bg-current" />
-                    <div className="w-1 h-1 rounded-full bg-current" />
-                    <div className="w-1 h-1 rounded-full bg-current" />
-                  </div>
-                )}
+              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md" disabled={isUpdating}>
+                {isUpdating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MoreVertical className="w-3.5 h-3.5" />}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="glass-strong border-border/80 w-48">
+            <DropdownMenuContent align="end" className="w-44">
               {campaign.status !== 'active' && (
-                <DropdownMenuItem onClick={() => handleStatusChange('active')}>
-                  Activate
-                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleStatusChange('active')}>Activate</DropdownMenuItem>
               )}
               {campaign.status === 'active' && (
-                <DropdownMenuItem onClick={() => handleStatusChange('paused')}>
-                  Pause
-                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleStatusChange('paused')}>Pause</DropdownMenuItem>
               )}
-              <DropdownMenuItem onClick={() => handleStatusChange('completed')}>
-                Mark Complete
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleDelete} className="text-destructive focus:text-destructive">
-                Delete
-              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleStatusChange('completed')}>Mark Complete</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleDelete} className="text-destructive focus:text-destructive">Delete</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
 
-      {/* Live Processing Banner */}
+      {campaign.created_at && (
+        <p className="text-xs text-muted-foreground mb-4">
+          Created {new Date(campaign.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+        </p>
+      )}
+
+      {/* Live Search Banner */}
       {(isSearching || hasNewLeads) && (
         <div className={cn(
-          "mb-5 p-4 rounded-xl border transition-all duration-500",
-          hasNewLeads 
-            ? "bg-success/10 border-success/30" 
-            : "bg-primary/5 border-primary/20"
+          "mb-4 p-3 rounded-md border text-sm",
+          hasNewLeads ? "bg-success/5 border-success/20 text-success" : "bg-primary/5 border-primary/20 text-primary"
         )}>
-          <div className="flex items-center gap-3">
-            {hasNewLeads ? (
-              <>
-                <div className="relative">
-                  <div className="w-10 h-10 rounded-xl bg-success/20 flex items-center justify-center">
-                    <Users className="w-5 h-5 text-success" />
-                  </div>
-                  <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-success animate-ping" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">
-                    {newLeadsCount} new lead{newLeadsCount !== 1 ? 's' : ''} found!
-                  </p>
-                  {latestLead && (
-                    <p className="text-xs text-muted-foreground truncate">
-                      Latest: {latestLead.name} {latestLead.title && `• ${latestLead.title}`}
-                    </p>
-                  )}
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <RingLoader className="w-5 h-5" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">AI is searching for leads...</p>
-                  <p className="text-xs text-muted-foreground">This usually takes 1-2 minutes</p>
-                </div>
-              </>
-            )}
-          </div>
+          {hasNewLeads ? (
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              <span className="font-medium">{newLeadsCount} new lead{newLeadsCount !== 1 ? 's' : ''} found</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Searching for candidates...</span>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Search Query */}
-      {campaign.search_query && !isSearching && !hasNewLeads && (
-        <div className="mb-5 p-3 rounded-xl bg-muted/30 border border-border/30">
-          <p className="text-xs font-medium text-muted-foreground mb-1">Search Query</p>
-          <p className="text-sm text-foreground line-clamp-2">{campaign.search_query}</p>
-        </div>
-      )}
-
-      {/* Candidate Pipeline Stats */}
-      <div className="mb-5">
-        <p className="text-2xl font-bold text-foreground">{displayedLeadCount} candidates</p>
+      {/* Stats */}
+      <div className="mb-4">
+        <p className="text-lg font-semibold text-foreground">{displayedLeadCount} candidates</p>
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2">
-        {onFindMoreLeads && !isSearching && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="rounded-xl gap-2 w-full"
-            onClick={() => onFindMoreLeads(campaign)}
-          >
-            <SparkBurst className="w-3.5 h-3.5" />
-            Find More Candidates
-          </Button>
-        )}
-      </div>
+      {onFindMoreLeads && !isSearching && (
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="rounded-md gap-2 w-full text-sm"
+          onClick={() => onFindMoreLeads(campaign)}
+        >
+          <Search className="w-3.5 h-3.5" />
+          Find More Candidates
+        </Button>
+      )}
     </div>
   );
 }
