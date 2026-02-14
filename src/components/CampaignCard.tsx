@@ -34,21 +34,17 @@ export function CampaignCard({ campaign, onUpdate, onViewLeads, onFindMoreLeads,
   const [isUpdating, setIsUpdating] = useState(false);
   const { toast } = useToast();
   
-  // Real-time lead subscription for this campaign
   const { newLeadsCount, latestLead, isListening } = useLeadSubscription({
     campaignId: campaign.id,
     enabled: campaign.status === 'searching',
     onLeadArrived: () => {
-      // Trigger a refresh when leads arrive
       onUpdate?.();
     },
   });
 
-  // Status now comes directly from the database
   const isSearching = campaign.status === 'searching';
   const hasNewLeads = newLeadsCount > 0;
   
-  // Use the database status directly
   const displayStatus = campaign.status as keyof typeof statusConfig;
   const status = statusConfig[displayStatus] || statusConfig.draft;
 
@@ -84,15 +80,9 @@ export function CampaignCard({ campaign, onUpdate, onViewLeads, onFindMoreLeads,
     }
   };
 
-  const replyRate = campaign.sent_count && campaign.sent_count > 0
-    ? Math.round(((campaign.reply_count || 0) / campaign.sent_count) * 100)
-    : 0;
-
-  // Calculate displayed lead count (include real-time arrivals)
   const displayedLeadCount = (campaign.lead_count || 0) + newLeadsCount;
 
   const handleCardClick = (e: React.MouseEvent) => {
-    // Don't trigger if clicking on buttons or dropdown
     const target = e.target as HTMLElement;
     if (target.closest('button') || target.closest('[role="menuitem"]')) return;
     onViewLeads?.(campaign);
@@ -220,61 +210,22 @@ export function CampaignCard({ campaign, onUpdate, onViewLeads, onFindMoreLeads,
         </div>
       )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-4 gap-3 mb-5">
-        <div className={cn(
-          "text-center p-3 rounded-xl border transition-all duration-300",
-          hasNewLeads 
-            ? "bg-success/10 border-success/30" 
-            : "bg-muted/20 border-border/30"
-        )}>
-          <div className={cn(
-            "text-xl font-bold",
-            hasNewLeads ? "text-success" : "text-foreground"
-          )}>
-            {displayedLeadCount}
-          </div>
-          <div className="text-xs text-muted-foreground font-medium mt-0.5">Leads</div>
-        </div>
-        <div className="text-center p-3 rounded-xl bg-muted/20 border border-border/30">
-          <div className="text-xl font-bold text-foreground">{campaign.sent_count || 0}</div>
-          <div className="text-xs text-muted-foreground font-medium mt-0.5">Sent</div>
-        </div>
-        <div className="text-center p-3 rounded-xl bg-muted/20 border border-border/30">
-          <div className="text-xl font-bold text-foreground">{campaign.reply_count || 0}</div>
-          <div className="text-xs text-muted-foreground font-medium mt-0.5">Replies</div>
-        </div>
-        <div className="text-center p-3 rounded-xl bg-muted/20 border border-border/30">
-          <div className="text-xl font-bold text-foreground">{replyRate}%</div>
-          <div className="text-xs text-muted-foreground font-medium mt-0.5">Rate</div>
-        </div>
+      {/* Candidate Pipeline Stats */}
+      <div className="mb-5">
+        <p className="text-2xl font-bold text-foreground">{displayedLeadCount} candidates</p>
       </div>
 
       {/* Actions */}
       <div className="flex gap-2">
-        {onViewLeads && (
-          <Button 
-            variant={hasNewLeads ? "default" : "outline"}
-            size="sm" 
-            className={cn(
-              "flex-1 rounded-xl gap-2",
-              hasNewLeads && "animate-pulse"
-            )}
-            onClick={() => onViewLeads(campaign)}
-          >
-            {hasNewLeads && <Zap className="w-3.5 h-3.5" />}
-            View Leads ({displayedLeadCount})
-          </Button>
-        )}
         {onFindMoreLeads && !isSearching && (
           <Button 
             variant="outline" 
             size="sm" 
-            className="rounded-xl gap-2"
+            className="rounded-xl gap-2 w-full"
             onClick={() => onFindMoreLeads(campaign)}
           >
             <SparkBurst className="w-3.5 h-3.5" />
-            Find More
+            Find More Candidates
           </Button>
         )}
       </div>
