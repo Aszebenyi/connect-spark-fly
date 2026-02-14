@@ -13,6 +13,7 @@ import { PricingPlans } from '@/components/PricingPlans';
 import { PLANS, PlanId } from '@/lib/plans';
 import { EmailConnectionCard } from '@/components/EmailConnectionCard';
 import { CompanyProfileTab } from '@/components/CompanyProfileTab';
+import { AlertCircle, ExternalLink } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -622,6 +623,46 @@ export function SettingsPage() {
               Connect your Gmail account to send personalized outreach emails directly from your own email address.
               Replies will come back to your inbox.
             </p>
+          </SettingsSection>
+
+          <SettingsSection 
+            title="Email Deliverability" 
+            description="Improve your email sender reputation to avoid spam folders"
+          >
+            <div className="space-y-4">
+              <div className="flex items-start gap-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                  <AlertCircle className="w-5 h-5 text-amber-600" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium text-foreground mb-1">
+                    New Gmail Account? Warm It Up First
+                  </h4>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Sending cold emails from a new or rarely-used Gmail account can land you in spam. 
+                    We recommend using Warmy.io to gradually build your sender reputation before starting outreach.
+                  </p>
+                  <a 
+                    href="https://www.warmy.io" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80"
+                  >
+                    Learn about Warmy.io
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                </div>
+              </div>
+              <div className="text-sm text-muted-foreground space-y-2">
+                <p className="font-medium text-foreground">Why email warmup matters:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Gmail tracks sender reputation - new accounts have none</li>
+                  <li>Sending 50+ cold emails immediately looks like spam</li>
+                  <li>Warmy gradually builds trust by simulating real conversations</li>
+                  <li>Takes 2-4 weeks to warm up a new account properly</li>
+                </ul>
+              </div>
+            </div>
           </SettingsSection>
         </div>
       )}
