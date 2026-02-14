@@ -549,7 +549,7 @@ export default function Index() {
 
         {activeTab === 'leads' && (
           <div className="animate-fade-in">
-            <div className="flex items-center justify-between mb-10">
+            <div className="flex items-center justify-between mb-4">
               <div className="page-header mb-0">
                 <h1 className="page-title">Candidates</h1>
                 <p className="page-subtitle">
@@ -559,21 +559,35 @@ export default function Index() {
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                {statusFilterFromStats && (
-                  <Button variant="outline" size="sm" onClick={() => setStatusFilterFromStats(null)} className="rounded-xl gap-1.5 text-primary border-primary/30">
-                    Filtered: {statusFilterFromStats} ✕
-                  </Button>
-                )}
                 <Button variant="outline" onClick={() => { setSelectedCampaignId(null); loadData(); }} className="rounded-xl">
                   Refresh
                 </Button>
                 <Button variant="outline" className="rounded-xl">
                   Export
                 </Button>
-                <Button onClick={() => setShowCreateCampaign(true)} className="rounded-xl">
-                  + New Job Opening
-                </Button>
               </div>
+            </div>
+            <div className="flex items-center gap-2 mb-6 flex-wrap">
+              <span className="text-sm text-muted-foreground">View:</span>
+              {[
+                { label: 'All', value: null },
+                { label: 'New', value: 'new' },
+                { label: 'Contacted', value: 'contacted' },
+                { label: 'Replied', value: 'replied' },
+                { label: 'Qualified', value: 'qualified' },
+                { label: 'Interviewing', value: 'interview_scheduled' },
+                { label: 'Hired', value: 'hired' },
+              ].map((chip) => (
+                <Button
+                  key={chip.label}
+                  variant={statusFilterFromStats === chip.value ? 'default' : 'outline'}
+                  size="sm"
+                  className="rounded-xl"
+                  onClick={() => setStatusFilterFromStats(chip.value)}
+                >
+                  {chip.label}
+                </Button>
+              ))}
             </div>
             <LeadTable 
               leads={convertedLeads}
@@ -620,7 +634,41 @@ export default function Index() {
                 />
               </>
             ) : (
-              <LeadFinder onLeadsFound={handleLeadsFound} />
+              <div className="max-w-2xl mx-auto">
+                <div className="text-center mb-8 animate-fade-in">
+                  <h2 className="text-2xl font-bold text-foreground mb-2 tracking-tight">Search for Candidates</h2>
+                  <p className="text-muted-foreground text-base">Select a job opening to add candidates to</p>
+                </div>
+                <div className="glass-strong rounded-2xl p-6 card-shadow animate-fade-in stagger-2">
+                  <p className="text-sm font-medium text-muted-foreground mb-3">Which job opening is this for?</p>
+                  <div className="space-y-2">
+                    {campaigns.map((campaign) => (
+                      <button
+                        key={campaign.id}
+                        onClick={() => setFindMoreCampaign(campaign)}
+                        className="w-full text-left p-4 rounded-xl border border-border/50 hover:border-primary/40 hover:bg-primary/5 transition-all duration-200 group"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-semibold text-foreground group-hover:text-primary transition-colors">{campaign.name}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {campaign.lead_count || 0} candidates • {campaign.status || 'draft'}
+                            </p>
+                          </div>
+                          <span className="text-muted-foreground group-hover:text-primary transition-colors">→</span>
+                        </div>
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => setShowCreateCampaign(true)}
+                      className="w-full text-left p-4 rounded-xl border border-dashed border-border/50 hover:border-primary/40 hover:bg-primary/5 transition-all duration-200 group"
+                    >
+                      <p className="font-semibold text-primary">+ Create new job opening</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Set up a new role to search for</p>
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         )}
