@@ -247,9 +247,8 @@ export default function Landing() {
           <div className="relative px-2 py-2 rounded-2xl bg-white/70 backdrop-blur-xl border border-border/50 shadow-[0_4px_24px_rgba(0,0,0,0.06),0_1px_4px_rgba(0,0,0,0.04)]">
             <div className="grid grid-cols-[1fr_auto_1fr] items-center">
               {/* Left: Logo */}
-              <div className="flex items-center gap-3 pl-2 justify-start min-w-0">
-              <img src="/medilead-logo.png" alt={appName} className="w-10 h-10 rounded-xl object-contain flex-shrink-0" />
-                <span className="text-lg font-semibold text-foreground tracking-tight truncate">{appName}</span>
+              <div className="flex items-center pl-2 justify-start min-w-0">
+                <img src="/medilead-logo.png" alt={appName} className="h-8 object-contain flex-shrink-0" />
               </div>
               
               {/* Center: Nav Links */}
