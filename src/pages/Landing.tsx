@@ -94,10 +94,11 @@ function StatItem({ value, label, sub, index }: { value: string; label: string; 
       initial={{ opacity: 0, scale: 0.8 }}
       animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
       transition={{ duration: 0.5, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
-      className="bg-card rounded-xl p-6 border border-border/50 shadow-sm flex flex-col items-center justify-center min-h-[160px]"
-      style={{ borderTop: '3px solid transparent', borderImage: 'linear-gradient(to right, hsl(210 80% 50%), hsl(180 60% 45%)) 1', borderImageSlice: '1 0 0 0' }}
+      className="relative flex flex-col items-center justify-center text-center p-6"
     >
-      <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-cyan-600 bg-clip-text text-transparent mb-3">{value}</div>
+      {/* Glow orb behind stat */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full bg-gradient-to-br from-primary/25 to-cyan-400/20 blur-2xl pointer-events-none" />
+      <div className="relative text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-cyan-600 bg-clip-text text-transparent mb-3">{value}</div>
       <div className="text-sm font-medium text-foreground mb-1">{label}</div>
       <div className="text-xs text-muted-foreground">{sub}</div>
     </motion.div>
@@ -411,10 +412,10 @@ export default function Landing() {
       </section>
       
       {/* Smooth transition gradient */}
-      <div className="h-32 bg-gradient-to-b from-cyan-50/30 via-background/50 to-background" />
+      <div className="h-32 bg-gradient-to-b from-cyan-50/30 via-white/50 to-white" />
       
       {/* Stats Section */}
-      <section className="py-16 px-6 bg-gradient-to-b from-blue-50/50 to-white relative">
+      <section className="py-16 px-6 bg-white relative">
         {/* Subtle dot pattern */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,_rgba(0,0,0,0.03)_1px,_transparent_0)] bg-[size:24px_24px]" />
         <div className="max-w-6xl mx-auto relative z-10">
@@ -435,7 +436,7 @@ export default function Landing() {
       </section>
       
       {/* Features Section */}
-      <section id="features" className="py-32 px-6 relative">
+      <section id="features" className="py-32 px-6 relative bg-white">
         {/* Decorative blobs */}
         <div className="absolute top-20 right-0 w-96 h-96 bg-primary/[0.04] rounded-full blur-3xl" />
         <div className="absolute bottom-20 left-0 w-80 h-80 bg-cyan-400/[0.04] rounded-full blur-3xl" />
