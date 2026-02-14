@@ -29,14 +29,14 @@ export function HexagonBadge({ className, children }: { className?: string; chil
       <svg viewBox="0 0 100 100" className="w-full h-full absolute">
         <defs>
           <linearGradient id="hexGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="hsl(330 100% 60% / 0.2)" />
-            <stop offset="100%" stopColor="hsl(330 100% 60% / 0.05)" />
+            <stop offset="0%" stopColor="hsl(210 80% 50% / 0.2)" />
+            <stop offset="100%" stopColor="hsl(210 80% 50% / 0.05)" />
           </linearGradient>
         </defs>
         <polygon 
           points="50,2 95,25 95,75 50,98 5,75 5,25" 
           fill="url(#hexGrad)"
-          stroke="hsl(330 100% 60% / 0.3)"
+          stroke="hsl(210 80% 50% / 0.3)"
           strokeWidth="1"
         />
       </svg>
@@ -74,9 +74,9 @@ export function WavePattern({ className }: { className?: string }) {
     <svg className={cn('', className)} viewBox="0 0 100 20" preserveAspectRatio="none">
       <defs>
         <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="hsl(330 100% 60% / 0.3)" />
-          <stop offset="50%" stopColor="hsl(350 100% 68% / 0.3)" />
-          <stop offset="100%" stopColor="hsl(330 100% 60% / 0.3)" />
+          <stop offset="0%" stopColor="hsl(210 80% 50% / 0.3)" />
+          <stop offset="50%" stopColor="hsl(210 80% 65% / 0.3)" />
+          <stop offset="100%" stopColor="hsl(210 80% 50% / 0.3)" />
         </linearGradient>
       </defs>
       <path 
@@ -92,8 +92,8 @@ export function AbstractBlob({ className }: { className?: string }) {
     <svg className={cn('', className)} viewBox="0 0 200 200">
       <defs>
         <linearGradient id="blobGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="hsl(330 100% 60% / 0.4)" />
-          <stop offset="100%" stopColor="hsl(350 100% 68% / 0.2)" />
+          <stop offset="0%" stopColor="hsl(210 80% 50% / 0.4)" />
+          <stop offset="100%" stopColor="hsl(210 80% 65% / 0.2)" />
         </linearGradient>
       </defs>
       <path 
@@ -110,8 +110,8 @@ export function CircuitLines({ className }: { className?: string }) {
     <svg className={cn('', className)} viewBox="0 0 100 100">
       <defs>
         <linearGradient id="circuitGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="hsl(330 100% 60% / 0.5)" />
-          <stop offset="100%" stopColor="hsl(330 100% 60% / 0.1)" />
+          <stop offset="0%" stopColor="hsl(210 80% 50% / 0.5)" />
+          <stop offset="100%" stopColor="hsl(210 80% 50% / 0.1)" />
         </linearGradient>
       </defs>
       <path 
@@ -121,8 +121,8 @@ export function CircuitLines({ className }: { className?: string }) {
         fill="none"
         strokeLinecap="round"
       />
-      <circle cx="30" cy="50" r="3" fill="hsl(330 100% 60%)" />
-      <circle cx="70" cy="50" r="3" fill="hsl(330 100% 60%)" />
+      <circle cx="30" cy="50" r="3" fill="hsl(210 80% 50%)" />
+      <circle cx="70" cy="50" r="3" fill="hsl(210 80% 50%)" />
     </svg>
   );
 }
@@ -193,8 +193,8 @@ export function SendArrow({ className }: { className?: string }) {
     <svg className={cn('', className)} viewBox="0 0 24 24" fill="none">
       <defs>
         <linearGradient id="arrowGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="hsl(330 100% 60%)" />
-          <stop offset="100%" stopColor="hsl(350 100% 68%)" />
+          <stop offset="0%" stopColor="hsl(210 80% 50%)" />
+          <stop offset="100%" stopColor="hsl(210 80% 65%)" />
         </linearGradient>
       </defs>
       <path 
@@ -214,12 +214,12 @@ export function MagnetPull({ className }: { className?: string }) {
     <svg className={cn('', className)} viewBox="0 0 48 48" fill="none">
       <defs>
         <linearGradient id="magnetGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="hsl(330 100% 70%)" />
-          <stop offset="100%" stopColor="hsl(330 100% 50%)" />
+          <stop offset="0%" stopColor="hsl(210 80% 60%)" />
+          <stop offset="100%" stopColor="hsl(210 80% 45%)" />
         </linearGradient>
         <linearGradient id="magnetGlow" x1="50%" y1="0%" x2="50%" y2="100%">
-          <stop offset="0%" stopColor="hsl(330 100% 60% / 0.6)" />
-          <stop offset="100%" stopColor="hsl(330 100% 60% / 0)" />
+          <stop offset="0%" stopColor="hsl(210 80% 50% / 0.6)" />
+          <stop offset="100%" stopColor="hsl(210 80% 50% / 0)" />
         </linearGradient>
       </defs>
       {/* Glow effect */}
@@ -228,13 +228,13 @@ export function MagnetPull({ className }: { className?: string }) {
       <circle cx="24" cy="18" r="8" fill="url(#magnetGrad)" />
       <circle cx="21" cy="15" r="2" fill="white" fillOpacity="0.4" />
       {/* Attraction lines */}
-      <path d="M24 28 L24 38" stroke="hsl(330 100% 60% / 0.4)" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="2 3" />
-      <path d="M18 26 L12 34" stroke="hsl(330 100% 60% / 0.3)" strokeWidth="1" strokeLinecap="round" strokeDasharray="2 3" />
-      <path d="M30 26 L36 34" stroke="hsl(330 100% 60% / 0.3)" strokeWidth="1" strokeLinecap="round" strokeDasharray="2 3" />
+      <path d="M24 28 L24 38" stroke="hsl(210 80% 50% / 0.4)" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="2 3" />
+      <path d="M18 26 L12 34" stroke="hsl(210 80% 50% / 0.3)" strokeWidth="1" strokeLinecap="round" strokeDasharray="2 3" />
+      <path d="M30 26 L36 34" stroke="hsl(210 80% 50% / 0.3)" strokeWidth="1" strokeLinecap="round" strokeDasharray="2 3" />
       {/* Orbiting dots */}
-      <circle cx="14" cy="20" r="2.5" fill="hsl(330 100% 60% / 0.5)" />
-      <circle cx="34" cy="16" r="2" fill="hsl(330 100% 60% / 0.4)" />
-      <circle cx="28" cy="28" r="1.5" fill="hsl(330 100% 60% / 0.3)" />
+      <circle cx="14" cy="20" r="2.5" fill="hsl(210 80% 50% / 0.5)" />
+      <circle cx="34" cy="16" r="2" fill="hsl(210 80% 50% / 0.4)" />
+      <circle cx="28" cy="28" r="1.5" fill="hsl(210 80% 50% / 0.3)" />
     </svg>
   );
 }

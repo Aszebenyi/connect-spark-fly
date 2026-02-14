@@ -116,7 +116,7 @@ function PricingCard({ name, price, leads, features, popular, index }: { name: s
       className={`relative flex flex-col p-8 rounded-3xl border backdrop-blur-xl transition-all duration-300 ${
         popular 
           ? 'border-primary/60 bg-gradient-to-b from-primary/15 via-card to-card shadow-2xl shadow-primary/20 ring-1 ring-primary/20' 
-          : 'border-white/10 bg-card/80 hover:border-white/20 hover:shadow-xl ring-1 ring-white/5'
+          : 'border-border bg-card/80 hover:border-primary/20 hover:shadow-xl ring-1 ring-border/50'
       }`}
     >
       {/* Glow effect for popular */}
@@ -267,9 +267,9 @@ export default function Landing() {
         className="fixed top-4 inset-x-0 z-50 px-4"
       >
         <div className="mx-auto max-w-5xl">
-          <div className="relative px-2 py-2 rounded-2xl bg-background/60 backdrop-blur-2xl border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.03)]">
+          <div className="relative px-2 py-2 rounded-2xl bg-background/60 backdrop-blur-2xl border border-border/60 shadow-[0_4px_24px_rgba(0,0,0,0.06),0_1px_4px_rgba(0,0,0,0.04)]">
             {/* Subtle top shine */}
-            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent rounded-t-2xl" />
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-black/[0.04] to-transparent rounded-t-2xl" />
             
             <div className="grid grid-cols-[1fr_auto_1fr] items-center">
               {/* Left: Logo */}
@@ -285,7 +285,7 @@ export default function Landing() {
               
               {/* Center: Nav Links (always centered) */}
               <div className="hidden md:flex items-center justify-center">
-                <div className="flex items-center bg-white/[0.03] rounded-xl p-1">
+                <div className="flex items-center bg-black/[0.03] rounded-xl p-1">
                   {[
                     { label: 'Features', href: '#features' },
                     { label: 'How it Works', href: '#how-it-works' },
@@ -294,14 +294,14 @@ export default function Landing() {
                     <a
                       key={link.label}
                       href={link.href}
-                      className="relative px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 rounded-lg hover:bg-white/[0.04]"
+                      className="relative px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 rounded-lg hover:bg-black/[0.04]"
                     >
                       {link.label}
                     </a>
                   ))}
                   <button
                     onClick={() => setIsContactOpen(true)}
-                    className="relative px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 rounded-lg hover:bg-white/[0.04]"
+                    className="relative px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 rounded-lg hover:bg-black/[0.04]"
                   >
                     Contact
                   </button>
@@ -348,7 +348,7 @@ export default function Landing() {
         <FloatingOrb className="w-64 h-64 bg-primary/25 top-1/3 right-1/4" delay={4} />
         
         {/* Grid pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:100px_100px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:100px_100px]" />
         
         <motion.div 
           style={{ y: heroY, opacity: heroOpacity }}
@@ -470,12 +470,12 @@ export default function Landing() {
       {/* Wave divider - top */}
       <div className="relative h-24 bg-background">
         <svg className="absolute bottom-0 w-full h-24" viewBox="0 0 1440 96" preserveAspectRatio="none" fill="none">
-          <path d="M0,96 L0,40 Q360,0 720,40 T1440,40 L1440,96 Z" fill="white" />
+          <path d="M0,96 L0,40 Q360,0 720,40 T1440,40 L1440,96 Z" fill="hsl(220 10% 95%)" />
         </svg>
       </div>
       
       {/* How it Works Section - Light theme */}
-      <section id="how-it-works" className="py-32 px-6 relative bg-white overflow-hidden">
+      <section id="how-it-works" className="py-32 px-6 relative bg-muted/50 overflow-hidden">
         {/* Decorative elements */}
         <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
@@ -486,10 +486,10 @@ export default function Landing() {
             <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
               Simple Process
             </span>
-            <h2 className="text-4xl md:text-5xl font-bold text-neutral-900 mb-6">
+            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
               From Job Req to Placement in 4 Steps
             </h2>
-            <p className="text-xl text-neutral-500 max-w-2xl mx-auto">
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Find, qualify, and contact candidates in minutes, not hours.
             </p>
           </AnimatedSection>
@@ -502,7 +502,7 @@ export default function Landing() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.5, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
-                className="flex gap-6 items-start p-6 rounded-2xl bg-neutral-50/80 border border-neutral-100 hover:bg-white hover:shadow-xl hover:shadow-neutral-200/50 transition-all duration-300"
+                className="flex gap-6 items-start p-6 rounded-2xl bg-card border border-border/80 hover:bg-card hover:shadow-xl hover:shadow-border/30 transition-all duration-300"
               >
                 <div className="flex-shrink-0">
                   <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-xl font-bold text-white shadow-lg shadow-primary/25">
@@ -511,10 +511,10 @@ export default function Landing() {
                 </div>
                 <div className="pt-2 flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-lg font-semibold text-neutral-900">{step.title}</h3>
+                    <h3 className="text-lg font-semibold text-foreground">{step.title}</h3>
                     <span className="text-xs font-medium text-primary bg-primary/10 px-2.5 py-1 rounded-full whitespace-nowrap">{step.time}</span>
                   </div>
-                  <p className="text-neutral-500 text-sm leading-relaxed">{step.description}</p>
+                  <p className="text-muted-foreground text-sm leading-relaxed">{step.description}</p>
                 </div>
               </motion.div>
             ))}
@@ -525,7 +525,7 @@ export default function Landing() {
       {/* Wave divider - bottom */}
       <div className="relative h-24 bg-background">
         <svg className="absolute top-0 w-full h-24" viewBox="0 0 1440 96" preserveAspectRatio="none" fill="none">
-          <path d="M0,0 L0,56 Q360,96 720,56 T1440,56 L1440,0 Z" fill="white" />
+          <path d="M0,0 L0,56 Q360,96 720,56 T1440,56 L1440,0 Z" fill="hsl(220 10% 95%)" />
         </svg>
       </div>
       
