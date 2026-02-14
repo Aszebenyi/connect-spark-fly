@@ -588,7 +588,7 @@ export default function Landing() {
       </section>
       
       {/* Footer - Dark */}
-      <footer className="py-12 px-6 bg-gray-900 text-white">
+      <footer className="py-12 px-6 text-white bg-secondary">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-md bg-gradient-to-br from-primary to-cyan-600 flex items-center justify-center">
