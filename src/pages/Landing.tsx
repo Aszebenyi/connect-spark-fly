@@ -415,7 +415,7 @@ export default function Landing() {
       {/* Stats Section */}
       <section className="py-16 px-6 bg-gradient-to-b from-muted/30 to-muted/50 relative">
         {/* Subtle dot pattern */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,_rgba(0,0,0,0.03)_1px,_transparent_0)] bg-[size:24px_24px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,_rgba(0,0,0,0.03)_1px,_transparent_0)] bg-[size:24px_24px] bg-primary-foreground" />
         <div className="max-w-6xl mx-auto relative z-10">
           <p className="text-center text-sm font-medium text-muted-foreground uppercase tracking-widest mb-12">
             Proven Results for Healthcare Recruiters
@@ -434,7 +434,7 @@ export default function Landing() {
       </section>
       
       {/* Features Section */}
-      <section id="features" className="py-32 px-6 relative">
+      <section id="features" className="py-32 px-6 relative bg-primary-foreground">
         {/* Decorative blobs */}
         <div className="absolute top-20 right-0 w-96 h-96 bg-primary/[0.04] rounded-full blur-3xl" />
         <div className="absolute bottom-20 left-0 w-80 h-80 bg-cyan-400/[0.04] rounded-full blur-3xl" />
@@ -461,7 +461,7 @@ export default function Landing() {
       </section>
       
       {/* Wave divider - top */}
-      <div className="relative h-24 bg-background">
+      <div className="relative h-24 bg-primary-foreground">
         <svg className="absolute bottom-0 w-full h-24" viewBox="0 0 1440 96" preserveAspectRatio="none" fill="none">
           <path d="M0,96 L0,40 Q360,0 720,40 T1440,40 L1440,96 Z" fill="hsl(220 10% 95%)" />
         </svg>
@@ -515,14 +515,14 @@ export default function Landing() {
       </section>
       
       {/* Wave divider - bottom */}
-      <div className="relative h-24 bg-background">
+      <div className="relative h-24 bg-primary-foreground">
         <svg className="absolute top-0 w-full h-24" viewBox="0 0 1440 96" preserveAspectRatio="none" fill="none">
           <path d="M0,0 L0,56 Q360,96 720,56 T1440,56 L1440,0 Z" fill="hsl(220 10% 95%)" />
         </svg>
       </div>
       
       {/* Pricing Section */}
-      <section id="pricing" className="py-32 px-6 relative">
+      <section id="pricing" className="py-32 px-6 relative bg-primary-foreground">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/[0.04] rounded-full blur-3xl" />
         
         <div className="max-w-5xl mx-auto relative z-10">
