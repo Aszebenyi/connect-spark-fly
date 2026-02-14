@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { CheckCircle2, Download, Users, Search, Sparkles, ShieldCheck, X, Trash2, Plus, Mail } from 'lucide-react';
+import { CheckCircle2, Download, Users, Search, Sparkles, ShieldCheck, X, Trash2, Plus, Mail, MessageCircle, Calendar, CheckCircle } from 'lucide-react';
 import { exportLeadsToCSV } from '@/lib/csv-export';
 import { EmailModal } from '@/components/EmailModal';
 import { BulkEmailModal } from '@/components/BulkEmailModal';
@@ -759,22 +759,28 @@ export function LeadTable({
                             <>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onStatusChange(lead.id, 'contacted'); }}>
-                                Mark Contacted
+                                <Mail className="w-4 h-4 mr-2 text-primary" />
+                                Mark as Contacted
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onStatusChange(lead.id, 'replied'); }}>
-                                Mark Replied
+                                <MessageCircle className="w-4 h-4 mr-2 text-success" />
+                                Mark as Replied
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onStatusChange(lead.id, 'qualified'); }}>
-                                Mark Qualified
+                                <CheckCircle className="w-4 h-4 mr-2 text-success" />
+                                Mark as Qualified
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onStatusChange(lead.id, 'interview_scheduled'); }}>
-                                Mark Interview Scheduled
+                                <Calendar className="w-4 h-4 mr-2 text-accent-foreground" />
+                                Interview Scheduled
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onStatusChange(lead.id, 'offer_sent'); }}>
-                                Mark Offer Sent
+                                <ShieldCheck className="w-4 h-4 mr-2 text-primary" />
+                                Offer Sent
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onStatusChange(lead.id, 'hired'); }}>
-                                Mark Hired
+                                <CheckCircle2 className="w-4 h-4 mr-2 text-success" />
+                                Hired
                               </DropdownMenuItem>
                             </>
                           )}
