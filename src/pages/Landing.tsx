@@ -248,12 +248,7 @@ export default function Landing() {
             <div className="grid grid-cols-[1fr_auto_1fr] items-center">
               {/* Left: Logo */}
               <div className="flex items-center gap-3 pl-2 justify-start min-w-0">
-                <div className="relative group flex-shrink-0">
-                  <div className="absolute inset-0 rounded-xl bg-primary/30 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-cyan-600 flex items-center justify-center shadow-md shadow-primary/20">
-                    <div className="w-4 h-4 rounded-full bg-white/90 shadow-inner" />
-                  </div>
-                </div>
+              <img src="/medilead-logo.png" alt={appName} className="w-10 h-10 rounded-xl object-contain flex-shrink-0" />
                 <span className="text-lg font-semibold text-foreground tracking-tight truncate">{appName}</span>
               </div>
               
@@ -352,7 +347,7 @@ export default function Landing() {
           >
             <span className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent">Fill healthcare roles</span>
             <br />
-            <span className="bg-gradient-to-r from-primary to-cyan-600 bg-clip-text text-transparent">3x faster</span>
+            <span className="bg-gradient-to-r from-primary to-cyan-600 bg-clip-text text-transparent">5x faster</span>
           </motion.h1>
           
           <motion.p
@@ -361,7 +356,7 @@ export default function Landing() {
             transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed"
           >
-            Describe the role you need to fill. {appName} finds qualified nurses, verifies credentials, and helps you reach the right candidates—fast.
+            {appName} identifies qualified candidates, verifies credentials, and enables personalised outreach based on the open role.
           </motion.p>
           
           <motion.div
@@ -395,9 +390,21 @@ export default function Landing() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1, delay: 0.6 }}
-            className="mt-16 text-sm text-muted-foreground/60"
+            className="mt-16 flex items-center justify-center gap-3"
           >
-            Join healthcare recruiters filling roles 3x faster
+            <div className="flex -space-x-2">
+              {[11, 26, 32, 44, 68].map((id) => (
+                <img
+                  key={id}
+                  src={`https://i.pravatar.cc/64?img=${id}`}
+                  alt=""
+                  className="w-8 h-8 rounded-full border-2 border-white shadow-sm object-cover"
+                />
+              ))}
+            </div>
+            <p className="text-sm font-medium text-muted-foreground">
+              Join <span className="font-semibold text-foreground">1,000+</span> recruiters and agencies
+            </p>
           </motion.div>
         </motion.div>
         
@@ -417,7 +424,7 @@ export default function Landing() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
             {[
               { value: "25%", label: "Reply Rate", sub: "vs 5-8% average" },
-              { value: "3x", label: "Faster Fill", sub: "vs 3-6 months" },
+              { value: "5x", label: "Faster Fill", sub: "vs 3-6 months" },
               { value: "13hrs", label: "Saved Weekly", sub: "LinkedIn searching" },
               { value: "95%+", label: "License Accuracy", sub: "Auto-verified" },
             ].map((stat, i) => (
