@@ -13,6 +13,7 @@ import { OnboardingChecklist } from '@/components/OnboardingChecklist';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Flame, Mail, CalendarDays, Clock, Loader2, Plus } from 'lucide-react';
+import { NotificationBell } from '@/components/NotificationBell';
 import { AddCandidateDialog } from '@/components/AddCandidateDialog';
 import { SEO } from '@/components/SEO';
 import { 
@@ -337,9 +338,12 @@ export default function Index() {
       <main id="main-content" className="lg:ml-72 p-6 pt-18 lg:pt-6">
         {activeTab === 'dashboard' && (
           <div className="animate-fade-in">
-            <div className="page-header">
-              <h1 className="page-title">Dashboard</h1>
-              <p className="page-subtitle">Track your candidate pipeline and placement performance</p>
+            <div className="page-header flex items-start justify-between">
+              <div>
+                <h1 className="page-title">Dashboard</h1>
+                <p className="page-subtitle">Track your candidate pipeline and placement performance</p>
+              </div>
+              <NotificationBell />
             </div>
 
             {/* Onboarding Checklist */}
