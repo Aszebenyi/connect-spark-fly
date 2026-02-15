@@ -1,116 +1,28 @@
 
 
-## MediLead Complete Fix Plan
+## Fix Landing Page Stats and Dashboard Background
 
-This plan addresses the critical and high-priority fixes from the audit, organized into manageable phases.
+Two issues to revert from the previous batch of changes:
 
----
+### 1. Dashboard Background: Grey to White
+The dashboard main area uses `bg-background` which maps to `hsl(0 0% 97%)` (light grey). Change the `--background` CSS variable from grey to white, or override the dashboard specifically to use a white background.
 
-### Phase 1: Critical Fixes
+**Preferred approach:** Update `src/index.css` to change `--background` from `0 0% 97%` to `0 0% 100%` (pure white). This gives the whole app a clean white base instead of grey.
 
-#### 1.1 Fix Auth Pages Dark Mode
-The Auth (`/auth`), ForgotPassword (`/forgot-password`), and ResetPassword (`/reset-password`) pages all use hardcoded `bg-[#030303]` dark backgrounds with `text-white` styling, clashing with the light-mode app.
+Alternatively, if you want the landing page to keep the subtle grey but dashboard to be white, we can add `bg-white` to the dashboard's main container in `src/pages/Dashboard.tsx` (line 311).
 
-**Approach:** Set theme to "light" globally in `App.tsx` and convert all three auth pages to use theme-aware Tailwind classes instead of hardcoded dark colors.
+### 2. Landing Page Stats: Remove Card Boxes
+The stats section currently wraps each stat in a white card with borders and shadows (`bg-card rounded-xl p-6 border border-border shadow-sm`). The screenshot shows these should be simple text items on the section background without visible card containers.
 
-**Files:**
-- `src/App.tsx` -- Wrap app in a component that calls `setTheme("light")` once on mount
-- `src/pages/Dashboard.tsx` -- Remove the per-page `setTheme("light")` useEffect (lines 42-48)
-- `src/pages/Landing.tsx` -- Remove the per-page `setTheme("light")` useEffect (lines 203-207)
-- `src/pages/Auth.tsx` -- Replace `bg-[#030303]` with `bg-background`, replace `text-white` with `text-foreground`, replace `text-white/50` with `text-muted-foreground`, replace `border-white/10` with `border-border`, replace `bg-white/[0.03]` with `bg-card`, etc. throughout the file (~482 lines)
-- `src/pages/ForgotPassword.tsx` -- Same dark-to-light conversion (~311 lines). Remove pink glow background effects, use `bg-background` and theme-aware colors
-- `src/pages/ResetPassword.tsx` -- Same dark-to-light conversion (~387 lines)
+**File: `src/pages/Landing.tsx` (lines 91-102, StatItem component)**
+- Remove the card styling (`bg-card rounded-xl p-6 border border-border shadow-sm`)
+- Keep the text layout (gradient number, label, subtitle) but without a visible card wrapper
+- Keep the subtle gradient accent line above each stat
+- Use transparent/no-background so the stats sit cleanly on the section background
 
-#### 1.2 Add International Settings Tab
-The `InternationalSettingsTab` component exists but is not accessible.
+### Technical Details
 
-**File: `src/components/SettingsPage.tsx`**
-- Add import for `InternationalSettingsTab`
-- Add `{ key: 'international' as const, label: 'International' }` to `settingsTabs` array (line 74)
-- Update `SettingsTab` type to include `'international'` (line 81)
-- Add render case for `activeTab === 'international'` showing the `InternationalSettingsTab` component
-
----
-
-### Phase 2: Design Consistency
-
-#### 2.1 Replace Glassmorphism with Flat Design
-Replace all `glass-strong` and `glass-soft` classes with clean, flat alternatives across 11 files.
-
-**Global replacements:**
-- `glass-strong` becomes `bg-card border border-border` (using theme-aware tokens)
-- `glass-soft` becomes `bg-card/50 border border-border/50`
-- `card-shadow` stays as-is (already defined as a subtle `box-shadow`)
-
-**Files affected:** `SettingsPage.tsx`, `OnboardingChecklist.tsx`, `LeadTable.tsx`, `LeadFinder.tsx`, `LeadResultCard.tsx`, `EmailModal.tsx`, `BulkEmailModal.tsx`, `InternationalSettingsTab.tsx`, `AdminSidebar.tsx`, `ErrorBoundary.tsx`, `NotFound.tsx`
-
-#### 2.2 Simplify Status Badge Colors (3-color system)
-Reduce visual noise in `LeadTable.tsx` status badges from 7+ colors to 3 categories:
-- **Gray**: New, Unqualified, Lost (inactive/neutral)
-- **Blue**: Contacted, Responded, Interview, Offer Sent (in-progress)
-- **Green**: Replied, Qualified, Hired (positive outcomes)
-
-#### 2.3 Fix Landing Page
-- **Logo size**: Change `h-8` to `h-6` on line 251 of `Landing.tsx`
-- **Stats section**: Wrap each `StatItem` in a white card with consistent `min-h`, flex centering, and a subtle top-border accent. Change section background from grey to light blue tint (`from-blue-50/50 to-white`). Add `items-stretch` to grid.
-
----
-
-### Phase 3: UX Improvements
-
-#### 3.1 Button Hierarchy Audit
-Review and update button variants across key components for consistent visual hierarchy:
-- Primary actions: `variant="default"` (Send Email, Create Job, Search)
-- Secondary actions: `variant="outline"` (Export CSV, Cancel, View Details)
-- Destructive actions: `variant="destructive"` (Delete, Remove)
-
-**Files:** `LeadTable.tsx`, `CampaignCard.tsx`, `CreateCampaignDialog.tsx`
-
-#### 3.2 Improve Empty States with CTAs
-The `EmptyState` component already supports `actionLabel`/`onAction` props. Ensure all empty state usages pass meaningful action buttons:
-- No campaigns: "Create First Job Opening" button
-- No candidates: "Search for Candidates" button
-- No emails sent: "View Candidates" button
-
-**Files:** `Dashboard.tsx`, `LeadTable.tsx`
-
-#### 3.3 Bulk Email Visibility
-Add a visible "Send Bulk Emails" section above the candidates table in `LeadTable.tsx` with a Select All checkbox in the table header.
-
----
-
-### Phase 4: Accessibility
-
-#### 4.1 Focus Indicators
-Add keyboard focus-visible styles to `src/index.css`:
-- `*:focus-visible` with `outline: 2px solid` primary color and `outline-offset: 2px`
-- Specific styles for buttons, links, inputs, and checkboxes
-
-#### 4.2 Skip to Main Content
-Add a visually-hidden skip link in `App.tsx` and `id="main-content"` on the Dashboard content area.
-
-#### 4.3 Aria Labels
-Add `aria-label` attributes to interactive elements in `LeadTable.tsx`, `CampaignCard.tsx`, and `Dashboard.tsx`.
-
----
-
-### Items Deferred (Too Risky / Complex for This Batch)
-
-- **Part 6 (Gmail OAuth from onboarding)**: The Gmail connection uses a dedicated `gmail-auth` edge function, not standard OAuth. Changing the onboarding flow to bypass Settings requires careful integration with that existing flow. Recommended as a separate task.
-- **Part 7 (Job URL as primary flow)**: The `CreateCampaignDialog` already has URL extraction integrated. Reordering the UI is a separate design task.
-- **Part 8 (Milestone celebrations)**: New feature, not a fix. Better as a follow-up.
-- **Part 10 (Grouped search results)**: Requires understanding match score data availability. Better as a follow-up.
-
----
-
-### Technical Summary
-
-| Phase | Files Modified | Estimated Complexity |
-|-------|---------------|---------------------|
-| Phase 1 | 6 files | Medium (auth page restyling is the bulk) |
-| Phase 2 | ~13 files | Low-Medium (mostly find/replace + stat redesign) |
-| Phase 3 | ~4 files | Low |
-| Phase 4 | ~4 files | Low |
-
-**No database changes required.**
+**Files to modify:**
+- `src/index.css` -- Change `--background: 0 0% 97%` to `--background: 0 0% 100%` (line 8)
+- `src/pages/Landing.tsx` -- Remove card wrapper styling from `StatItem` component (lines 96), replace with simple `text-center flex flex-col items-center justify-center min-h-[140px]` without `bg-card`, `border`, or `shadow-sm`
 
