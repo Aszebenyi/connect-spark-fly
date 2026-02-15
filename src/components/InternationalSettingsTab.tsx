@@ -81,7 +81,7 @@ export function InternationalSettingsTab() {
   return (
     <div className="space-y-8 max-w-3xl">
       {/* Regional Settings */}
-      <div className="glass-strong rounded-2xl p-8 card-shadow">
+      <div className="bg-card border border-border rounded-2xl p-8 shadow-sm">
         <div className="mb-6">
           <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
             <Globe className="w-5 h-5 text-primary" />
@@ -151,7 +151,7 @@ export function InternationalSettingsTab() {
       </div>
 
       {/* Display Preferences */}
-      <div className="glass-strong rounded-2xl p-8 card-shadow">
+      <div className="bg-card border border-border rounded-2xl p-8 shadow-sm">
         <div className="mb-6">
           <h3 className="text-lg font-semibold text-foreground">Display Preferences</h3>
           <p className="text-sm text-muted-foreground mt-1">Currency and date formatting</p>

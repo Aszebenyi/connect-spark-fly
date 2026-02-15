@@ -64,7 +64,7 @@ export default function NotFound() {
           </motion.div>
 
           {/* Card */}
-          <div className="glass-strong rounded-3xl p-8 card-shadow">
+          <div className="bg-card border border-border rounded-3xl p-8 shadow-sm">
             <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-6">
               <Search className="w-8 h-8 text-muted-foreground" />
             </div>

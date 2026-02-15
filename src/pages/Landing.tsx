@@ -1,5 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
-import { useTheme } from 'next-themes';
+import { useRef, useState } from 'react';
 import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -94,9 +93,10 @@ function StatItem({ value, label, sub, index }: {value: string;label: string;sub
       initial={{ opacity: 0, scale: 0.8 }}
       animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
       transition={{ duration: 0.5, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
-      className="text-center">
+      className="bg-card rounded-xl p-6 border border-border shadow-sm text-center flex flex-col items-center justify-center min-h-[140px]">
 
-      <div className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary to-cyan-600 bg-clip-text text-transparent mb-3">{value}</div>
+      <div className="h-[2px] w-12 bg-gradient-to-r from-primary to-cyan-600 rounded-full mb-4" />
+      <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-cyan-600 bg-clip-text text-transparent mb-2">{value}</div>
       <div className="text-sm font-medium text-foreground mb-1">{label}</div>
       <div className="text-xs text-muted-foreground">{sub}</div>
     </motion.div>);
@@ -200,11 +200,6 @@ export default function Landing() {
   const { appName } = useBrandConfig();
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [isFreeLeadSampleOpen, setIsFreeLeadSampleOpen] = useState(false);
-  const { setTheme } = useTheme();
-
-  useEffect(() => {
-    setTheme("light");
-  }, [setTheme]);
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -248,7 +243,7 @@ export default function Landing() {
             <div className="grid grid-cols-[1fr_auto_1fr] items-center">
               {/* Left: Logo */}
               <div className="flex items-center pl-2 justify-start min-w-0">
-                <img src="/medilead-logo.png" alt={appName} className="h-8 object-contain flex-shrink-0" />
+                <img src="/medilead-logo.png" alt={appName} className="h-6 object-contain flex-shrink-0" />
               </div>
               
               {/* Center: Nav Links */}
@@ -413,14 +408,14 @@ export default function Landing() {
       
       
       {/* Stats Section */}
-      <section className="py-16 px-6 bg-gradient-to-b from-muted/30 to-muted/50 relative">
+      <section className="py-16 px-6 bg-gradient-to-b from-blue-50/50 to-background relative">
         {/* Subtle dot pattern */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,_rgba(0,0,0,0.03)_1px,_transparent_0)] bg-[size:24px_24px] bg-primary-foreground" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,_rgba(0,0,0,0.03)_1px,_transparent_0)] bg-[size:24px_24px]" />
         <div className="max-w-6xl mx-auto relative z-10">
           <p className="text-center text-sm font-medium text-muted-foreground uppercase tracking-widest mb-12">
             Proven Results for Healthcare Recruiters
           </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 items-stretch">
             {[
             { value: "25%", label: "Reply Rate", sub: "vs 5-8% average" },
             { value: "5x", label: "Faster Fill", sub: "vs 3-6 months" },

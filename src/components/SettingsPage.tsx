@@ -13,6 +13,7 @@ import { PricingPlans } from '@/components/PricingPlans';
 import { PLANS, PlanId } from '@/lib/plans';
 import { EmailConnectionCard } from '@/components/EmailConnectionCard';
 import { CompanyProfileTab } from '@/components/CompanyProfileTab';
+import { InternationalSettingsTab } from '@/components/InternationalSettingsTab';
 
 import { useEmailStats } from '@/hooks/useEmailStats';
 import { AlertCircle, ExternalLink, Loader2 } from 'lucide-react';
@@ -43,7 +44,7 @@ interface SettingsSectionProps {
 
 function SettingsSection({ title, description, children, className = '' }: SettingsSectionProps) {
   return (
-    <div className={`glass-strong rounded-2xl p-8 card-shadow ${className}`}>
+    <div className={`bg-card border border-border rounded-2xl p-8 shadow-sm ${className}`}>
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-foreground">{title}</h3>
         <p className="text-sm text-muted-foreground mt-1">{description}</p>
@@ -76,9 +77,10 @@ const settingsTabs = [
   { key: 'billing' as const, label: 'Billing' },
   { key: 'integrations' as const, label: 'Integrations' },
   { key: 'company' as const, label: 'Company Profile' },
+  { key: 'international' as const, label: 'International' },
 ];
 
-type SettingsTab = 'account' | 'billing' | 'integrations' | 'company';
+type SettingsTab = 'account' | 'billing' | 'integrations' | 'company' | 'international';
 
 export function SettingsPage() {
   const { toast } = useToast();
@@ -715,6 +717,17 @@ export function SettingsPage() {
             description="Define your company identity for AI-generated candidate outreach"
           >
             <CompanyProfileTab />
+          </SettingsSection>
+        </div>
+      )}
+      {/* International Tab */}
+      {activeTab === 'international' && (
+        <div className="max-w-3xl space-y-8">
+          <SettingsSection
+            title="International Settings"
+            description="Configure regional preferences for international healthcare recruitment"
+          >
+            <InternationalSettingsTab />
           </SettingsSection>
         </div>
       )}
