@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 export interface OnboardingProgress {
-  hasCountrySet: boolean;
   hasEmailConnection: boolean;
   hasCompanyProfile: boolean;
   hasCampaign: boolean;
@@ -18,7 +17,6 @@ export interface OnboardingProgress {
 export function useOnboardingProgress(): OnboardingProgress & { refresh: () => void } {
   const { user } = useAuth();
   const [progress, setProgress] = useState<Omit<OnboardingProgress, 'isComplete' | 'completedCount' | 'totalSteps'>>({
-    hasCountrySet: false,
     hasEmailConnection: false,
     hasCompanyProfile: false,
     hasCampaign: false,
@@ -43,10 +41,8 @@ export function useOnboardingProgress(): OnboardingProgress & { refresh: () => v
       ]);
 
       const profileData = profileResult.data as any;
-      const baseCountry = profileData?.base_country;
 
       setProgress({
-        hasCountrySet: !!baseCountry && baseCountry !== 'US' ? true : !!baseCountry,
         hasEmailConnection: (emailResult.data?.length ?? 0) > 0,
         hasCompanyProfile: !!profileData?.company,
         hasCampaign: (campaignsResult.data?.length ?? 0) > 0,
@@ -65,7 +61,6 @@ export function useOnboardingProgress(): OnboardingProgress & { refresh: () => v
   }, [fetchProgress]);
 
   const completedCount = [
-    progress.hasCountrySet,
     progress.hasEmailConnection,
     progress.hasCompanyProfile,
     progress.hasCampaign,
@@ -73,7 +68,7 @@ export function useOnboardingProgress(): OnboardingProgress & { refresh: () => v
     progress.hasSentOutreach,
   ].filter(Boolean).length;
 
-  const totalSteps = 6;
+  const totalSteps = 5;
   const isComplete = completedCount === totalSteps;
 
   return {
