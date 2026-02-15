@@ -456,9 +456,9 @@ export default function Landing() {
       </section>
       
       {/* Wave divider - top */}
-      <div className="relative h-24 bg-primary-foreground">
+      <div className="relative h-24 bg-background">
         <svg className="absolute bottom-0 w-full h-24" viewBox="0 0 1440 96" preserveAspectRatio="none" fill="none">
-          <path d="M0,96 L0,40 Q360,0 720,40 T1440,40 L1440,96 Z" fill="hsl(220 10% 95%)" />
+          <path d="M0,96 L0,40 Q360,0 720,40 T1440,40 L1440,96 Z" fill="hsl(220 10% 97.5%)" />
         </svg>
       </div>
       
