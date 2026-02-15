@@ -93,7 +93,7 @@ function StatItem({ value, label, sub, index }: {value: string;label: string;sub
       initial={{ opacity: 0, scale: 0.8 }}
       animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
       transition={{ duration: 0.5, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
-      className="bg-card rounded-xl p-6 border border-border shadow-sm text-center flex flex-col items-center justify-center min-h-[140px]">
+      className="text-center flex flex-col items-center justify-center min-h-[140px]">
 
       <div className="h-[2px] w-12 bg-gradient-to-r from-primary to-cyan-600 rounded-full mb-4" />
       <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-cyan-600 bg-clip-text text-transparent mb-2">{value}</div>
