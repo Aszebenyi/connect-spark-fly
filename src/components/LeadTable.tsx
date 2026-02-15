@@ -60,16 +60,19 @@ interface LeadTableProps {
 }
 
 const statusConfig: Record<string, { label: string; color: string }> = {
-  new: { label: 'New', color: 'bg-primary/15 text-primary border-primary/30' },
-  contacted: { label: 'Contacted', color: 'bg-blue-500/15 text-blue-400 border-blue-500/30' },
-  responded: { label: 'Responded', color: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30' },
-  replied: { label: 'Replied', color: 'bg-success/15 text-success border-success/30' },
-  qualified: { label: 'Qualified', color: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' },
-  interview_scheduled: { label: 'Interview', color: 'bg-purple-500/15 text-purple-400 border-purple-500/30' },
-  offer_sent: { label: 'Offer Sent', color: 'bg-amber-500/15 text-amber-400 border-amber-500/30' },
-  hired: { label: 'Hired', color: 'bg-emerald-600/15 text-emerald-600 border-emerald-600/30' },
+  // Gray: Inactive/neutral
+  new: { label: 'New', color: 'bg-muted text-muted-foreground border-border' },
   unqualified: { label: 'Unqualified', color: 'bg-muted text-muted-foreground border-border' },
-  lost: { label: 'Lost', color: 'bg-destructive/15 text-destructive border-destructive/30' },
+  lost: { label: 'Lost', color: 'bg-muted text-muted-foreground border-border' },
+  // Blue: In-progress
+  contacted: { label: 'Contacted', color: 'bg-primary/15 text-primary border-primary/30' },
+  responded: { label: 'Responded', color: 'bg-primary/15 text-primary border-primary/30' },
+  interview_scheduled: { label: 'Interview', color: 'bg-primary/15 text-primary border-primary/30' },
+  offer_sent: { label: 'Offer Sent', color: 'bg-primary/15 text-primary border-primary/30' },
+  // Green: Positive outcomes
+  replied: { label: 'Replied', color: 'bg-success/15 text-success border-success/30' },
+  qualified: { label: 'Qualified', color: 'bg-success/15 text-success border-success/30' },
+  hired: { label: 'Hired', color: 'bg-success/15 text-success border-success/30' },
 };
 
 // Healthcare data helpers
@@ -349,7 +352,7 @@ export function LeadTable({
   };
 
   return (
-    <div className="glass-strong rounded-2xl overflow-hidden card-shadow relative">
+    <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm relative">
       {/* Header */}
       <div className="p-4 border-b border-border flex items-center gap-4 flex-wrap">
         <div className="search-input flex items-center gap-4 px-5 py-3 flex-1 max-w-md">
@@ -377,7 +380,7 @@ export function LeadTable({
             <SelectTrigger className="w-[220px] rounded-xl">
               <SelectValue placeholder="Filter by Job Opening" />
             </SelectTrigger>
-            <SelectContent className="glass-strong">
+            <SelectContent>
               <SelectItem value="all">All Job Openings</SelectItem>
               <SelectItem value="unassigned">Unassigned Candidates</SelectItem>
               {campaigns.map((campaign) => (
@@ -397,7 +400,7 @@ export function LeadTable({
           <SelectTrigger className="w-[150px] rounded-xl">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
-          <SelectContent className="glass-strong">
+          <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
             {Object.entries(statusConfig).map(([key, config]) => (
               <SelectItem key={key} value={key}>
@@ -743,7 +746,7 @@ export function LeadTable({
                             </div>
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="glass-strong border-border/80 w-48">
+                        <DropdownMenuContent align="end" className="border-border/80 w-48">
                           {lead.email && (
                             <DropdownMenuItem onClick={(e) => {
                               e.stopPropagation();
@@ -841,7 +844,7 @@ export function LeadTable({
                   Add to Job Opening
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="glass-strong w-56">
+              <DropdownMenuContent className="w-56">
                 {campaigns.map(c => (
                   <DropdownMenuItem key={c.id} onClick={() => handleBulkAssign(c.id!)}>
                     {c.name}

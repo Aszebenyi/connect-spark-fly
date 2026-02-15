@@ -355,6 +355,20 @@
 .stagger-5 { animation-delay: 0.15s; }
 .stagger-6 { animation-delay: 0.18s; }
 
+/* Focus indicators */
+*:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 0px;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

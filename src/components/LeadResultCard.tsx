@@ -369,7 +369,7 @@ export function LeadResultCard({ lead, isSelected, onToggleSelect, campaignGoal 
 
       {/* Outreach Dialog */}
       <Dialog open={showOutreachDialog} onOpenChange={setShowOutreachDialog}>
-        <DialogContent className="max-w-2xl glass-strong border-border/80">
+        <DialogContent className="max-w-2xl bg-card border-border/80">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3 text-xl">
               <div className="visual-badge-sm">

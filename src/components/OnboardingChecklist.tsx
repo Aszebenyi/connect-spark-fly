@@ -106,7 +106,7 @@ export function OnboardingChecklist({
   const progressPercent = (progress.completedCount / progress.totalSteps) * 100;
 
   return (
-    <div className="glass-strong rounded-2xl overflow-hidden card-shadow mb-6">
+    <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm mb-6">
       {/* Header */}
       <div 
         className="p-5 flex items-center justify-between cursor-pointer hover:bg-muted/5 transition-colors"

@@ -207,7 +207,7 @@ export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinde
       </div>
 
       {/* Search Box */}
-      <div className="glass-strong rounded-3xl p-6 card-shadow mb-6 animate-fade-in stagger-2 relative overflow-hidden">
+      <div className="bg-card border border-border rounded-3xl p-6 shadow-sm mb-6 animate-fade-in stagger-2 relative overflow-hidden">
         <img src={medileadLogo} alt="MediLead" className="absolute top-4 right-4 w-10 h-10 object-contain z-10" />
         <div className="absolute top-0 right-0 w-64 h-64 opacity-20 -translate-y-1/2 translate-x-1/2">
           <AbstractBlob className="w-full h-full" />

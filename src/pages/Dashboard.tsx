@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useTheme } from 'next-themes';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { OAuthCallback } from '@/components/OAuthCallback';
 import { Sidebar } from '@/components/Sidebar';
@@ -39,13 +38,8 @@ import { useBrandConfig } from '@/hooks/useBrandConfig';
 
 export default function Index() {
   const { appName } = useBrandConfig();
-  const { setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [statusFilterFromStats, setStatusFilterFromStats] = useState<string | null>(null);
-
-  useEffect(() => {
-    setTheme("light");
-  }, [setTheme]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<LegacyLead | null>(null);
   const [dbLeads, setDbLeads] = useState<ApiLead[]>([]);
@@ -340,7 +334,7 @@ export default function Index() {
         <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
       
-      <main className="lg:ml-72 p-6 pt-18 lg:pt-6">
+      <main id="main-content" className="lg:ml-72 p-6 pt-18 lg:pt-6">
         {activeTab === 'dashboard' && (
           <div className="animate-fade-in">
             <div className="page-header">
