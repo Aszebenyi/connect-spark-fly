@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { GlowDot, AbstractBlob } from '@/components/ui/visual-elements';
 import { supabase } from '@/integrations/supabase/client';
@@ -54,23 +53,7 @@ function SettingsSection({ title, description, children, className = '' }: Setti
   );
 }
 
-interface SettingRowProps {
-  label: string;
-  description?: string;
-  children: React.ReactNode;
-}
 
-function SettingRow({ label, description, children }: SettingRowProps) {
-  return (
-    <div className="flex items-center justify-between py-4 border-b border-border/50 last:border-0">
-      <div className="flex-1">
-        <Label className="text-foreground font-medium">{label}</Label>
-        {description && <p className="text-sm text-muted-foreground mt-0.5">{description}</p>}
-      </div>
-      <div className="flex-shrink-0 ml-4">{children}</div>
-    </div>
-  );
-}
 
 const settingsTabs = [
   { key: 'account' as const, label: 'Account' },
@@ -101,13 +84,6 @@ export function SettingsPage() {
     company: '',
   });
   
-  const [notifications, setNotifications] = useState({
-    emailDigest: true,
-    leadAlerts: true,
-    campaignUpdates: false,
-    weeklyReport: true,
-  });
-
   const [usageStats, setUsageStats] = useState({
     leadsCount: 0,
     campaignsCount: 0,
@@ -171,26 +147,6 @@ export function SettingsPage() {
     loadProfile();
   }, [user]);
 
-  useEffect(() => {
-    if (!user) return;
-    const loadPrefs = async () => {
-      const { data } = await supabase
-        .from('user_preferences')
-        .select('email_digest, lead_alerts, campaign_updates, weekly_report')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      if (data) {
-        setNotifications({
-          emailDigest: data.email_digest,
-          leadAlerts: data.lead_alerts,
-          campaignUpdates: data.campaign_updates,
-          weeklyReport: data.weekly_report,
-        });
-      }
-    };
-    loadPrefs();
-  }, [user]);
-
   const handleSaveProfile = async () => {
     if (!user) return;
     try {
@@ -211,27 +167,6 @@ export function SettingsPage() {
       });
     } catch {
       toast({ title: 'Error saving profile', variant: 'destructive' });
-    }
-  };
-
-  const handleSaveNotifications = async () => {
-    if (!user) return;
-    try {
-      await supabase
-        .from('user_preferences')
-        .upsert({
-          user_id: user.id,
-          email_digest: notifications.emailDigest,
-          lead_alerts: notifications.leadAlerts,
-          campaign_updates: notifications.campaignUpdates,
-          weekly_report: notifications.weeklyReport,
-        }, { onConflict: 'user_id' });
-      toast({
-        title: 'Preferences saved',
-        description: 'Your notification preferences have been updated.',
-      });
-    } catch {
-      toast({ title: 'Error saving preferences', variant: 'destructive' });
     }
   };
 
@@ -395,44 +330,6 @@ export function SettingsPage() {
             </div>
           </SettingsSection>
 
-          {/* Notifications */}
-          <SettingsSection 
-            title="Notifications" 
-            description="Control how and when you receive updates"
-          >
-            <div>
-              <SettingRow label="Email Digest" description="Receive a daily summary of your lead activity">
-                <Switch
-                  checked={notifications.emailDigest}
-                  onCheckedChange={(checked) => setNotifications({ ...notifications, emailDigest: checked })}
-                />
-              </SettingRow>
-              <SettingRow label="Lead Alerts" description="Get notified when new leads match your criteria">
-                <Switch
-                  checked={notifications.leadAlerts}
-                  onCheckedChange={(checked) => setNotifications({ ...notifications, leadAlerts: checked })}
-                />
-              </SettingRow>
-              <SettingRow label="Campaign Updates" description="Receive updates on campaign progress and results">
-                <Switch
-                  checked={notifications.campaignUpdates}
-                  onCheckedChange={(checked) => setNotifications({ ...notifications, campaignUpdates: checked })}
-                />
-              </SettingRow>
-              <SettingRow label="Weekly Report" description="Get a weekly performance summary">
-                <Switch
-                  checked={notifications.weeklyReport}
-                  onCheckedChange={(checked) => setNotifications({ ...notifications, weeklyReport: checked })}
-                />
-              </SettingRow>
-              <div className="pt-4">
-                <Button onClick={handleSaveNotifications} className="apple-button">
-                  Save Preferences
-                </Button>
-              </div>
-            </div>
-          </SettingsSection>
-
           {/* Danger Zone */}
           <SettingsSection 
             title="Danger Zone" 
@@ -488,13 +385,13 @@ export function SettingsPage() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Delete your account?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This action cannot be undone. Your account and all associated data (leads, campaigns, email connections, subscription) will be permanently deleted.
+                        This will permanently delete your account, all leads, campaigns, and data. This action cannot be undone.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
                       <AlertDialogAction onClick={handleDeleteAccount} className="rounded-xl bg-destructive hover:bg-destructive/90">
-                        Yes, Delete Everything
+                        Delete Account
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
@@ -508,108 +405,110 @@ export function SettingsPage() {
       {/* Billing Tab */}
       {activeTab === 'billing' && (
         <div className="max-w-3xl space-y-8">
-          <SettingsSection 
-            title="Plan & Usage" 
-            description="Your current subscription and credit usage"
+          <SettingsSection
+            title="Current Plan"
+            description="Your subscription and usage details"
           >
-            <div className="relative overflow-hidden">
-              <div className="absolute -top-16 -right-16 w-32 h-32 opacity-20">
-                <AbstractBlob className="w-full h-full" />
+            {subscriptionLoading ? (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Loading subscription...
               </div>
-              <div className="relative">
-                <div className="flex items-center justify-between mb-4">
+            ) : (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xl font-bold text-foreground">
-                      {subscriptionLoading ? '...' : currentPlan.name} Plan
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {subscription?.subscribed ? 'Billed monthly' : 'Free tier'}
-                    </p>
-                  </div>
-                  <span className={`px-4 py-1.5 rounded-full text-xs font-semibold border ${
-                    subscription?.subscribed 
-                      ? 'bg-primary/10 text-primary border-primary/20' 
-                      : 'bg-muted text-muted-foreground border-border'
-                  }`}>
-                    {subscription?.subscribed ? 'ACTIVE' : 'FREE'}
-                  </span>
-                </div>
-
-                <div className="space-y-4 mt-6">
-                  <div>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="text-muted-foreground">Credits Used</span>
-                      <span className="text-foreground font-medium">
-                        {subscriptionLoading 
-                          ? '...' 
-                          : `${creditsUsed.toLocaleString()} / ${creditsLimit.toLocaleString()}`}
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-xl font-semibold text-foreground">{currentPlan.name}</h4>
+                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                        {subscription?.plan_id === 'free' ? 'Free' : 'Active'}
                       </span>
                     </div>
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div 
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{ 
-                          width: `${creditsPercentage}%`,
-                          background: creditsPercentage > 90 
-                            ? 'hsl(0 72% 55%)' 
-                            : 'linear-gradient(90deg, hsl(330 100% 63%), hsl(350 90% 65%), hsl(15 95% 60%))'
-                        }} 
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {creditsRemaining} credits remaining this month
-                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">{currentPlan.features[0]}</p>
                   </div>
-
-                  <div className="grid grid-cols-3 gap-4 pt-4">
-                    <div className="text-center p-4 rounded-xl bg-muted/30 border border-border/50">
-                      <p className="text-2xl font-bold text-foreground">
-                        {usageStats.isLoading ? '...' : usageStats.campaignsCount}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Campaigns</p>
-                    </div>
-                    <div className="text-center p-4 rounded-xl bg-muted/30 border border-border/50">
-                      <p className="text-2xl font-bold text-foreground">
-                        {usageStats.isLoading ? '...' : usageStats.leadsCount.toLocaleString()}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Leads Found</p>
-                    </div>
-                    <div className="text-center p-4 rounded-xl bg-muted/30 border border-border/50">
-                      <p className="text-2xl font-bold text-foreground">
-                        ${currentPlan.price}
-                      </p>
-                      <p className="text-xs text-muted-foreground">/month</p>
-                    </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold text-foreground">${currentPlan.price}</p>
+                    {currentPlan.price !== 0 && <p className="text-xs text-muted-foreground">/month</p>}
                   </div>
                 </div>
 
-                <div className="pt-6 flex gap-3">
-                  <Button onClick={() => setShowPricing(true)} className="rounded-xl">
-                    {subscription?.subscribed ? 'Change Plan' : 'Upgrade Plan'}
-                  </Button>
-                  {subscription?.subscribed && (
-                    <Button 
-                      variant="outline" 
-                      className="rounded-xl"
-                      onClick={handleManageBilling}
-                      disabled={managingBilling}
-                    >
-                      {managingBilling ? (
-                        <div className="apple-spinner w-4 h-4" />
-                      ) : (
-                        'Manage Billing'
-                      )}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Credits Used</span>
+                    <span className="font-medium text-foreground">{creditsUsed} / {creditsLimit}</span>
+                  </div>
+                  <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary rounded-full transition-all duration-500"
+                      style={{ width: `${creditsPercentage}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">{creditsRemaining} credits remaining this period</p>
+                </div>
+
+                <div className="flex gap-3">
+                  {subscription?.plan_id === 'free' ? (
+                    <Button onClick={() => setShowPricing(true)} className="apple-button">
+                      Upgrade Plan
                     </Button>
+                  ) : (
+                    <>
+                      <Button onClick={() => setShowPricing(true)} variant="outline" className="rounded-xl">
+                        Change Plan
+                      </Button>
+                      <Button
+                        onClick={handleManageBilling}
+                        variant="outline"
+                        className="rounded-xl"
+                        disabled={managingBilling}
+                      >
+                        {managingBilling ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Loading...
+                          </>
+                        ) : (
+                          <>
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            Manage Billing
+                          </>
+                        )}
+                      </Button>
+                    </>
                   )}
-                  <Button 
-                    variant="ghost" 
-                    className="rounded-xl"
-                    onClick={refreshSubscription}
-                    disabled={subscriptionLoading}
-                  >
-                    Refresh
-                  </Button>
                 </div>
+              </div>
+            )}
+          </SettingsSection>
+
+          <SettingsSection
+            title="Usage Statistics"
+            description="Overview of your platform usage"
+          >
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 rounded-xl bg-muted/50 border border-border">
+                <p className="text-sm text-muted-foreground">Total Candidates</p>
+                <p className="text-2xl font-bold text-foreground mt-1">
+                  {usageStats.isLoading ? '...' : usageStats.leadsCount}
+                </p>
+              </div>
+              <div className="p-4 rounded-xl bg-muted/50 border border-border">
+                <p className="text-sm text-muted-foreground">Job Openings</p>
+                <p className="text-2xl font-bold text-foreground mt-1">
+                  {usageStats.isLoading ? '...' : usageStats.campaignsCount}
+                </p>
+              </div>
+              <div className="p-4 rounded-xl bg-muted/50 border border-border">
+                <p className="text-sm text-muted-foreground">Emails Sent</p>
+                <p className="text-2xl font-bold text-foreground mt-1">
+                  {emailStatsLoading ? '...' : emailStats?.emails_sent_today ?? 0}
+                </p>
+              </div>
+              <div className="p-4 rounded-xl bg-muted/50 border border-border">
+                <p className="text-sm text-muted-foreground">Open Rate</p>
+                <p className="text-2xl font-bold text-foreground mt-1">
+                  {emailStatsLoading ? '...' : `${emailStats?.account_age_days ?? 0} days`}
+                </p>
               </div>
             </div>
           </SettingsSection>
@@ -619,119 +518,28 @@ export function SettingsPage() {
       {/* Integrations Tab */}
       {activeTab === 'integrations' && (
         <div className="max-w-3xl space-y-8">
-          <SettingsSection 
-            title="Email Integration" 
-            description="Connect your email account to send outreach directly"
+          <SettingsSection
+            title="Email Connection"
+            description="Connect your email to send outreach messages"
           >
             <EmailConnectionCard />
-            <p className="text-xs text-muted-foreground mt-4">
-              Connect your Gmail account to send personalized outreach emails directly from your own email address.
-              Replies will come back to your inbox.
-            </p>
-          </SettingsSection>
-
-          {/* Email Safety Stats */}
-          <SettingsSection
-            title="Email Safety"
-            description="Monitor your daily sending activity and recommended limits"
-          >
-            {emailStatsLoading ? (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Loading stats...
-              </div>
-            ) : emailStats?.has_connection ? (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-medium text-foreground">Today's Activity</h4>
-                  <span className={`text-xs font-medium px-2 py-1 rounded ${
-                    emailStats.over_limit
-                      ? 'bg-red-100 text-red-700'
-                      : emailStats.approaching_limit
-                      ? 'bg-amber-100 text-amber-700'
-                      : 'bg-emerald-100 text-emerald-700'
-                  }`}>
-                    {emailStats.emails_sent_today}/{emailStats.recommended_limit} today
-                  </span>
-                </div>
-                <div className="space-y-2 text-sm text-muted-foreground">
-                  <p>Account age: {emailStats.account_age_days} days</p>
-                  <p>Recommended daily limit: {emailStats.recommended_limit} emails</p>
-                  <p className="text-xs">
-                    Limit increases as your account ages (10/day → 50/day over 30 days)
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">Connect your Gmail to see email safety stats.</p>
-            )}
-          </SettingsSection>
-
-          <SettingsSection 
-            title="Email Deliverability" 
-            description="Improve your email sender reputation to avoid spam folders"
-          >
-            <div className="space-y-4">
-              <div className="flex items-start gap-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
-                  <AlertCircle className="w-5 h-5 text-amber-600" />
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-medium text-foreground mb-1">
-                    New Gmail Account? Warm It Up First
-                  </h4>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Sending cold emails from a new or rarely-used Gmail account can land you in spam. 
-                    We recommend using Warmy.io to gradually build your sender reputation before starting outreach.
-                  </p>
-                  <a 
-                    href="https://www.warmy.io" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80"
-                  >
-                    Learn about Warmy.io
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
-                </div>
-              </div>
-              <div className="text-sm text-muted-foreground space-y-2">
-                <p className="font-medium text-foreground">Why email warmup matters:</p>
-                <ul className="list-disc list-inside space-y-1">
-                  <li>Gmail tracks sender reputation - new accounts have none</li>
-                  <li>Sending 50+ cold emails immediately looks like spam</li>
-                  <li>Warmy gradually builds trust by simulating real conversations</li>
-                  <li>Takes 2-4 weeks to warm up a new account properly</li>
-                </ul>
-              </div>
-            </div>
           </SettingsSection>
         </div>
       )}
 
       {/* Company Profile Tab */}
       {activeTab === 'company' && (
-        <div className="max-w-3xl space-y-8">
-          <SettingsSection 
-            title="Company Profile" 
-            description="Define your company identity for AI-generated candidate outreach"
-          >
-            <CompanyProfileTab />
-          </SettingsSection>
-        </div>
-      )}
-      {/* International Tab */}
-      {activeTab === 'international' && (
-        <div className="max-w-3xl space-y-8">
-          <SettingsSection
-            title="International Settings"
-            description="Configure regional preferences for international healthcare recruitment"
-          >
-            <InternationalSettingsTab />
-          </SettingsSection>
+        <div className="max-w-3xl">
+          <CompanyProfileTab />
         </div>
       )}
 
+      {/* International Tab */}
+      {activeTab === 'international' && (
+        <div className="max-w-3xl">
+          <InternationalSettingsTab />
+        </div>
+      )}
 
       {/* Pricing Modal */}
       <Dialog open={showPricing} onOpenChange={setShowPricing}>
