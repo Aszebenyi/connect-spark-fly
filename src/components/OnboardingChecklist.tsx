@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, Circle, ChevronDown, ChevronUp, X, Mail, Building2, Briefcase, Search, Send, Globe } from 'lucide-react';
+import { CheckCircle2, Circle, ChevronDown, ChevronUp, X, Mail, Building2, Briefcase, Search, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
@@ -47,15 +47,6 @@ export function OnboardingChecklist({
   }
 
   const steps = [
-    {
-      id: 'country',
-      title: 'Select your country',
-      description: 'Set your base country for localized recruiting',
-      completed: progress.hasCountrySet,
-      icon: Globe,
-      action: onNavigateToCompanyProfile,
-      actionLabel: 'Set Country',
-    },
     {
       id: 'email',
       title: 'Connect your Gmail',
