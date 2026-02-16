@@ -236,7 +236,7 @@ export function LeadTable({
     toast({ title: 'Export complete', description: `Exported ${target.length} leads to CSV.` });
   };
 
-  const filteredLeads = leads
+  const filteredLeads = useMemo(() => leads
     .filter(lead => {
       // Campaign/job opening filter
       if (campaignLeadIds && !campaignLeadIds.has(lead.id)) return false;
@@ -274,7 +274,7 @@ export function LeadTable({
       return sortDirection === 'asc' 
         ? String(aVal || '').localeCompare(String(bVal || ''))
         : String(bVal || '').localeCompare(String(aVal || ''));
-    });
+    }), [leads, campaignLeadIds, searchQuery, statusFilter, sortField, sortDirection]);
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -738,7 +738,7 @@ export function LeadTable({
                     <td className="p-3 text-right align-middle">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl">
+                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" aria-label={`Actions for ${lead.name}`}>
                             <div className="flex flex-col gap-0.5">
                               <div className="w-1 h-1 rounded-full bg-current" />
                               <div className="w-1 h-1 rounded-full bg-current" />

@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkRateLimit, rateLimitResponse } from '../_shared/rate-limiter.ts';
+import { logError, logInfo } from '../_shared/logger.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -37,7 +39,15 @@ serve(async (req) => {
       );
     }
 
-    console.log('Authenticated user:', claims.claims.sub);
+    logInfo('Authenticated user', { userId: claims.claims.sub, endpoint: 'apify-scrape' });
+
+    // Rate limit check  
+    const supabaseAdmin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+    const rateLimit = await checkRateLimit(supabaseAdmin, claims.claims.sub as string, 'apify-scrape');
+    if (!rateLimit.allowed) {
+      return rateLimitResponse(rateLimit.resetAt, rateLimit.retryAfter!);
+    }
+
     const { linkedinUrl } = await req.json();
     
     const APIFY_API_KEY = Deno.env.get('APIFY_API_KEY');

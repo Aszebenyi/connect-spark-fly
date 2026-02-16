@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkRateLimit, rateLimitResponse } from '../_shared/rate-limiter.ts';
+import { logError, logInfo } from '../_shared/logger.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -187,7 +189,13 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Sending email to ${to} for user ${user.id}`);
+    logInfo('Sending email', { userId: user.id, endpoint: 'send-email', to });
+
+    // Rate limit check
+    const rateLimit = await checkRateLimit(supabaseAdmin, user.id, 'send-email');
+    if (!rateLimit.allowed) {
+      return rateLimitResponse(rateLimit.resetAt, rateLimit.retryAfter!);
+    }
 
     // Validate email body for dangerous HTML patterns
     const dangerousPatterns = [
