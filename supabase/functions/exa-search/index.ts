@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
+import { checkRateLimit, rateLimitResponse } from '../_shared/rate-limiter.ts';
+import { logError, logInfo } from '../_shared/logger.ts';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -394,7 +395,13 @@ Deno.serve(async (req) => {
     }
 
     const userId = user.id;
-    console.log('Authenticated user:', userId);
+    logInfo('Authenticated user', { userId, endpoint: 'exa-search' });
+
+    // Rate limit check
+    const rateLimit = await checkRateLimit(supabase, userId, 'exa-search');
+    if (!rateLimit.allowed) {
+      return rateLimitResponse(rateLimit.resetAt, rateLimit.retryAfter!);
+    }
 
     const body = await req.json();
     
