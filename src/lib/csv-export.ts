@@ -1,4 +1,4 @@
-import { Lead } from '@/types/lead';
+import { Lead } from '@/lib/api';
 
 export function exportLeadsToCSV(leads: Lead[], filename: string = 'leads') {
   // Define CSV headers
@@ -25,8 +25,8 @@ export function exportLeadsToCSV(leads: Lead[], filename: string = 'leads') {
     escapeCSVField(lead.location || ''),
     escapeCSVField(lead.industry || ''),
     escapeCSVField(lead.status || 'new'),
-    escapeCSVField(lead.linkedin || ''),
-    escapeCSVField(formatDate(lead.createdAt)),
+    escapeCSVField(lead.linkedin_url || ''),
+    escapeCSVField(formatDate(lead.created_at)),
   ]);
 
   // Combine headers and rows

@@ -1,7 +1,6 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { COUNTRIES, CountryCode, getCountryFlag } from '@/lib/countries';
-import { Lead } from '@/types/lead';
-import { Campaign, getOutreachMessages, OutreachMessage } from '@/lib/api';
+import { Lead, Campaign, getOutreachMessages, OutreachMessage } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -77,7 +76,7 @@ const statusConfig: Record<string, { label: string; color: string }> = {
 
 // Healthcare data helpers
 function getProfileData(lead: Lead): any {
-  return lead.profile_data || lead.profileData || {};
+  return lead.profile_data || {};
 }
 
 function getProfileField(lead: Lead, field: string): string | null {
@@ -243,8 +242,8 @@ export function LeadTable({
 
       const matchesSearch = 
         lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        lead.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        lead.email.toLowerCase().includes(searchQuery.toLowerCase());
+        (lead.company || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (lead.email || '').toLowerCase().includes(searchQuery.toLowerCase());
       
       const matchesStatus = statusFilter === 'all' || lead.status === statusFilter;
       
@@ -262,8 +261,8 @@ export function LeadTable({
         return sortDirection === 'asc' ? aYrs - bYrs : bYrs - aYrs;
       }
       if (sortField === 'createdAt') {
-        const aDate = new Date(a.createdAt || 0).getTime();
-        const bDate = new Date(b.createdAt || 0).getTime();
+        const aDate = new Date(a.created_at || 0).getTime();
+        const bDate = new Date(b.created_at || 0).getTime();
         return sortDirection === 'asc' ? aDate - bDate : bDate - aDate;
       }
       const aVal = (a as any)[sortField];
@@ -589,14 +588,14 @@ export function LeadTable({
                         <div className="relative">
                           <Avatar className="w-10 h-10 border border-border">
                             <AvatarImage 
-                              src={(lead.profile_data || lead.profileData)?.linkedin?.profilePicture} 
+                              src={lead.profile_data?.linkedin?.profilePicture} 
                               alt={lead.name} 
                             />
                             <AvatarFallback className="text-xs bg-muted text-muted-foreground">
                               {lead.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
-                          {(lead.profile_data || lead.profileData)?.linkedin && (
+                          {lead.profile_data?.linkedin && (
                             <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-card flex items-center justify-center">
                               <CheckCircle2 className="w-2.5 h-2.5 text-white" />
                             </div>
@@ -756,10 +755,10 @@ export function LeadTable({
                               Send Email
                             </DropdownMenuItem>
                           )}
-                          {lead.linkedin && (
+                          {lead.linkedin_url && (
                             <DropdownMenuItem onClick={(e) => {
                               e.stopPropagation();
-                              window.open(lead.linkedin, '_blank');
+                              window.open(lead.linkedin_url, '_blank');
                             }}>
                               View LinkedIn
                             </DropdownMenuItem>
