@@ -42,13 +42,24 @@ async function refreshAccessToken(refreshToken: string): Promise<{ access_token:
   }
 }
 
+function injectTrackingPixel(htmlBody: string, trackingPixelHtml: string): string {
+  // Insert before the closing </td> of the content area
+  const insertPoint = htmlBody.lastIndexOf('</td>');
+  if (insertPoint > -1) {
+    return htmlBody.substring(0, insertPoint) + trackingPixelHtml + htmlBody.substring(insertPoint);
+  }
+  // Fallback: insert before </body>
+  const bodyClose = htmlBody.lastIndexOf('</body>');
+  if (bodyClose > -1) {
+    return htmlBody.substring(0, bodyClose) + trackingPixelHtml + htmlBody.substring(bodyClose);
+  }
+  return htmlBody + trackingPixelHtml;
+}
+
 function wrapInHtmlTemplate(content: string, companyName?: string): string {
-  // Convert plain text to HTML if needed (handles legacy plain text content)
   let htmlContent = content;
   
-  // If content doesn't have HTML tags, convert plain text to HTML
   if (!/<[a-z][\s\S]*>/i.test(content)) {
-    // Convert double line breaks to paragraph breaks
     const paragraphs = content.split(/\n\n+/).filter(p => p.trim());
     htmlContent = paragraphs.map(p => `<p style="margin: 0 0 16px 0;">${p.replace(/\n/g, '<br>')}</p>`).join('');
   }
@@ -97,9 +108,7 @@ function wrapInHtmlTemplate(content: string, companyName?: string): string {
 </html>`;
 }
 
-function createRawEmail(to: string, from: string, subject: string, body: string, companyName?: string): string {
-  const htmlBody = wrapInHtmlTemplate(body, companyName);
-  
+function createRawEmail(to: string, from: string, subject: string, htmlBody: string): string {
   const emailLines = [
     `To: ${to}`,
     `From: ${from}`,
@@ -112,7 +121,6 @@ function createRawEmail(to: string, from: string, subject: string, body: string,
 
   const email = emailLines.join("\r\n");
   
-  // Base64 URL-safe encoding
   const encodedEmail = btoa(email)
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
@@ -122,13 +130,11 @@ function createRawEmail(to: string, from: string, subject: string, body: string,
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Get auth token from header
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(
@@ -137,7 +143,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Create Supabase clients
     const supabaseAdmin = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
     const supabaseClient = createClient(
       SUPABASE_URL!,
@@ -254,7 +259,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Get user's email connection using service role (tokens not exposed to client)
+    // Get user's email connection
     const { data: connection, error: connectionError } = await supabaseAdmin
       .from("email_connections")
       .select("*")
@@ -284,7 +289,6 @@ Deno.serve(async (req) => {
       const refreshResult = await refreshAccessToken(connection.refresh_token);
       
       if (!refreshResult) {
-        // Token refresh failed, user needs to reconnect
         await supabaseAdmin
           .from("email_connections")
           .update({ is_active: false })
@@ -299,7 +303,6 @@ Deno.serve(async (req) => {
       accessToken = refreshResult.access_token;
       const newExpiry = new Date(Date.now() + refreshResult.expires_in * 1000);
 
-      // Update token in database
       await supabaseAdmin
         .from("email_connections")
         .update({
@@ -312,10 +315,53 @@ Deno.serve(async (req) => {
       console.log("Token refreshed successfully");
     }
 
-    // Create the email
-    const rawEmail = createRawEmail(to, connection.email, subject, emailBody, senderCompany);
+    // Get recipient name from leads table if leadId provided
+    let recipientName: string | null = null;
+    if (leadId) {
+      const { data: leadData } = await supabaseAdmin
+        .from("leads")
+        .select("name")
+        .eq("id", leadId)
+        .maybeSingle();
+      recipientName = leadData?.name || null;
+    }
 
-    // Send via Gmail API
+    // Step 1: Insert email_log row BEFORE sending to get the ID for tracking pixel
+    const { data: emailLogEntry, error: logInsertError } = await supabaseAdmin
+      .from("email_log")
+      .insert({
+        user_id: user.id,
+        recipient_email: to,
+        recipient_name: recipientName,
+        subject,
+        body_sent: emailBody,
+        status: 'sending',
+        sent_at: new Date().toISOString(),
+        metadata: {
+          gmail_message_id: null,
+          lead_id: leadId || null,
+          campaign_id: campaignId || null,
+        },
+      })
+      .select('id')
+      .single();
+
+    if (logInsertError) {
+      console.error("Failed to create email_log entry:", logInsertError);
+      // Non-fatal - continue sending without tracking
+    }
+
+    // Step 2: Build HTML with tracking pixel
+    let htmlBody = wrapInHtmlTemplate(emailBody, senderCompany);
+
+    if (emailLogEntry?.id) {
+      const trackingPixel = `<img src="${SUPABASE_URL}/functions/v1/track-email?id=${emailLogEntry.id}&type=open" width="1" height="1" style="display:none" alt="" />`;
+      htmlBody = injectTrackingPixel(htmlBody, trackingPixel);
+    }
+
+    // Step 3: Create and send the email
+    const rawEmail = createRawEmail(to, connection.email, subject, htmlBody);
+
     const sendResponse = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
       method: "POST",
       headers: {
@@ -329,6 +375,15 @@ Deno.serve(async (req) => {
 
     if (sendResult.error) {
       console.error("Gmail API error:", sendResult.error);
+
+      // Update email_log to failed
+      if (emailLogEntry?.id) {
+        await supabaseAdmin
+          .from("email_log")
+          .update({ status: 'failed', error_message: sendResult.error.message || 'Gmail API error' })
+          .eq("id", emailLogEntry.id);
+      }
+
       return new Response(
         JSON.stringify({ error: sendResult.error.message || "Failed to send email" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -336,6 +391,21 @@ Deno.serve(async (req) => {
     }
 
     console.log("Email sent successfully, message ID:", sendResult.id);
+
+    // Step 4: Update email_log with success + gmail message ID
+    if (emailLogEntry?.id) {
+      await supabaseAdmin
+        .from("email_log")
+        .update({
+          status: 'sent',
+          metadata: {
+            gmail_message_id: sendResult.id,
+            lead_id: leadId || null,
+            campaign_id: campaignId || null,
+          },
+        })
+        .eq("id", emailLogEntry.id);
+    }
 
     // Track daily email count
     const today = new Date().toISOString().split("T")[0];
@@ -415,6 +485,7 @@ Deno.serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         messageId: sendResult.id,
+        emailLogId: emailLogEntry?.id || null,
         warning: emailsSentToday >= recommendedLimit ? {
           emails_sent_today: emailsSentToday,
           recommended_limit: recommendedLimit,
