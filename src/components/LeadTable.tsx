@@ -17,7 +17,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { EmptyState } from '@/components/EmptyState';
 import {
   DropdownMenu,
@@ -65,7 +65,6 @@ const statusConfig: Record<string, { label: string; color: string }> = {
   unqualified: { label: 'Unqualified', color: 'bg-muted text-muted-foreground border-border' },
   lost: { label: 'Lost', color: 'bg-muted text-muted-foreground border-border' },
   contacted: { label: 'Contacted', color: 'bg-primary/15 text-primary border-primary/30' },
-  responded: { label: 'Responded', color: 'bg-primary/15 text-primary border-primary/30' },
   interview_scheduled: { label: 'Interview', color: 'bg-primary/15 text-primary border-primary/30' },
   offer_sent: { label: 'Offer Sent', color: 'bg-primary/15 text-primary border-primary/30' },
   replied: { label: 'Replied', color: 'bg-success/15 text-success border-success/30' },
@@ -167,7 +166,7 @@ export function LeadTable({
   onClearStatusFilter,
   activeCampaign,
 }: LeadTableProps) {
-  const { toast } = useToast();
+  
   const isMobile = useIsMobile();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>(initialStatusFilter || 'all');
@@ -258,12 +257,12 @@ export function LeadTable({
   const handleExport = (leadsToExport?: Lead[]) => {
     const target = leadsToExport || filteredLeads;
     if (target.length === 0) {
-      toast({ title: 'No leads to export', description: 'No leads match current filters.', variant: 'destructive' });
+      toast.error('No leads match current filters.');
       return;
     }
     const campaignName = selectedCampaign?.name?.replace(/\s+/g, '-').toLowerCase() || 'all-leads';
     exportLeadsToCSV(target, campaignName);
-    toast({ title: 'Export complete', description: `Exported ${target.length} leads to CSV.` });
+    toast.success(`Exported ${target.length} leads to CSV.`);
   };
 
   const filteredLeads = useMemo(() => leads

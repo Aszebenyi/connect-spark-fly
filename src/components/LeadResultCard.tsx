@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { RingLoader } from '@/components/ui/visual-elements';
 import { Lead, generateOutreach, GeneratedOutreach } from '@/lib/api';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -115,7 +115,7 @@ export function LeadResultCard({ lead, isSelected, onToggleSelect, campaignGoal 
   const [editedSubject, setEditedSubject] = useState('');
   const [editedBody, setEditedBody] = useState('');
   const [isSending, setIsSending] = useState(false);
-  const { toast } = useToast();
+  
   const { isConnected, sendEmail } = useEmailConnection();
   const { subscription } = useAuth();
 
@@ -147,24 +147,13 @@ export function LeadResultCard({ lead, isSelected, onToggleSelect, campaignGoal 
       if (result.success && result.outreach) {
         setOutreach(result.outreach);
         setShowOutreachDialog(true);
-        toast({
-          title: 'Outreach generated!',
-          description: 'Personalized message ready to edit and send',
-        });
+        toast.success('Personalized message ready to edit and send');
       } else {
-        toast({
-          title: 'Generation failed',
-          description: result.error || 'Could not generate outreach',
-          variant: 'destructive',
-        });
+        toast.error(result.error || 'Could not generate outreach');
       }
     } catch (error) {
       console.error('Generate error:', error);
-      toast({
-        title: 'Generation error',
-        description: 'Failed to generate outreach. Please try again.',
-        variant: 'destructive',
-      });
+      toast.error('Failed to generate outreach. Please try again.');
     } finally {
       setIsGenerating(false);
     }
@@ -172,11 +161,7 @@ export function LeadResultCard({ lead, isSelected, onToggleSelect, campaignGoal 
 
   const handleSendEmail = async () => {
     if (!isConnected) {
-      toast({
-        title: 'Gmail not connected',
-        description: 'Please connect your Gmail account first in Settings',
-        variant: 'destructive',
-      });
+      toast.error('Please connect your Gmail account first in Settings');
       return;
     }
 
@@ -192,18 +177,11 @@ export function LeadResultCard({ lead, isSelected, onToggleSelect, campaignGoal 
 
       if (result.success) {
         setShowOutreachDialog(false);
-        toast({
-          title: 'Email sent!',
-          description: `Successfully sent to luukalleman@gmail.com (test mode)`,
-        });
+        toast.success(`Successfully sent to luukalleman@gmail.com (test mode)`);
       }
     } catch (error) {
       console.error('Send error:', error);
-      toast({
-        title: 'Send failed',
-        description: 'Failed to send email. Please try again.',
-        variant: 'destructive',
-      });
+      toast.error('Failed to send email. Please try again.');
     } finally {
       setIsSending(false);
     }
@@ -211,10 +189,7 @@ export function LeadResultCard({ lead, isSelected, onToggleSelect, campaignGoal 
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
-    toast({
-      title: 'Copied!',
-      description: `${label} copied to clipboard`,
-    });
+    toast.success(`${label} copied to clipboard`);
   };
 
   // Build employer + location line

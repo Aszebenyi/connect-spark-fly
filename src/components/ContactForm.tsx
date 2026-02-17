@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { z } from 'zod';
 import { SparkBurst } from '@/components/ui/visual-elements';
 
@@ -28,7 +28,7 @@ export function ContactForm({ onClose }: ContactFormProps) {
   const [errors, setErrors] = useState<Partial<Record<keyof ContactFormData, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const { toast } = useToast();
+  
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -69,10 +69,7 @@ export function ContactForm({ onClose }: ContactFormProps) {
       if (error) throw error;
 
       setIsSuccess(true);
-      toast({
-        title: "Message Sent!",
-        description: "We'll get back to you as soon as possible.",
-      });
+      toast.success("Message sent! We'll get back to you as soon as possible.");
 
       // Close after animation
       setTimeout(() => {
@@ -80,11 +77,7 @@ export function ContactForm({ onClose }: ContactFormProps) {
       }, 2000);
     } catch (error) {
       console.error('Contact form error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send message. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to send message. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

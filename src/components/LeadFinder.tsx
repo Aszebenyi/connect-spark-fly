@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RingLoader, AbstractBlob } from '@/components/ui/visual-elements';
 import medileadLogo from '@/assets/medilead-logo.png';
 import { searchLeadsWithExa, saveLeads, Lead, Campaign, getSavedSearches, createSavedSearch, deleteSavedSearch, SavedSearch } from '@/lib/api';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { LeadResultCard } from './LeadResultCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { Bookmark, X } from 'lucide-react';
@@ -41,7 +41,7 @@ export function LeadFinder({ onLeadsFound, campaigns = [], initialCampaignId, in
   const [selectedLeads, setSelectedLeads] = useState<Set<number>>(new Set());
   const [query, setQuery] = useState('');
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
-  const { toast } = useToast();
+  
   const { subscription, subscriptionLoading } = useAuth();
 
   const creditsRemaining = (subscription?.credits_limit || 0) - (subscription?.credits_used || 0);
@@ -66,10 +66,10 @@ export function LeadFinder({ onLeadsFound, campaigns = [], initialCampaignId, in
     const name = query.trim().substring(0, 40);
     const result = await createSavedSearch(name, query.trim());
     if (result.success) {
-      toast({ title: 'Search saved' });
+      toast.success('Search saved');
       loadSavedSearches();
     } else {
-      toast({ title: 'Failed to save search', variant: 'destructive' });
+      toast.error('Failed to save search');
     }
   };
 
@@ -82,12 +82,12 @@ export function LeadFinder({ onLeadsFound, campaigns = [], initialCampaignId, in
 
   const handleSearch = async () => {
     if (!user) {
-      toast({ title: 'Sign in required', description: 'Please sign in to search for leads.', variant: 'destructive' });
+      toast.error('Please sign in to search for leads.');
       return;
     }
 
     if (!query.trim()) {
-      toast({ title: 'Enter a search query', description: 'Describe who you want to find in plain English', variant: 'destructive' });
+      toast.error('Describe who you want to find in plain English');
       return;
     }
 
@@ -106,35 +106,32 @@ export function LeadFinder({ onLeadsFound, campaigns = [], initialCampaignId, in
 
       if (result.success) {
         if (result.status === 'processing' || result.websetId) {
-          toast({
-            title: 'Search started!',
-            description: activeCampaignId 
+          toast.success(activeCampaignId 
               ? 'Leads will be added to your job opening automatically. This may take 1-2 minutes.'
-              : 'Leads will be saved to your database automatically. This may take 1-2 minutes.',
-          });
+              : 'Leads will be saved to your database automatically. This may take 1-2 minutes.');
           onLeadsFound?.([]);
           setQuery('');
         } else if (result.leads && result.leads.length > 0) {
           setFoundLeads(result.leads);
           setSelectedLeads(new Set(result.leads.map((_, i) => i)));
-          toast({ title: 'Search complete!', description: `Found ${result.leads.length} potential leads` });
+          toast.success(`Found ${result.leads.length} potential leads`);
         } else {
-          toast({ title: 'Search initiated', description: 'Processing your request...' });
+          toast.success('Processing your request...');
         }
       } else {
         if (result.error === 'NO_CREDITS') {
-          toast({ title: 'No credits remaining', description: 'You have used all your credits. Please upgrade your plan to continue.', variant: 'destructive' });
+          toast.error('You have used all your credits. Please upgrade your plan to continue.');
         } else {
-          toast({ title: 'Search failed', description: result.error || 'Unable to start search. Please try again.', variant: 'destructive' });
+          toast.error(result.error || 'Unable to start search. Please try again.');
         }
       }
     } catch (error: any) {
       console.error('Search error:', error);
       const msg = error?.message || '';
       if (msg.includes('402') || msg.toLowerCase().includes('credit')) {
-        toast({ title: 'No credits remaining', description: 'You have used all your credits. Please upgrade your plan to continue.', variant: 'destructive' });
+        toast.error('You have used all your credits. Please upgrade your plan to continue.');
       } else {
-        toast({ title: 'Search error', description: 'Failed to search for leads. Please try again.', variant: 'destructive' });
+        toast.error('Failed to search for leads. Please try again.');
       }
     } finally {
       setIsSearching(false);
@@ -155,7 +152,7 @@ export function LeadFinder({ onLeadsFound, campaigns = [], initialCampaignId, in
   const handleSaveLeads = async () => {
     const leadsToSave = foundLeads.filter((_, i) => selectedLeads.has(i));
     if (leadsToSave.length === 0) {
-      toast({ title: 'No leads selected', description: 'Please select at least one lead to save', variant: 'destructive' });
+      toast.error('Please select at least one lead to save');
       return;
     }
 
@@ -163,22 +160,19 @@ export function LeadFinder({ onLeadsFound, campaigns = [], initialCampaignId, in
     try {
       const result = await saveLeads(leadsToSave, activeCampaignId);
       if (result.success) {
-        toast({
-          title: 'Leads saved!',
-          description: activeCampaignId 
+        toast.success(activeCampaignId 
             ? `${leadsToSave.length} leads added to "${activeCampaignName}"`
-            : `${leadsToSave.length} leads added to your database`,
-        });
+            : `${leadsToSave.length} leads added to your database`);
         onLeadsFound?.(leadsToSave);
         setFoundLeads([]);
         setSelectedLeads(new Set());
         setQuery('');
       } else {
-        toast({ title: 'Save failed', description: result.error || 'Failed to save leads', variant: 'destructive' });
+        toast.error(result.error || 'Failed to save leads');
       }
     } catch (error) {
       console.error('Save error:', error);
-      toast({ title: 'Save error', description: 'Failed to save leads. Please try again.', variant: 'destructive' });
+      toast.error('Failed to save leads. Please try again.');
     } finally {
       setIsSaving(false);
     }
