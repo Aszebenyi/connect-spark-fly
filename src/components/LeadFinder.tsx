@@ -49,9 +49,15 @@ export function LeadFinder({ onLeadsFound, campaigns = [], initialCampaignId, in
 
   const { user, refreshSubscription } = useAuth();
 
-  // Load saved searches
+  // Load saved searches + check for pending search from landing page
   useEffect(() => {
     loadSavedSearches();
+    const pendingSearch = sessionStorage.getItem('pendingSearch');
+    if (pendingSearch) {
+      setQuery(pendingSearch);
+      sessionStorage.removeItem('pendingSearch');
+      toast.success('Welcome! We found your search — run it again to see full results with contact details.');
+    }
   }, []);
 
   const loadSavedSearches = async () => {
