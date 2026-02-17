@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Lead } from '@/lib/api';
+import { Lead, getLeadNotes, createLeadNote, deleteLeadNote, LeadNote } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -35,12 +35,19 @@ import {
   ChevronDown,
   Eye,
   MousePointerClick,
+  MessageSquare,
+  PhoneCall,
+  CalendarCheck,
+  ArrowRightLeft,
+  Trash2,
+  Plus,
 } from 'lucide-react';
 import { enrichLeadWithLinkedIn, LinkedInProfile, getOutreachMessages, OutreachMessage } from '@/lib/api';
 import { toast } from 'sonner';
 import { useEmailConnection } from '@/hooks/useEmailConnection';
 import { generateOutreach, GeneratedOutreach } from '@/lib/api';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 
 interface LeadDetailSheetProps {
@@ -92,6 +99,172 @@ const StatPill = ({ icon: Icon, children, color = "muted" }: { icon: any; childr
     </span>
   );
 };
+
+// Helper for relative time
+function timeAgo(dateStr: string): string {
+  const now = new Date();
+  const date = new Date(dateStr);
+  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  if (seconds < 60) return 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return date.toLocaleDateString();
+}
+
+const noteTypeConfig: Record<string, { icon: any; label: string; isSystem: boolean }> = {
+  note: { icon: MessageSquare, label: 'Note', isSystem: false },
+  call: { icon: PhoneCall, label: 'Call', isSystem: false },
+  meeting: { icon: CalendarCheck, label: 'Meeting', isSystem: false },
+  status_change: { icon: ArrowRightLeft, label: 'Status Change', isSystem: true },
+  email_sent: { icon: Mail, label: 'Email Sent', isSystem: true },
+  system: { icon: Sparkles, label: 'System', isSystem: true },
+};
+
+function ActivityNotesSection({ leadId }: { leadId: string }) {
+  const [notes, setNotes] = useState<LeadNote[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [newNote, setNewNote] = useState('');
+  const [noteType, setNoteType] = useState('note');
+  const [isAdding, setIsAdding] = useState(false);
+  const { user } = useAuth();
+
+  const loadNotes = async () => {
+    const result = await getLeadNotes(leadId);
+    if (result.success && result.notes) setNotes(result.notes);
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    loadNotes();
+  }, [leadId]);
+
+  const handleAddNote = async () => {
+    if (!newNote.trim()) return;
+    setIsAdding(true);
+    const result = await createLeadNote(leadId, newNote.trim(), noteType);
+    if (result.success) {
+      setNewNote('');
+      loadNotes();
+    } else {
+      toast.error(result.error || 'Failed to add note');
+    }
+    setIsAdding(false);
+  };
+
+  const handleDelete = async (noteId: string) => {
+    const result = await deleteLeadNote(noteId);
+    if (result.success) loadNotes();
+    else toast.error('Failed to delete note');
+  };
+
+  return (
+    <Section>
+      <SectionHeader icon={MessageSquare} count={notes.length}>Activity & Notes</SectionHeader>
+      
+      {/* Add note form */}
+      <div className="space-y-2">
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <textarea
+              value={newNote}
+              onChange={(e) => setNewNote(e.target.value)}
+              placeholder="Add a note..."
+              rows={2}
+              className="w-full px-3 py-2 rounded-xl bg-muted/30 border border-border/50 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground"
+            />
+          </div>
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="flex gap-1">
+            {(['note', 'call', 'meeting'] as const).map((type) => {
+              const config = noteTypeConfig[type];
+              const TypeIcon = config.icon;
+              return (
+                <button
+                  key={type}
+                  onClick={() => setNoteType(type)}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs transition-colors ${
+                    noteType === type
+                      ? 'bg-primary/10 text-primary border border-primary/20'
+                      : 'bg-muted/30 text-muted-foreground border border-transparent hover:bg-muted/50'
+                  }`}
+                >
+                  <TypeIcon className="w-3 h-3" />
+                  {config.label}
+                </button>
+              );
+            })}
+          </div>
+          <Button
+            size="sm"
+            onClick={handleAddNote}
+            disabled={!newNote.trim() || isAdding}
+            className="rounded-xl gap-1.5 h-7 text-xs"
+          >
+            {isAdding ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+            Add
+          </Button>
+        </div>
+      </div>
+
+      {/* Timeline */}
+      {isLoading ? (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          Loading...
+        </div>
+      ) : notes.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No activity yet</p>
+      ) : (
+        <div className="space-y-1 relative">
+          <div className="absolute left-3 top-2 bottom-2 w-px bg-border/50" />
+          {notes.map((note) => {
+            const config = noteTypeConfig[note.note_type] || noteTypeConfig.note;
+            const NoteIcon = config.icon;
+            const isSystem = config.isSystem;
+            return (
+              <div key={note.id} className="relative pl-8 group">
+                <div className={`absolute left-1.5 top-2.5 w-3 h-3 rounded-full z-10 flex items-center justify-center ${
+                  isSystem ? 'bg-muted border border-border' : 'bg-primary/20 border-2 border-primary'
+                }`}>
+                  <NoteIcon className="w-1.5 h-1.5 text-muted-foreground" style={{ display: 'none' }} />
+                </div>
+                <div className={`py-2 px-3 rounded-lg border-l-2 ${
+                  isSystem ? 'border-l-muted-foreground/30' : 'border-l-primary/50'
+                }`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <p className={`text-sm leading-relaxed ${isSystem ? 'text-muted-foreground italic' : 'text-foreground'}`}>
+                      {note.content}
+                    </p>
+                    {note.user_id === user?.id && !isSystem && (
+                      <button
+                        onClick={() => handleDelete(note.id)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-destructive/10"
+                      >
+                        <Trash2 className="w-3 h-3 text-destructive" />
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                      <NoteIcon className="w-2.5 h-2.5" />
+                      {config.label}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">{timeAgo(note.created_at)}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Section>
+  );
+}
 
 export function LeadDetailSheet({ lead, open, onClose, onLeadUpdated }: LeadDetailSheetProps) {
   const [isEnriching, setIsEnriching] = useState(false);
@@ -631,59 +804,43 @@ export function LeadDetailSheet({ lead, open, onClose, onLeadUpdated }: LeadDeta
                     const logKey = `${msg.subject}|${msg.sent_at?.substring(0, 16)}`;
                     const logData = emailLogMap[logKey];
                     return (
-                    <div key={msg.id} className="relative pl-8">
-                      <div className="absolute left-3.5 top-3 w-3 h-3 rounded-full bg-primary/20 border-2 border-primary z-10" />
-                      <ItemCard hover className="cursor-pointer" onClick={() => setExpandedEmailId(expandedEmailId === msg.id ? null : msg.id!)}>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs text-muted-foreground">
-                            ✉️ {msg.sent_at ? new Date(msg.sent_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Draft'}
-                          </span>
-                          <div className="flex items-center gap-1.5">
-                            {logData?.opened_at && (
-                              <span className="inline-flex items-center gap-1 text-[10px] text-emerald-500">
-                                <Eye className="w-3 h-3" />
-                                Opened
-                              </span>
-                            )}
-                            {logData?.clicked_at && (
-                              <span className="inline-flex items-center gap-1 text-[10px] text-blue-500">
-                                <MousePointerClick className="w-3 h-3" />
-                                Clicked
-                              </span>
-                            )}
-                            <Badge variant="outline" className="text-[10px] capitalize">{msg.status || 'sent'}</Badge>
+                      <div key={msg.id} className="relative pl-8">
+                        <div className="absolute left-3.5 top-3 w-3 h-3 rounded-full bg-primary/20 border-2 border-primary z-10" />
+                        <ItemCard hover className="cursor-pointer" onClick={() => setExpandedEmailId(expandedEmailId === msg.id ? null : msg.id!)}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs text-muted-foreground">
+                              ✉️ {msg.sent_at ? new Date(msg.sent_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Draft'}
+                            </span>
+                            <div className="flex items-center gap-1.5">
+                              {logData?.opened_at && (
+                                <span className="inline-flex items-center gap-1 text-[10px] text-emerald-500">
+                                  <Eye className="w-3 h-3" />
+                                  Opened
+                                </span>
+                              )}
+                              {logData?.clicked_at && (
+                                <span className="inline-flex items-center gap-1 text-[10px] text-blue-500">
+                                  <MousePointerClick className="w-3 h-3" />
+                                  Clicked
+                                </span>
+                              )}
+                              <Badge variant="outline" className="text-[10px] capitalize">{msg.status || 'sent'}</Badge>
+                            </div>
                           </div>
-                        </div>
-                        <p className="text-sm font-medium text-foreground truncate">{msg.subject || 'No subject'}</p>
-                        {expandedEmailId === msg.id && (
-                          <p className="text-xs text-muted-foreground mt-2 whitespace-pre-wrap">{msg.body}</p>
-                        )}
-                      </ItemCard>
-                    </div>
+                          <p className="text-sm font-medium text-foreground truncate">{msg.subject || 'No subject'}</p>
+                          {expandedEmailId === msg.id && (
+                            <p className="text-xs text-muted-foreground mt-2 whitespace-pre-wrap">{msg.body}</p>
+                          )}
+                        </ItemCard>
+                      </div>
                     );
                   })}
-                  ))}
                 </div>
               )}
             </Section>
 
-            <Section>
-              <SectionHeader icon={Calendar}>Activity</SectionHeader>
-              <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                <span>Added {lead.created_at ? new Date(lead.created_at).toLocaleDateString() : '—'}</span>
-                {lead.updated_at && (
-                  <span>Last updated {new Date(lead.updated_at).toLocaleDateString()}</span>
-                )}
-              </div>
-            </Section>
-
-            {/* Notes */}
-            {lead.profile_data?.summary && (
-              <Section>
-                <SectionHeader icon={Calendar}>Notes</SectionHeader>
-                <p className="text-sm text-muted-foreground">{lead.profile_data.summary}</p>
-              </Section>
-            )}
+            {/* Activity & Notes */}
+            <ActivityNotesSection leadId={lead.id} />
           </div>
         </div>
 

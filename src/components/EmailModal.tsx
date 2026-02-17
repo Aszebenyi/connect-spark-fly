@@ -91,6 +91,9 @@ export function EmailModal({ lead, campaign, isOpen, onClose, onSent }: EmailMod
 
       if (result.success) {
         toast({ title: `Email sent to ${lead.name}` });
+        // Auto-log email sent as a note
+        const { createLeadNote } = await import('@/lib/api');
+        createLeadNote(lead.id, `Email sent: ${subject}`, 'email_sent');
         onSent();
         onClose();
       }

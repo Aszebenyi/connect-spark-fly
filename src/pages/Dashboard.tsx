@@ -129,7 +129,13 @@ export default function Index() {
 
   const handleStatusChange = async (leadId: string, newStatus: string) => {
     const result = await updateLeadStatus(leadId, newStatus);
-    if (result.success) { loadData(); toast({ title: 'Status updated' }); }
+    if (result.success) {
+      loadData();
+      toast({ title: 'Status updated' });
+      // Auto-log status change as a note
+      const { createLeadNote } = await import('@/lib/api');
+      createLeadNote(leadId, `Status changed to ${newStatus}`, 'status_change');
+    }
     else toast({ title: 'Failed to update status', variant: 'destructive' });
   };
 
