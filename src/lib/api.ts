@@ -668,3 +668,56 @@ export async function addToDoNotContact(email: string): Promise<{ success: boole
 
   return { success: true };
 }
+
+// Saved Search functions
+export interface SavedSearch {
+  id: string;
+  user_id: string;
+  name: string;
+  query: string;
+  created_at: string;
+}
+
+export async function getSavedSearches(): Promise<{ success: boolean; searches?: SavedSearch[]; error?: string }> {
+  const { data, error } = await supabase
+    .from('saved_searches')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Get saved searches error:', error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true, searches: data as unknown as SavedSearch[] };
+}
+
+export async function createSavedSearch(name: string, query: string): Promise<{ success: boolean; error?: string }> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { error } = await supabase
+    .from('saved_searches')
+    .insert({ user_id: user.id, name, query });
+
+  if (error) {
+    console.error('Create saved search error:', error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+
+export async function deleteSavedSearch(id: string): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase
+    .from('saved_searches')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Delete saved search error:', error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}

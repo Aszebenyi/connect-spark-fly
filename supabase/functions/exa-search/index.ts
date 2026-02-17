@@ -562,25 +562,25 @@ Deno.serve(async (req) => {
 
       console.log('Valid lead found:', parsed.name, '| Title:', parsed.title, '| Certs:', parsed.certifications, '| Licenses:', parsed.licenses, '| Specialty:', parsed.specialty);
 
-      // Check for duplicate in same campaign
+      // Check for duplicate across ALL user's leads (user-wide dedup)
       let existingLead = null;
       
-      if (parsed.linkedin_url && campaignId) {
+      if (parsed.linkedin_url) {
         const { data } = await supabase
           .from('leads')
           .select('id')
           .eq('linkedin_url', parsed.linkedin_url)
-          .eq('campaign_id', campaignId)
+          .eq('user_id', userId)
           .maybeSingle();
         existingLead = data;
       }
       
-      if (!existingLead && parsed.email && campaignId) {
+      if (!existingLead && parsed.email) {
         const { data } = await supabase
           .from('leads')
           .select('id')
           .eq('email', parsed.email)
-          .eq('campaign_id', campaignId)
+          .eq('user_id', userId)
           .maybeSingle();
         existingLead = data;
       }
@@ -605,19 +605,30 @@ Deno.serve(async (req) => {
       };
 
       if (existingLead) {
-        const { error: updateError } = await supabase
-          .from('leads')
-          .update(leadData)
-          .eq('id', existingLead.id);
-        
-        if (updateError) {
-          console.error('Error updating lead:', updateError);
-          skippedCount++;
+        // Duplicate found — don't re-insert, don't charge credit
+        // If campaignId provided, link existing lead to this campaign
+        if (campaignId) {
+          const { data: existingAssignment } = await supabase
+            .from('lead_campaign_assignments')
+            .select('id')
+            .eq('lead_id', existingLead.id)
+            .eq('campaign_id', campaignId)
+            .maybeSingle();
+
+          if (!existingAssignment) {
+            await supabase
+              .from('lead_campaign_assignments')
+              .insert({ lead_id: existingLead.id, campaign_id: campaignId, assigned_by: userId });
+            console.log(`Lead ${parsed.name} already exists, linked to campaign instead of re-created`);
+          } else {
+            console.log(`Lead ${parsed.name} already exists and already assigned to campaign`);
+          }
         } else {
-          console.log('Lead updated:', parsed.name);
-          savedCount++;
-          savedLeadsForScoring.push({ id: existingLead.id, name: parsed.name, title: parsed.title, certifications: certs, licenses: lics, specialty: spec, location: parsed.location, text: result.text || '' });
+          console.log(`Lead ${parsed.name} already exists, skipping (no campaign to link)`);
         }
+        // Add to scoring list but don't increment savedCount (no credit charge)
+        savedLeadsForScoring.push({ id: existingLead.id, name: parsed.name, title: parsed.title, certifications: certs, licenses: lics, specialty: spec, location: parsed.location, text: result.text || '' });
+        skippedCount++;
       } else {
         const { data: insertedLead, error: insertError } = await supabase
           .from('leads')
@@ -631,7 +642,14 @@ Deno.serve(async (req) => {
         } else {
           console.log('Lead inserted:', parsed.name);
           savedCount++;
+
           if (insertedLead) {
+            // Auto-assign to campaign via junction table
+            if (campaignId) {
+              await supabase
+                .from('lead_campaign_assignments')
+                .insert({ lead_id: insertedLead.id, campaign_id: campaignId, assigned_by: userId });
+            }
             savedLeadsForScoring.push({ id: insertedLead.id, name: parsed.name, title: parsed.title, certifications: certs, licenses: lics, specialty: spec, location: parsed.location, text: result.text || '' });
           }
         }
