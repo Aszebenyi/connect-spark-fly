@@ -226,6 +226,7 @@ export type Database = {
           opened_at: string | null
           recipient_email: string
           recipient_name: string | null
+          replied_at: string | null
           sent_at: string | null
           sequence_id: string | null
           status: string | null
@@ -243,6 +244,7 @@ export type Database = {
           opened_at?: string | null
           recipient_email: string
           recipient_name?: string | null
+          replied_at?: string | null
           sent_at?: string | null
           sequence_id?: string | null
           status?: string | null
@@ -260,6 +262,7 @@ export type Database = {
           opened_at?: string | null
           recipient_email?: string
           recipient_name?: string | null
+          replied_at?: string | null
           sent_at?: string | null
           sequence_id?: string | null
           status?: string | null
@@ -703,6 +706,7 @@ export type Database = {
           currency: string | null
           date_format: string | null
           email: string | null
+          email_preferences: Json | null
           full_name: string | null
           id: string
           international_recruiting: boolean | null
@@ -717,6 +721,7 @@ export type Database = {
           currency?: string | null
           date_format?: string | null
           email?: string | null
+          email_preferences?: Json | null
           full_name?: string | null
           id?: string
           international_recruiting?: boolean | null
@@ -731,6 +736,7 @@ export type Database = {
           currency?: string | null
           date_format?: string | null
           email?: string | null
+          email_preferences?: Json | null
           full_name?: string | null
           id?: string
           international_recruiting?: boolean | null
