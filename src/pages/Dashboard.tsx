@@ -25,13 +25,12 @@ import {
   assignLeadsToCampaign,
   removeLeadsFromCampaign,
   deleteLeads,
-  Lead as ApiLead, 
+  Lead, 
   Campaign,
   LeadCampaignAssignment,
   updateLeadStatus,
   deleteLead,
 } from '@/lib/api';
-import { Lead as LegacyLead } from '@/types/lead';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscriptionRealtime } from '@/hooks/useSubscriptionRealtime';
@@ -42,8 +41,8 @@ export default function Index() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [statusFilterFromStats, setStatusFilterFromStats] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [selectedLead, setSelectedLead] = useState<LegacyLead | null>(null);
-  const [dbLeads, setDbLeads] = useState<ApiLead[]>([]);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [dbLeads, setDbLeads] = useState<Lead[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [assignments, setAssignments] = useState<LeadCampaignAssignment[]>([]);
   const [stats, setStats] = useState({ totalLeads: 0, contacted: 0, replied: 0, qualified: 0 });
@@ -148,24 +147,7 @@ export default function Index() {
     }
   }, [user]);
 
-  const convertedLeads: LegacyLead[] = dbLeads.map((lead) => ({
-    id: lead.id || '',
-    name: lead.name,
-    email: lead.email || '',
-    company: lead.company || '',
-    title: lead.title || '',
-    status: (lead.status as LegacyLead['status']) || 'new',
-    score: lead.profile_data?.exa_score ? Math.round(lead.profile_data.exa_score * 100) : 75,
-    lastContact: lead.updated_at || null,
-    tags: lead.industry ? [lead.industry] : [],
-    phone: lead.phone,
-    linkedin: lead.linkedin_url,
-    notes: lead.profile_data?.summary,
-    location: lead.location,
-    industry: lead.industry || '',
-    createdAt: lead.created_at || new Date().toISOString(),
-    profile_data: lead.profile_data, // Pass the full profile_data for enrichment display
-  }));
+  // Pass dbLeads directly — no conversion needed with unified Lead type
 
   const handleLeadsFound = () => {
     loadData();
@@ -194,35 +176,14 @@ export default function Index() {
   };
 
   const handleLeadUpdated = async () => {
-    // Refresh all data from the database
     const leadsResult = await getLeads();
     if (leadsResult.success && leadsResult.leads) {
       setDbLeads(leadsResult.leads);
       
-      // If a lead is currently selected, update it with fresh data
       if (selectedLead) {
         const freshLead = leadsResult.leads.find(l => l.id === selectedLead.id);
         if (freshLead) {
-          // Convert to LegacyLead format and update selectedLead
-          const updatedLead: LegacyLead = {
-            id: freshLead.id || '',
-            name: freshLead.name,
-            email: freshLead.email || '',
-            company: freshLead.company || '',
-            title: freshLead.title || '',
-            status: (freshLead.status as LegacyLead['status']) || 'new',
-            score: freshLead.profile_data?.exa_score ? Math.round(freshLead.profile_data.exa_score * 100) : 75,
-            lastContact: freshLead.updated_at || null,
-            tags: freshLead.industry ? [freshLead.industry] : [],
-            phone: freshLead.phone,
-            linkedin: freshLead.linkedin_url,
-            notes: freshLead.profile_data?.summary,
-            location: freshLead.location,
-            industry: freshLead.industry || '',
-            createdAt: freshLead.created_at || new Date().toISOString(),
-            profile_data: freshLead.profile_data,
-          };
-          setSelectedLead(updatedLead);
+          setSelectedLead(freshLead);
         }
       }
     }
@@ -527,7 +488,7 @@ export default function Index() {
             )}
 
             {/* Empty State */}
-            {convertedLeads.length === 0 && campaigns.length === 0 && (
+            {dbLeads.length === 0 && campaigns.length === 0 && (
               <div className="bg-card border border-border rounded-lg p-12 text-center animate-fade-in-up">
                    <h3 className="text-2xl font-semibold text-foreground mb-3">Welcome to {appName}</h3>
                    <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
@@ -588,7 +549,7 @@ export default function Index() {
               ))}
             </div>
             <LeadTable 
-              leads={convertedLeads}
+              leads={dbLeads}
               campaigns={campaigns}
               assignments={assignments}
               selectedCampaignId={selectedCampaignId}

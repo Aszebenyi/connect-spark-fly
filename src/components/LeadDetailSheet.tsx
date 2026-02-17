@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Lead } from '@/types/lead';
+import { Lead } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -106,7 +106,7 @@ export function LeadDetailSheet({ lead, open, onClose, onLeadUpdated }: LeadDeta
   // Sync local state when lead changes or when sheet opens
   useEffect(() => {
     if (lead && open) {
-      setLocalProfileData(lead.profile_data || lead.profileData || null);
+      setLocalProfileData(lead.profile_data || null);
       // Load email history
       setIsLoadingHistory(true);
       getOutreachMessages(lead.id).then(result => {
@@ -134,7 +134,7 @@ export function LeadDetailSheet({ lead, open, onClose, onLeadUpdated }: LeadDeta
   const profileData = localProfileData;
   const linkedinData: LinkedInProfile | null = profileData?.linkedin || null;
   const isEnriched = !!linkedinData;
-  const linkedinUrl = lead.linkedin || profileData?.linkedin?.linkedinUrl;
+  const linkedinUrl = lead.linkedin_url || profileData?.linkedin?.linkedinUrl;
   const enrichedAt = profileData?.linkedin_enriched_at;
   const exaEnrichments = profileData?.enrichments || [];
 
@@ -287,7 +287,9 @@ export function LeadDetailSheet({ lead, open, onClose, onLeadUpdated }: LeadDeta
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-2xl bg-muted/30 border border-border/50 p-4">
                 <p className="text-xs text-muted-foreground uppercase tracking-wider">Score</p>
-                <p className="text-2xl font-bold text-foreground mt-1">{lead.score}</p>
+                <p className="text-2xl font-bold text-foreground mt-1">
+                  {lead.profile_data?.match_score ?? (lead.profile_data?.exa_score ? Math.round(lead.profile_data.exa_score * 100) : '—')}
+                </p>
               </div>
               <div className="rounded-2xl bg-muted/30 border border-border/50 p-4">
                 <p className="text-xs text-muted-foreground uppercase tracking-wider">Status</p>
@@ -627,18 +629,18 @@ export function LeadDetailSheet({ lead, open, onClose, onLeadUpdated }: LeadDeta
             <Section>
               <SectionHeader icon={Calendar}>Activity</SectionHeader>
               <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                <span>Added {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString() : '—'}</span>
-                {lead.lastContact && (
-                  <span>Last contact {new Date(lead.lastContact).toLocaleDateString()}</span>
+                <span>Added {lead.created_at ? new Date(lead.created_at).toLocaleDateString() : '—'}</span>
+                {lead.updated_at && (
+                  <span>Last updated {new Date(lead.updated_at).toLocaleDateString()}</span>
                 )}
               </div>
             </Section>
 
             {/* Notes */}
-            {lead.notes && (
+            {lead.profile_data?.summary && (
               <Section>
                 <SectionHeader icon={Calendar}>Notes</SectionHeader>
-                <p className="text-sm text-muted-foreground">{lead.notes}</p>
+                <p className="text-sm text-muted-foreground">{lead.profile_data.summary}</p>
               </Section>
             )}
           </div>

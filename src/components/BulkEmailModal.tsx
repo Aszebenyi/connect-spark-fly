@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Lead } from '@/types/lead';
-import { Campaign } from '@/lib/api';
+import { Lead, Campaign } from '@/lib/api';
 import {
   Dialog,
   DialogContent,
@@ -38,7 +37,7 @@ interface PersonalizedEmail {
 }
 
 function getProfileField(lead: Lead, field: string): string | null {
-  const pd = lead.profile_data || lead.profileData || {};
+  const pd = lead.profile_data || {};
   return pd[field] || null;
 }
 
@@ -68,11 +67,12 @@ export function BulkEmailModal({ leads, campaign, isOpen, onClose, onSent }: Bul
       try {
         const result = await generateOutreach({
           lead: {
+            id: lead.id,
             name: lead.name,
             title: lead.title,
             company: lead.company,
             email: lead.email,
-            profile_data: lead.profile_data || lead.profileData,
+            profile_data: lead.profile_data,
           },
           campaignGoal: campaign?.goal || campaign?.name,
           tone: 'professional',

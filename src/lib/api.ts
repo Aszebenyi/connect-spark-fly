@@ -1,7 +1,29 @@
 import { supabase } from '@/integrations/supabase/client';
 
+export interface ProfileData {
+  source?: string;
+  exa_id?: string;
+  exa_score?: number;
+  match_score?: number;
+  license_match?: boolean;
+  cert_match?: boolean;
+  experience_match?: boolean;
+  location_match?: boolean;
+  certifications?: string | null;
+  licenses?: string | null;
+  specialty?: string | null;
+  scoring_notes?: string;
+  years_experience?: number;
+  summary?: string;
+  headline?: string;
+  linkedin?: LinkedInProfile;
+  linkedin_enriched_at?: string;
+  enrichments?: any[];
+  [key: string]: any;
+}
+
 export interface Lead {
-  id?: string;
+  id: string;
   name: string;
   title?: string;
   company?: string;
@@ -10,7 +32,7 @@ export interface Lead {
   linkedin_url?: string;
   location?: string;
   industry?: string;
-  profile_data?: any;
+  profile_data?: ProfileData;
   status?: string;
   campaign_id?: string;
   user_id?: string;
@@ -188,7 +210,7 @@ export async function getLeadsByCampaign(campaignId: string): Promise<{ success:
     return { success: false, error: error.message };
   }
 
-  return { success: true, leads: data };
+  return { success: true, leads: data as unknown as Lead[] };
 }
 
 export async function getLeads(): Promise<{ success: boolean; leads?: Lead[]; error?: string }> {
@@ -202,7 +224,7 @@ export async function getLeads(): Promise<{ success: boolean; leads?: Lead[]; er
     return { success: false, error: error.message };
   }
 
-  return { success: true, leads: data };
+  return { success: true, leads: data as unknown as Lead[] };
 }
 
 export async function updateLeadStatus(
