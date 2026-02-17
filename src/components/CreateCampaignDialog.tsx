@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { ArrowRight, ArrowLeft, Sparkles, Target, Search, Check, Users, Zap, Eye, Loader2, Link, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { trackEvent } from '@/lib/analytics';
 
 interface CampaignData {
   id?: string;
@@ -228,6 +229,7 @@ export function CreateCampaignDialog({ open, onOpenChange, onCreated }: CreateCa
       }
 
       const campaignId = campaignResult.campaign.id;
+      trackEvent('opening_created', { name: name.trim() });
       const campaignData: CampaignData = {
         id: campaignId,
         name: name.trim(),

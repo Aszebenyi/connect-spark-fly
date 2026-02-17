@@ -48,6 +48,7 @@ import { useEmailConnection } from '@/hooks/useEmailConnection';
 import { generateOutreach, GeneratedOutreach } from '@/lib/api';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { trackEvent } from '@/lib/analytics';
 
 
 interface LeadDetailSheetProps {
@@ -284,6 +285,7 @@ export function LeadDetailSheet({ lead, open, onClose, onLeadUpdated }: LeadDeta
   // Sync local state when lead changes or when sheet opens
   useEffect(() => {
     if (lead && open) {
+      trackEvent('candidate_viewed', { leadId: lead.id });
       setLocalProfileData(lead.profile_data || null);
       setIsLoadingHistory(true);
       

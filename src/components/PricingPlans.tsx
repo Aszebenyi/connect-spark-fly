@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { PLANS, PlanId } from '@/lib/plans';
 import { cn } from '@/lib/utils';
+import { trackEvent } from '@/lib/analytics';
 
 interface PricingPlansProps {
   onClose?: () => void;
@@ -20,6 +21,7 @@ export function PricingPlans({ onClose }: PricingPlansProps) {
     if (!plan.priceId) return;
 
     setLoadingPlan(planId);
+    trackEvent('plan_selected', { planId });
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: { priceId: plan.priceId },

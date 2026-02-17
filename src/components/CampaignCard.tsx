@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Campaign, updateCampaign, deleteCampaign } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -32,6 +33,7 @@ const statusConfig = {
 export function CampaignCard({ campaign, onUpdate, onViewLeads, onFindMoreLeads, className }: CampaignCardProps) {
   const [isUpdating, setIsUpdating] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   const { newLeadsCount, latestLead } = useLeadSubscription({
     campaignId: campaign.id,
@@ -82,7 +84,9 @@ export function CampaignCard({ campaign, onUpdate, onViewLeads, onFindMoreLeads,
   const handleCardClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
     if (target.closest('button') || target.closest('[role="menuitem"]')) return;
-    onViewLeads?.(campaign);
+    if (campaign.id) {
+      navigate(`/opening/${campaign.id}`);
+    }
   };
 
   return (

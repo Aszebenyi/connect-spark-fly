@@ -19,6 +19,7 @@ const Terms = lazy(() => import('./pages/Terms'));
 const Privacy = lazy(() => import('./pages/Privacy'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const Explainer = lazy(() => import('./pages/Explainer'));
+const OpeningDetail = lazy(() => import('./pages/OpeningDetail'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 function PageLoader() {
@@ -61,6 +62,7 @@ const App = () => (
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/explainer" element={<Explainer />} />
+                <Route path="/opening/:id" element={<OpeningDetail />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

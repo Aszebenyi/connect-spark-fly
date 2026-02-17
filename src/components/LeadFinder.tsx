@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { LeadResultCard } from './LeadResultCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { Bookmark, X } from 'lucide-react';
+import { trackEvent } from '@/lib/analytics';
 
 interface LeadFinderProps {
   onLeadsFound?: (leads: Lead[]) => void;
@@ -93,6 +94,7 @@ export function LeadFinder({ onLeadsFound, campaigns = [], initialCampaignId, in
     setIsSearching(true);
     setFoundLeads([]);
     setSelectedLeads(new Set());
+    trackEvent('search_performed', { query: query.trim(), campaignId: activeCampaignId });
 
     await refreshSubscription();
 
