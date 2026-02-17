@@ -707,8 +707,10 @@ export type Database = {
           date_format: string | null
           email: string | null
           email_preferences: Json | null
+          email_signature: string | null
           full_name: string | null
           id: string
+          include_signature: boolean | null
           international_recruiting: boolean | null
           onboarding_completed: boolean | null
           recruit_countries: string[] | null
@@ -723,8 +725,10 @@ export type Database = {
           date_format?: string | null
           email?: string | null
           email_preferences?: Json | null
+          email_signature?: string | null
           full_name?: string | null
           id?: string
+          include_signature?: boolean | null
           international_recruiting?: boolean | null
           onboarding_completed?: boolean | null
           recruit_countries?: string[] | null
@@ -739,8 +743,10 @@ export type Database = {
           date_format?: string | null
           email?: string | null
           email_preferences?: Json | null
+          email_signature?: string | null
           full_name?: string | null
           id?: string
+          include_signature?: boolean | null
           international_recruiting?: boolean | null
           onboarding_completed?: boolean | null
           recruit_countries?: string[] | null

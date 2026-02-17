@@ -234,14 +234,15 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Fetch sender's company name for CAN-SPAM footer
+    // Fetch sender's company name and email signature for CAN-SPAM footer
     const { data: profile } = await supabaseAdmin
       .from("profiles")
-      .select("company")
+      .select("company, email_signature, include_signature")
       .eq("user_id", user.id)
       .maybeSingle();
 
     const senderCompany = profile?.company || null;
+    const emailSignature = profile?.include_signature && profile?.email_signature ? profile.email_signature : null;
 
     // Validate email body for dangerous HTML patterns
     const dangerousPatterns = [
@@ -352,7 +353,13 @@ Deno.serve(async (req) => {
     }
 
     // Step 2: Build HTML with tracking pixel
-    let htmlBody = wrapInHtmlTemplate(emailBody, senderCompany);
+    // Append signature if configured
+    let finalEmailBody = emailBody;
+    if (emailSignature) {
+      finalEmailBody = emailBody + "\n\n--\n" + emailSignature;
+    }
+
+    let htmlBody = wrapInHtmlTemplate(finalEmailBody, senderCompany);
 
     if (emailLogEntry?.id) {
       const trackingPixel = `<img src="${SUPABASE_URL}/functions/v1/track-email?id=${emailLogEntry.id}&type=open" width="1" height="1" style="display:none" alt="" />`;
