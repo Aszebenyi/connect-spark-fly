@@ -1,13 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RingLoader, AbstractBlob } from '@/components/ui/visual-elements';
 import medileadLogo from '@/assets/medilead-logo.png';
-import { searchLeadsWithExa, saveLeads, Lead, Campaign } from '@/lib/api';
+import { searchLeadsWithExa, saveLeads, Lead, Campaign, getSavedSearches, createSavedSearch, deleteSavedSearch, SavedSearch } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { LeadResultCard } from './LeadResultCard';
 import { useAuth } from '@/contexts/AuthContext';
+import { Bookmark, X } from 'lucide-react';
 
 interface LeadFinderProps {
   onLeadsFound?: (leads: Lead[]) => void;
@@ -38,6 +39,7 @@ export function LeadFinder({ onLeadsFound, campaigns = [], initialCampaignId, in
   const [foundLeads, setFoundLeads] = useState<Lead[]>([]);
   const [selectedLeads, setSelectedLeads] = useState<Set<number>>(new Set());
   const [query, setQuery] = useState('');
+  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
   const { toast } = useToast();
   const { subscription, subscriptionLoading } = useAuth();
 
@@ -46,22 +48,45 @@ export function LeadFinder({ onLeadsFound, campaigns = [], initialCampaignId, in
 
   const { user, refreshSubscription } = useAuth();
 
+  // Load saved searches
+  useEffect(() => {
+    loadSavedSearches();
+  }, []);
+
+  const loadSavedSearches = async () => {
+    const result = await getSavedSearches();
+    if (result.success && result.searches) {
+      setSavedSearches(result.searches);
+    }
+  };
+
+  const handleSaveSearch = async () => {
+    if (!query.trim()) return;
+    const name = query.trim().substring(0, 40);
+    const result = await createSavedSearch(name, query.trim());
+    if (result.success) {
+      toast({ title: 'Search saved' });
+      loadSavedSearches();
+    } else {
+      toast({ title: 'Failed to save search', variant: 'destructive' });
+    }
+  };
+
+  const handleDeleteSavedSearch = async (id: string) => {
+    const result = await deleteSavedSearch(id);
+    if (result.success) {
+      setSavedSearches(prev => prev.filter(s => s.id !== id));
+    }
+  };
+
   const handleSearch = async () => {
     if (!user) {
-      toast({
-        title: 'Sign in required',
-        description: 'Please sign in to search for leads.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Sign in required', description: 'Please sign in to search for leads.', variant: 'destructive' });
       return;
     }
 
     if (!query.trim()) {
-      toast({
-        title: 'Enter a search query',
-        description: 'Describe who you want to find in plain English',
-        variant: 'destructive',
-      });
+      toast({ title: 'Enter a search query', description: 'Describe who you want to find in plain English', variant: 'destructive' });
       return;
     }
 
@@ -69,7 +94,6 @@ export function LeadFinder({ onLeadsFound, campaigns = [], initialCampaignId, in
     setFoundLeads([]);
     setSelectedLeads(new Set());
 
-    // Refresh subscription to get fresh credit data
     await refreshSubscription();
 
     try {
@@ -78,10 +102,7 @@ export function LeadFinder({ onLeadsFound, campaigns = [], initialCampaignId, in
         campaignId: activeCampaignId 
       });
 
-      console.log('Search result:', result);
-
       if (result.success) {
-        // Async mode - leads are being saved in background
         if (result.status === 'processing' || result.websetId) {
           toast({
             title: 'Search started!',
@@ -91,52 +112,27 @@ export function LeadFinder({ onLeadsFound, campaigns = [], initialCampaignId, in
           });
           onLeadsFound?.([]);
           setQuery('');
-        } 
-        // Legacy sync mode - leads returned directly
-        else if (result.leads && result.leads.length > 0) {
+        } else if (result.leads && result.leads.length > 0) {
           setFoundLeads(result.leads);
           setSelectedLeads(new Set(result.leads.map((_, i) => i)));
-          toast({
-            title: 'Search complete!',
-            description: `Found ${result.leads.length} potential leads`,
-          });
+          toast({ title: 'Search complete!', description: `Found ${result.leads.length} potential leads` });
         } else {
-          toast({
-            title: 'Search initiated',
-            description: 'Processing your request...',
-          });
+          toast({ title: 'Search initiated', description: 'Processing your request...' });
         }
       } else {
-        // Handle NO_CREDITS error specifically
         if (result.error === 'NO_CREDITS') {
-          toast({
-            title: 'No credits remaining',
-            description: 'You have used all your credits. Please upgrade your plan to continue.',
-            variant: 'destructive',
-          });
+          toast({ title: 'No credits remaining', description: 'You have used all your credits. Please upgrade your plan to continue.', variant: 'destructive' });
         } else {
-          toast({
-            title: 'Search failed',
-            description: result.error || 'Unable to start search. Please try again.',
-            variant: 'destructive',
-          });
+          toast({ title: 'Search failed', description: result.error || 'Unable to start search. Please try again.', variant: 'destructive' });
         }
       }
     } catch (error: any) {
       console.error('Search error:', error);
       const msg = error?.message || '';
       if (msg.includes('402') || msg.toLowerCase().includes('credit')) {
-        toast({
-          title: 'No credits remaining',
-          description: 'You have used all your credits. Please upgrade your plan to continue.',
-          variant: 'destructive',
-        });
+        toast({ title: 'No credits remaining', description: 'You have used all your credits. Please upgrade your plan to continue.', variant: 'destructive' });
       } else {
-        toast({
-          title: 'Search error',
-          description: 'Failed to search for leads. Please try again.',
-          variant: 'destructive',
-        });
+        toast({ title: 'Search error', description: 'Failed to search for leads. Please try again.', variant: 'destructive' });
       }
     } finally {
       setIsSearching(false);
@@ -144,29 +140,20 @@ export function LeadFinder({ onLeadsFound, campaigns = [], initialCampaignId, in
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !isSearching) {
-      handleSearch();
-    }
+    if (e.key === 'Enter' && !isSearching) handleSearch();
   };
 
   const toggleLeadSelection = (index: number) => {
     const newSelected = new Set(selectedLeads);
-    if (newSelected.has(index)) {
-      newSelected.delete(index);
-    } else {
-      newSelected.add(index);
-    }
+    if (newSelected.has(index)) newSelected.delete(index);
+    else newSelected.add(index);
     setSelectedLeads(newSelected);
   };
 
   const handleSaveLeads = async () => {
     const leadsToSave = foundLeads.filter((_, i) => selectedLeads.has(i));
     if (leadsToSave.length === 0) {
-      toast({
-        title: 'No leads selected',
-        description: 'Please select at least one lead to save',
-        variant: 'destructive',
-      });
+      toast({ title: 'No leads selected', description: 'Please select at least one lead to save', variant: 'destructive' });
       return;
     }
 
@@ -185,21 +172,21 @@ export function LeadFinder({ onLeadsFound, campaigns = [], initialCampaignId, in
         setSelectedLeads(new Set());
         setQuery('');
       } else {
-        toast({
-          title: 'Save failed',
-          description: result.error || 'Failed to save leads',
-          variant: 'destructive',
-        });
+        toast({ title: 'Save failed', description: result.error || 'Failed to save leads', variant: 'destructive' });
       }
     } catch (error) {
       console.error('Save error:', error);
-      toast({
-        title: 'Save error',
-        description: 'Failed to save leads. Please try again.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Save error', description: 'Failed to save leads. Please try again.', variant: 'destructive' });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleCampaignChange = (value: string) => {
+    if (value === '__create__') {
+      onCreateCampaign?.();
+    } else {
+      setSelectedCampaignId(value);
     }
   };
 
@@ -223,6 +210,23 @@ export function LeadFinder({ onLeadsFound, campaigns = [], initialCampaignId, in
         </div>
         
         <div className="relative">
+          {/* Campaign selector - above search */}
+          <div className="mb-4">
+            <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Add results to:</label>
+            <Select value={selectedCampaignId} onValueChange={handleCampaignChange}>
+              <SelectTrigger className="w-full bg-background">
+                <SelectValue placeholder="General Pool (no job opening)" />
+              </SelectTrigger>
+              <SelectContent className="bg-popover z-50">
+                <SelectItem value="__none__">General Pool (no job opening)</SelectItem>
+                {campaigns.map((c) => (
+                  <SelectItem key={c.id} value={c.id!}>{c.name}</SelectItem>
+                ))}
+                <SelectItem value="__create__">+ Create new job opening</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="search-input flex items-center gap-4 px-4 py-3">
             <div className="w-5 h-5 relative flex-shrink-0">
               <div className="absolute inset-0 flex items-center justify-center">
@@ -237,6 +241,15 @@ export function LeadFinder({ onLeadsFound, campaigns = [], initialCampaignId, in
               onKeyDown={handleKeyDown}
               className="border-0 bg-transparent text-base placeholder:text-muted-foreground/60 focus-visible:ring-0 px-0"
             />
+            {query.trim().length > 0 && (
+              <button
+                onClick={handleSaveSearch}
+                className="flex-shrink-0 p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                title="Save this search"
+              >
+                <Bookmark className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           <p className="text-sm text-muted-foreground mt-2 mb-2">Paste a full job description or describe the role, location, and requirements. Be as specific as possible.</p>
@@ -257,6 +270,31 @@ export function LeadFinder({ onLeadsFound, campaigns = [], initialCampaignId, in
             </div>
           </div>
 
+          {/* Saved Searches */}
+          {savedSearches.length > 0 && (
+            <div className="mt-3">
+              <p className="text-xs font-medium text-muted-foreground mb-2">Saved Searches:</p>
+              <div className="flex flex-wrap gap-2">
+                {savedSearches.map((search) => (
+                  <div
+                    key={search.id}
+                    className="group flex items-center gap-1 text-xs px-3 py-1.5 rounded-full bg-primary/10 hover:bg-primary/20 text-primary transition-all duration-300 border border-primary/20"
+                  >
+                    <button onClick={() => setQuery(search.query)} className="text-left">
+                      {search.name}
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDeleteSavedSearch(search.id); }}
+                      className="opacity-0 group-hover:opacity-100 ml-0.5 hover:text-destructive transition-opacity"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Credits remaining indicator */}
           {!subscriptionLoading && (
              <p className="text-sm text-muted-foreground mt-4 text-center">
@@ -266,24 +304,6 @@ export function LeadFinder({ onLeadsFound, campaigns = [], initialCampaignId, in
                 <span className="text-destructive font-medium">You have no searches remaining. Upgrade to continue finding candidates.</span>
               )}
             </p>
-          )}
-
-          {/* Campaign selector */}
-          {campaigns.length > 0 && (
-            <div className="mt-4">
-              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Add to Job Opening (optional)</label>
-              <Select value={selectedCampaignId} onValueChange={setSelectedCampaignId}>
-                <SelectTrigger className="w-full bg-background">
-                  <SelectValue placeholder="Unassigned (search only)" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover z-50">
-                  <SelectItem value="__none__">Unassigned (search only)</SelectItem>
-                  {campaigns.map((c) => (
-                    <SelectItem key={c.id} value={c.id!}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
           )}
 
           <Button 
