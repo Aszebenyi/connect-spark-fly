@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useBrandConfig } from '@/hooks/useBrandConfig';
 import { ContactDialog } from '@/components/ContactDialog';
 import { FreeLeadSampleModal } from '@/components/lead-magnets/FreeLeadSampleModal';
-import { Users } from 'lucide-react';
+
 import {
   PulseOrb,
   DataFlow,
@@ -104,7 +104,7 @@ function StatItem({ value, label, sub, index }: {value: string;label: string;sub
 }
 
 // Pricing card
-function PricingCard({ name, price, leads, features, popular, index }: {name: string;price: string;leads: string;features: string[];popular?: boolean;index: number;}) {
+function PricingCard({ name, price, leads, perCandidate, features, popular, index }: {name: string;price: string;leads: string;perCandidate?: string;features: string[];popular?: boolean;index: number;}) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-50px" });
   const navigate = useNavigate();
@@ -158,6 +158,9 @@ function PricingCard({ name, price, leads, features, popular, index }: {name: st
             </svg>
             {leads}
           </div>
+          {perCandidate && (
+            <p className="text-xs text-muted-foreground mt-2 font-medium">{perCandidate}</p>
+          )}
         </div>
         
         {/* Features list */}
@@ -224,9 +227,9 @@ export default function Landing() {
 
 
   const pricing = [
-  { name: "Starter", price: "$299", leads: "250 searches/mo", features: ["~2,500-3,750 qualified candidates", "AI-powered candidate search", "License & certification verification", "Gmail integration", "AI-generated email outreach", "Job opening management", "Email tracking (opens, replies)"] },
-  { name: "Growth", price: "$599", leads: "1,000 searches/mo", popular: true, features: ["~10,000-15,000 qualified candidates", "Everything in Starter, plus:", "Priority enrichment", "Advanced candidate filters", "Match scoring with AI reasoning", "Enhanced email analytics", "Multiple job opening management", "Weekly performance reports"] },
-  { name: "Agency", price: "$999", leads: "2,500 searches/mo", features: ["~25,000-37,500 qualified candidates", "Everything in Growth, plus:", "Dedicated account support", "Unlimited job openings", "CSV export", "Priority support"] }];
+  { name: "Starter", price: "$299", leads: "250 searches/mo", perCandidate: "~$1.20 per verified candidate", features: ["~2,500-3,750 qualified candidates", "AI-powered candidate search", "License & certification verification", "Gmail integration", "AI-generated email outreach", "Job opening management", "Email tracking (opens, replies)"] },
+  { name: "Growth", price: "$599", leads: "1,000 searches/mo", perCandidate: "~$0.60 per verified candidate", popular: true, features: ["~10,000-15,000 qualified candidates", "Everything in Starter, plus:", "Priority enrichment", "Advanced candidate filters", "Match scoring with AI reasoning", "Enhanced email analytics", "Multiple job opening management", "Weekly performance reports"] },
+  { name: "Agency", price: "$999", leads: "2,500 searches/mo", perCandidate: "~$0.40 per verified candidate", features: ["~25,000-37,500 qualified candidates", "Everything in Growth, plus:", "Dedicated account support", "Unlimited job openings", "CSV export", "Priority support"] }];
 
 
   return (
@@ -339,9 +342,9 @@ export default function Landing() {
             transition={{ duration: 0.8, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
             className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[0.95] mb-8">
 
-            <span className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent">Fill healthcare roles in</span>
+            <span className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent">AI-powered nurse sourcing</span>
             <br />
-            <span className="bg-gradient-to-r from-primary to-cyan-600 bg-clip-text text-transparent">14 days, not 90</span>
+            <span className="bg-gradient-to-r from-primary to-cyan-600 bg-clip-text text-transparent">with built-in license verification</span>
           </motion.h1>
           
           <motion.p
@@ -350,7 +353,7 @@ export default function Landing() {
             transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-12 leading-relaxed">
 
-            The only recruiting platform built for healthcare — with automatic license verification, multi-state credential matching, and proven <span className="font-semibold text-foreground">25% reply rates</span>.
+            Find credentialed, qualified candidates in minutes. Auto-verify licenses. Send personalized outreach. Fill roles <span className="font-semibold text-foreground">5x faster</span>.
           </motion.p>
           
           <motion.div
@@ -364,19 +367,19 @@ export default function Landing() {
               size="lg"
               className="h-14 px-8 text-lg gap-2 bg-gradient-to-r from-primary to-cyan-600 text-white shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 hover:scale-105 transition-all duration-300 border-0">
 
-              Get Started
+              Start Finding Nurses — Free
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
             </Button>
             <Button
-              onClick={() => setIsFreeLeadSampleOpen(true)}
+              asChild
               variant="outline"
               size="lg"
               className="h-14 px-8 text-lg gap-2 bg-white/80 backdrop-blur-sm border-border/60 shadow-md hover:shadow-lg hover:bg-white hover:border-primary/30 transition-all duration-300">
-
-              <Users className="w-5 h-5 text-primary" />
-              👥 Get 5 Free Candidates
+              <a href="#how-it-works">
+                See How It Works
+              </a>
             </Button>
           </motion.div>
           
@@ -384,21 +387,14 @@ export default function Landing() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1, delay: 0.6 }}
-            className="mt-16 flex items-center justify-center gap-3">
-
-            <div className="flex -space-x-2">
-              {[11, 26, 32, 44, 68].map((id) =>
-              <img
-                key={id}
-                src={`https://i.pravatar.cc/64?img=${id}`}
-                alt=""
-                className="w-8 h-8 rounded-full border-2 border-white shadow-sm object-cover" />
-
-              )}
+            className="mt-16 flex items-center justify-center">
+            <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/80 backdrop-blur-sm border border-border/40 shadow-sm text-sm text-muted-foreground">
+              <span>✓ HIPAA-conscious</span>
+              <span className="text-border">·</span>
+              <span>✓ CAN-SPAM compliant</span>
+              <span className="text-border">·</span>
+              <span>✓ SOC 2 in progress</span>
             </div>
-            <p className="text-sm font-medium text-muted-foreground">
-              Join <span className="font-semibold text-foreground">1,000+</span> recruiters and agencies
-            </p>
           </motion.div>
         </motion.div>
         
@@ -428,53 +424,43 @@ export default function Landing() {
         </div>
       </section>
       
-      {/* Testimonials Section */}
+      {/* Built for Healthcare Recruiting Section */}
       <section className="py-20 px-6 bg-background relative">
         <div className="max-w-6xl mx-auto">
           <AnimatedSection className="text-center mb-14">
             <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6 tracking-wide">
-              Trusted by Healthcare Recruiters
+              Purpose-Built Platform
             </span>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-              What Our Users Say
+              Built for Healthcare Recruiting
             </h2>
           </AnimatedSection>
           
           <div className="grid md:grid-cols-3 gap-6">
             {[
               {
-                quote: "We filled 3 ICU positions in 2 weeks. Before MediLead, it took us 3 months.",
-                author: "Sarah J.",
-                role: "VP of Recruiting",
-                company: "HealthStaff Solutions",
+                title: "License Verification",
+                description: "Automatically detects RN, BSN, NP, CRNA and 15+ license types from candidate profiles",
+                icon: "🔍",
               },
               {
-                quote: "The license verification feature alone saves me 10 hours every week. Game changer.",
-                author: "Michael C.",
-                role: "Senior Recruiter",
-                company: "TravelNurse Pro",
+                title: "Credential Matching",
+                description: "AI scores each candidate against your specific requirements — BLS, ACLS, specialty experience, location",
+                icon: "✓",
               },
               {
-                quote: "25% reply rate is insane. LinkedIn Recruiter was getting us 5%.",
-                author: "Amanda R.",
-                role: "Recruiting Manager",
-                company: "CriticalCare Staffing",
+                title: "Smart Outreach",
+                description: "AI writes personalized emails using each candidate's actual credentials and experience",
+                icon: "✉️",
               },
-            ].map((testimonial, i) => (
-              <AnimatedSection key={testimonial.author} delay={i * 0.1}>
+            ].map((card, i) => (
+              <AnimatedSection key={card.title} delay={i * 0.1}>
                 <div className="p-6 rounded-2xl bg-card border border-border/40 shadow-md h-full flex flex-col">
-                  <div className="flex gap-1 mb-4">
-                    {[...Array(5)].map((_, j) => (
-                      <svg key={j} className="w-4 h-4 text-amber-400 fill-amber-400" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-xl mb-4">
+                    {card.icon}
                   </div>
-                  <p className="text-foreground/80 text-sm leading-relaxed flex-1 mb-4">"{testimonial.quote}"</p>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">{testimonial.author}</p>
-                    <p className="text-xs text-muted-foreground">{testimonial.role}, {testimonial.company}</p>
-                  </div>
+                  <h3 className="text-lg font-semibold text-foreground mb-2">{card.title}</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed flex-1">{card.description}</p>
                 </div>
               </AnimatedSection>
             ))}
@@ -658,7 +644,7 @@ export default function Landing() {
           </div>
           
           <p className="text-sm text-gray-500">
-            © 2025 {appName}. All rights reserved.
+            © 2026 {appName}. All rights reserved.
           </p>
         </div>
       </footer>
