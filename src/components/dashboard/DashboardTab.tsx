@@ -1,12 +1,16 @@
+import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { StatCard } from '@/components/StatCard';
 import { CampaignCard } from '@/components/CampaignCard';
 import { OnboardingChecklist } from '@/components/OnboardingChecklist';
 import { NotificationBell } from '@/components/NotificationBell';
 import { cn } from '@/lib/utils';
-import { Flame, Mail, CalendarDays, Clock } from 'lucide-react';
+import { Flame, Mail, CalendarDays, Clock, Search, MessageSquare, Reply } from 'lucide-react';
 import { useBrandConfig } from '@/hooks/useBrandConfig';
+import { useAuth } from '@/contexts/AuthContext';
 import { Lead, Campaign } from '@/lib/api';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
 interface DashboardTabProps {
   stats: { totalLeads: number; contacted: number; replied: number; qualified: number };
@@ -18,6 +22,13 @@ interface DashboardTabProps {
   onFindMoreLeads: (campaign: Campaign) => void;
   loadData: () => void;
   setStatusFilterFromStats: (status: string | null) => void;
+}
+
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 18) return 'Good afternoon';
+  return 'Good evening';
 }
 
 export function DashboardTab({
@@ -32,7 +43,44 @@ export function DashboardTab({
   setStatusFilterFromStats,
 }: DashboardTabProps) {
   const { appName } = useBrandConfig();
+  const { user } = useAuth();
   const replyRate = stats.contacted > 0 ? Math.round((stats.replied / stats.contacted) * 100) : 0;
+
+  const firstName = user?.user_metadata?.full_name?.split(' ')[0] || 'there';
+  const awaitingResponse = useMemo(() =>
+    dbLeads.filter(l => l.status === 'replied' && l.updated_at && new Date(l.updated_at) < new Date(Date.now() - 24 * 60 * 60 * 1000)).length,
+    [dbLeads]
+  );
+
+  // This Week stats
+  const startOfWeek = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - d.getDay());
+    return d.toISOString();
+  }, []);
+
+  const candidatesFoundThisWeek = useMemo(() =>
+    dbLeads.filter(l => l.created_at && l.created_at >= startOfWeek).length,
+    [dbLeads, startOfWeek]
+  );
+
+  const { data: emailsSentThisWeek = 0 } = useQuery({
+    queryKey: ['emails-sent-this-week', startOfWeek],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('outreach_messages')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', startOfWeek);
+      return count || 0;
+    },
+    staleTime: 60000,
+  });
+
+  const repliesThisWeek = useMemo(() =>
+    dbLeads.filter(l => l.status === 'replied' && l.updated_at && l.updated_at >= startOfWeek).length,
+    [dbLeads, startOfWeek]
+  );
 
   return (
     <div className="animate-fade-in">
@@ -43,6 +91,14 @@ export function DashboardTab({
         </div>
         <NotificationBell />
       </div>
+
+      {/* Welcome bar */}
+      <p className="text-sm text-muted-foreground mb-6">
+        {getGreeting()}, <span className="font-medium text-foreground">{firstName}</span>.
+        {awaitingResponse > 0 && (
+          <> You have <span className="font-semibold text-primary">{awaitingResponse}</span> candidate{awaitingResponse !== 1 ? 's' : ''} awaiting response.</>
+        )}
+      </p>
 
       <OnboardingChecklist
         onCreateCampaign={onCreateCampaign}
@@ -101,6 +157,34 @@ export function DashboardTab({
           </div>
         );
       })()}
+
+      {/* This Week */}
+      <div className="mb-8 animate-fade-in">
+        <div className="section-header">
+          <h2 className="section-title">This Week</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[
+            { label: 'Candidates Found', value: candidatesFoundThisWeek, icon: <Search className="w-4 h-4 text-primary" /> },
+            { label: 'Emails Sent', value: emailsSentThisWeek, icon: <MessageSquare className="w-4 h-4 text-primary" /> },
+            { label: 'Replies', value: repliesThisWeek, icon: <Reply className="w-4 h-4 text-primary" /> },
+          ].map((item) => (
+            <div
+              key={item.label}
+              className="bg-card border border-border rounded-lg p-5 flex items-center gap-4"
+              style={{ boxShadow: '0 1px 2px hsl(220 10% 50% / 0.05)' }}
+            >
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                {item.icon}
+              </div>
+              <div>
+                <p className="text-2xl font-semibold text-foreground">{item.value}</p>
+                <p className="text-xs text-muted-foreground">{item.label}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Candidate Pipeline */}
       {dbLeads.length > 0 && (() => {
