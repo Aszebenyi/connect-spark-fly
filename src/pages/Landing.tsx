@@ -104,7 +104,7 @@ function StatItem({ value, label, sub, index }: {value: string;label: string;sub
 }
 
 // Pricing card
-function PricingCard({ name, price, leads, perCandidate, features, popular, index }: {name: string;price: string;leads: string;perCandidate?: string;features: string[];popular?: boolean;index: number;}) {
+function PricingCard({ name, price, originalPrice, leads, perCandidate, features, popular, index, isAnnual }: {name: string;price: string;originalPrice?: string;leads: string;perCandidate?: string;features: string[];popular?: boolean;index: number;isAnnual?: boolean;}) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-50px" });
   const navigate = useNavigate();
@@ -148,6 +148,12 @@ function PricingCard({ name, price, leads, perCandidate, features, popular, inde
             <span className="text-5xl font-bold text-foreground tracking-tight">{price}</span>
             <span className="text-muted-foreground text-sm font-medium">/month</span>
           </div>
+          {isAnnual && originalPrice && (
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-sm text-muted-foreground line-through">{originalPrice}/mo</span>
+              <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Save 20%</span>
+            </div>
+          )}
           <div className={`inline-flex items-center gap-2 mt-3 px-3 py-1.5 rounded-full text-sm font-semibold ${
           popular ?
           'bg-primary/10 text-primary border border-primary/20' :
@@ -226,10 +232,13 @@ export default function Landing() {
   { title: "Send Personalized Emails", description: "Generate personalized outreach with AI, or write your own. Send directly from the platform using your Gmail account. Track opens and responses.", time: "⏱️ First responses in 24-48 hours" }];
 
 
+  const [pricingPeriod, setPricingPeriod] = useState<'monthly' | 'annual'>('monthly');
+  const isAnnualPricing = pricingPeriod === 'annual';
+
   const pricing = [
-  { name: "Starter", price: "$299", leads: "250 searches/mo", perCandidate: "~$1.20 per verified candidate", features: ["~2,500-3,750 qualified candidates", "AI-powered candidate search", "License & certification verification", "Gmail integration", "AI-generated email outreach", "Job opening management", "Email tracking (opens, replies)"] },
-  { name: "Growth", price: "$599", leads: "1,000 searches/mo", perCandidate: "~$0.60 per verified candidate", popular: true, features: ["~10,000-15,000 qualified candidates", "Everything in Starter, plus:", "Priority enrichment", "Advanced candidate filters", "Match scoring with AI reasoning", "Enhanced email analytics", "Multiple job opening management", "Weekly performance reports"] },
-  { name: "Agency", price: "$999", leads: "2,500 searches/mo", perCandidate: "~$0.40 per verified candidate", features: ["~25,000-37,500 qualified candidates", "Everything in Growth, plus:", "Dedicated account support", "Unlimited job openings", "CSV export", "Priority support"] }];
+  { name: "Starter", price: isAnnualPricing ? "$239" : "$299", originalPrice: "$299", leads: "250 searches/mo", perCandidate: isAnnualPricing ? "~$0.96 per verified candidate" : "~$1.20 per verified candidate", features: ["~2,500-3,750 qualified candidates", "AI-powered candidate search", "License & certification verification", "Gmail integration", "AI-generated email outreach", "Job opening management", "Email tracking (opens, replies)"] },
+  { name: "Growth", price: isAnnualPricing ? "$479" : "$599", originalPrice: "$599", leads: "1,000 searches/mo", perCandidate: isAnnualPricing ? "~$0.48 per verified candidate" : "~$0.60 per verified candidate", popular: true, features: ["~10,000-15,000 qualified candidates", "Everything in Starter, plus:", "Priority enrichment", "Advanced candidate filters", "Match scoring with AI reasoning", "Enhanced email analytics", "Multiple job opening management", "Weekly performance reports"] },
+  { name: "Agency", price: isAnnualPricing ? "$799" : "$999", originalPrice: "$999", leads: "2,500 searches/mo", perCandidate: isAnnualPricing ? "~$0.32 per verified candidate" : "~$0.40 per verified candidate", features: ["~25,000-37,500 qualified candidates", "Everything in Growth, plus:", "Dedicated account support", "Unlimited job openings", "CSV export", "Priority support"] }];
 
 
   return (
@@ -563,14 +572,35 @@ export default function Landing() {
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
               Simple, Transparent Pricing
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
               Every search gives you 10-15 qualified candidates with verified contact info. First 5 candidates free.
             </p>
+
+            {/* Billing toggle */}
+            <div className="inline-flex items-center gap-1 p-1 rounded-full bg-muted/60 border border-border">
+              <button
+                onClick={() => setPricingPeriod('monthly')}
+                className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
+                  !isAnnualPricing ? 'bg-white text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setPricingPeriod('annual')}
+                className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                  isAnnualPricing ? 'bg-white text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Annual
+                <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-700">-20%</span>
+              </button>
+            </div>
           </AnimatedSection>
           
           <div className="grid md:grid-cols-3 gap-8 items-stretch">
             {pricing.map((plan, i) =>
-            <PricingCard key={plan.name} {...plan} index={i} />
+            <PricingCard key={plan.name} {...plan} index={i} isAnnual={isAnnualPricing} />
             )}
           </div>
         </div>

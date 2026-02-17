@@ -1,11 +1,14 @@
 // Stripe product and price configuration
+// TODO: Replace annual price placeholders with real Stripe price IDs
 export const PLANS = {
   free: {
     id: 'free',
     name: 'Free',
     price: 0,
+    annualPrice: 0,
     credits: 5,
     priceId: null,
+    annualPriceId: null,
     productId: null,
     features: [
       '5 searches to try it out',
@@ -17,8 +20,10 @@ export const PLANS = {
     id: 'starter',
     name: 'Starter',
     price: 299,
+    annualPrice: 239,
     credits: 250,
     priceId: 'price_1Sl6DHDp7VRpgnTikwLRt1tw',
+    annualPriceId: 'price_PLACEHOLDER_annual_starter',
     productId: 'prod_TiXHpO8ijpKqTp',
     features: [
       '250 searches per month',
@@ -35,8 +40,10 @@ export const PLANS = {
     id: 'growth',
     name: 'Growth',
     price: 599,
+    annualPrice: 479,
     credits: 1000,
     priceId: 'price_1Sl6DJDp7VRpgnTi99xkXWPn',
+    annualPriceId: 'price_PLACEHOLDER_annual_growth',
     productId: 'prod_TiXHO7iMyHkneq',
     popular: true,
     features: [
@@ -55,8 +62,10 @@ export const PLANS = {
     id: 'scale',
     name: 'Agency',
     price: 999,
+    annualPrice: 799,
     credits: 2500,
     priceId: 'price_1Sl6DLDp7VRpgnTiujlSkYLD',
+    annualPriceId: 'price_PLACEHOLDER_annual_scale',
     productId: 'prod_TiXH8Xv4s6tGGb',
     features: [
       '2,500 searches per month',

@@ -15,16 +15,20 @@ export function PricingPlans({ onClose }: PricingPlansProps) {
   const { subscription, session, refreshSubscription } = useAuth();
   const { toast } = useToast();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
+
+  const isAnnual = billingPeriod === 'annual';
 
   const handleSubscribe = async (planId: PlanId) => {
     const plan = PLANS[planId];
-    if (!plan.priceId) return;
+    const priceId = isAnnual ? plan.annualPriceId : plan.priceId;
+    if (!priceId) return;
 
     setLoadingPlan(planId);
-    trackEvent('plan_selected', { planId });
+    trackEvent('plan_selected', { planId, billingPeriod });
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { priceId: plan.priceId },
+        body: { priceId, billingPeriod },
         headers: {
           Authorization: `Bearer ${session?.access_token}`,
         },
@@ -82,15 +86,51 @@ export function PricingPlans({ onClose }: PricingPlansProps) {
     <div className="space-y-8">
       <div className="text-center">
         <h2 className="text-2xl font-bold text-foreground mb-2">Choose Your Plan</h2>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground mb-6">
           Unlock more leads and grow your business
         </p>
+
+        {/* Billing period toggle */}
+        <div className="inline-flex items-center gap-1 p-1 rounded-full bg-muted/60 border border-border">
+          <button
+            onClick={() => setBillingPeriod('monthly')}
+            className={cn(
+              'px-4 py-2 rounded-full text-sm font-medium transition-all duration-200',
+              !isAnnual
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setBillingPeriod('annual')}
+            className={cn(
+              'px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2',
+              isAnnual
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            Annual
+            <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-success/15 text-success border border-success/20">
+              -20%
+            </span>
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {(Object.entries(PLANS) as [PlanId, typeof PLANS[PlanId]][]).map(([id, plan]) => {
           const isCurrentPlan = currentPlanId === id;
           const isPlanPopular = 'popular' in plan && plan.popular;
+          const displayPrice = isAnnual ? plan.annualPrice : plan.price;
+          const activePriceId = isAnnual ? plan.annualPriceId : plan.priceId;
+
+          // Per-candidate cost calculation
+          const perCandidate = plan.credits > 0 && displayPrice > 0
+            ? `~$${(displayPrice / (plan.credits * 10)).toFixed(2)} per candidate`
+            : null;
 
           return (
             <div
@@ -126,15 +166,24 @@ export function PricingPlans({ onClose }: PricingPlansProps) {
                 <h3 className="text-lg font-semibold text-foreground mb-1">{plan.name}</h3>
                 <div className="flex items-baseline justify-center gap-1">
                   <span className="text-3xl font-bold text-foreground">
-                    ${plan.price}
+                    ${displayPrice}
                   </span>
-                  {plan.price > 0 && (
+                  {displayPrice > 0 && (
                     <span className="text-muted-foreground">/mo</span>
                   )}
                 </div>
+                {isAnnual && plan.price > 0 && (
+                  <div className="flex items-center justify-center gap-2 mt-1">
+                    <span className="text-sm text-muted-foreground line-through">${plan.price}/mo</span>
+                    <span className="text-xs font-semibold text-success">Save 20%</span>
+                  </div>
+                )}
                 <p className="text-sm text-muted-foreground mt-2">
                   {plan.credits.toLocaleString()} leads/month
                 </p>
+                {perCandidate && (
+                  <p className="text-xs text-muted-foreground mt-1">{perCandidate}</p>
+                )}
               </div>
 
               <ul className="space-y-3 mb-6">
@@ -177,7 +226,7 @@ export function PricingPlans({ onClose }: PricingPlansProps) {
                     Current Plan
                   </Button>
                 )
-              ) : plan.priceId ? (
+              ) : activePriceId ? (
                 <Button
                   className={cn(
                     'w-full rounded-xl',
