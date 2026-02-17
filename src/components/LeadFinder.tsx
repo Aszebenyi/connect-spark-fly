@@ -1,16 +1,23 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RingLoader, AbstractBlob } from '@/components/ui/visual-elements';
 import medileadLogo from '@/assets/medilead-logo.png';
-import { searchLeadsWithExa, saveLeads, Lead } from '@/lib/api';
+import { searchLeadsWithExa, saveLeads, Lead, Campaign } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { LeadResultCard } from './LeadResultCard';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface LeadFinderProps {
   onLeadsFound?: (leads: Lead[]) => void;
+  campaigns?: Campaign[];
+  initialCampaignId?: string;
+  initialCampaignName?: string;
+  onCreateCampaign?: () => void;
+  /** @deprecated Use initialCampaignId instead */
   campaignId?: string;
+  /** @deprecated Use initialCampaignName instead */
   campaignName?: string;
 }
 
@@ -21,7 +28,11 @@ const suggestions = [
   'Nurse - Miami, FL - 2+ years, BLS/ACLS/PALS certified',
 ];
 
-export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinderProps) {
+export function LeadFinder({ onLeadsFound, campaigns = [], initialCampaignId, initialCampaignName, onCreateCampaign, campaignId: legacyCampaignId, campaignName: legacyCampaignName }: LeadFinderProps) {
+  const effectiveCampaignId = initialCampaignId || legacyCampaignId;
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string>(effectiveCampaignId || '__none__');
+  const activeCampaignId = selectedCampaignId === '__none__' ? undefined : selectedCampaignId;
+  const activeCampaignName = campaigns.find(c => c.id === activeCampaignId)?.name || initialCampaignName || legacyCampaignName;
   const [isSearching, setIsSearching] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [foundLeads, setFoundLeads] = useState<Lead[]>([]);
@@ -64,7 +75,7 @@ export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinde
     try {
       const result = await searchLeadsWithExa({ 
         query: query.trim(),
-        campaignId: campaignId 
+        campaignId: activeCampaignId 
       });
 
       console.log('Search result:', result);
@@ -74,8 +85,8 @@ export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinde
         if (result.status === 'processing' || result.websetId) {
           toast({
             title: 'Search started!',
-            description: campaignId 
-              ? 'Leads will be added to your campaign automatically. This may take 1-2 minutes.'
+            description: activeCampaignId 
+              ? 'Leads will be added to your job opening automatically. This may take 1-2 minutes.'
               : 'Leads will be saved to your database automatically. This may take 1-2 minutes.',
           });
           onLeadsFound?.([]);
@@ -161,12 +172,12 @@ export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinde
 
     setIsSaving(true);
     try {
-      const result = await saveLeads(leadsToSave, campaignId);
+      const result = await saveLeads(leadsToSave, activeCampaignId);
       if (result.success) {
         toast({
           title: 'Leads saved!',
-          description: campaignId 
-            ? `${leadsToSave.length} leads added to campaign "${campaignName}"`
+          description: activeCampaignId 
+            ? `${leadsToSave.length} leads added to "${activeCampaignName}"`
             : `${leadsToSave.length} leads added to your database`,
         });
         onLeadsFound?.(leadsToSave);
@@ -197,12 +208,10 @@ export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinde
       {/* Hero Section */}
       <div className="text-center mb-6 animate-fade-in">
         <h2 className="text-2xl font-bold text-foreground mb-2 tracking-tight">
-          {campaignId ? `Find Candidates for "${campaignName}"` : 'Find Your Next Placement'}
+          Find Your Next Placement
         </h2>
         <p className="text-muted-foreground text-base max-w-md mx-auto">
-          {campaignId 
-            ? 'Add more candidates to your job opening'
-            : 'Paste a full job description or describe the role, location, and requirements. Be as specific as possible.'}
+          Paste a full job description or describe the role, location, and requirements. Be as specific as possible.
         </p>
       </div>
 
@@ -257,6 +266,24 @@ export function LeadFinder({ onLeadsFound, campaignId, campaignName }: LeadFinde
                 <span className="text-destructive font-medium">You have no searches remaining. Upgrade to continue finding candidates.</span>
               )}
             </p>
+          )}
+
+          {/* Campaign selector */}
+          {campaigns.length > 0 && (
+            <div className="mt-4">
+              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Add to Job Opening (optional)</label>
+              <Select value={selectedCampaignId} onValueChange={setSelectedCampaignId}>
+                <SelectTrigger className="w-full bg-background">
+                  <SelectValue placeholder="Unassigned (search only)" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover z-50">
+                  <SelectItem value="__none__">Unassigned (search only)</SelectItem>
+                  {campaigns.map((c) => (
+                    <SelectItem key={c.id} value={c.id!}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           )}
 
           <Button 
