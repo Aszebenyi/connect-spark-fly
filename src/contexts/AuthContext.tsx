@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { identifyUser } from '@/lib/analytics';
 
 interface SubscriptionData {
   subscribed: boolean;
@@ -96,6 +97,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false);
 
         if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+          if (event === 'SIGNED_IN') {
+            identifyUser(session.user.id, { email: session.user.email });
+          }
           setTimeout(() => {
             refreshSubscription();
           }, 0);

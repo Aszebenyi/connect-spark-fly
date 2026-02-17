@@ -17,6 +17,7 @@ import { useEmailConnection } from '@/hooks/useEmailConnection';
 import { useEmailStats } from '@/hooks/useEmailStats';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { trackEvent } from '@/lib/analytics';
 
 interface EmailModalProps {
   lead: Lead | null;
@@ -91,6 +92,7 @@ export function EmailModal({ lead, campaign, isOpen, onClose, onSent }: EmailMod
 
       if (result.success) {
         toast({ title: `Email sent to ${lead.name}` });
+        trackEvent('email_sent', { leadId: lead.id, campaignId: campaign?.id });
         // Auto-log email sent as a note
         const { createLeadNote } = await import('@/lib/api');
         createLeadNote(lead.id, `Email sent: ${subject}`, 'email_sent');
