@@ -721,3 +721,58 @@ export async function deleteSavedSearch(id: string): Promise<{ success: boolean;
 
   return { success: true };
 }
+
+// Lead Notes functions
+export interface LeadNote {
+  id: string;
+  lead_id: string;
+  user_id: string;
+  content: string;
+  note_type: string;
+  created_at: string;
+}
+
+export async function getLeadNotes(leadId: string): Promise<{ success: boolean; notes?: LeadNote[]; error?: string }> {
+  const { data, error } = await supabase
+    .from('lead_notes')
+    .select('*')
+    .eq('lead_id', leadId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Get lead notes error:', error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true, notes: data as unknown as LeadNote[] };
+}
+
+export async function createLeadNote(leadId: string, content: string, noteType: string = 'note'): Promise<{ success: boolean; error?: string }> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { error } = await supabase
+    .from('lead_notes')
+    .insert({ lead_id: leadId, user_id: user.id, content, note_type: noteType });
+
+  if (error) {
+    console.error('Create lead note error:', error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+
+export async function deleteLeadNote(noteId: string): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase
+    .from('lead_notes')
+    .delete()
+    .eq('id', noteId);
+
+  if (error) {
+    console.error('Delete lead note error:', error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
