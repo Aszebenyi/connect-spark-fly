@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBrandConfig } from '@/hooks/useBrandConfig';
 import { ContactDialog } from '@/components/ContactDialog';
-import { FreeLeadSampleModal } from '@/components/lead-magnets/FreeLeadSampleModal';
+import { ShieldCheck, Sparkles, Mail } from 'lucide-react';
 
 import {
   PulseOrb,
@@ -202,7 +202,7 @@ export default function Landing() {
   const { user } = useAuth();
   const { appName } = useBrandConfig();
   const [isContactOpen, setIsContactOpen] = useState(false);
-  const [isFreeLeadSampleOpen, setIsFreeLeadSampleOpen] = useState(false);
+  
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -387,14 +387,12 @@ export default function Landing() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1, delay: 0.6 }}
-            className="mt-16 flex items-center justify-center">
-            <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/80 backdrop-blur-sm border border-border/40 shadow-sm text-sm text-muted-foreground">
-              <span>✓ HIPAA-conscious</span>
-              <span className="text-border">·</span>
-              <span>✓ CAN-SPAM compliant</span>
-              <span className="text-border">·</span>
-              <span>✓ SOC 2 in progress</span>
-            </div>
+            className="mt-16 flex items-center justify-center gap-3 flex-wrap">
+            {["✓ License Verification", "✓ CAN-SPAM Compliant", "✓ HIPAA Conscious"].map((badge) => (
+              <span key={badge} className="inline-flex items-center px-4 py-2 rounded-full bg-muted/60 border border-border/40 text-sm text-muted-foreground font-medium">
+                {badge}
+              </span>
+            ))}
           </motion.div>
         </motion.div>
         
@@ -439,25 +437,25 @@ export default function Landing() {
           <div className="grid md:grid-cols-3 gap-6">
             {[
               {
-                title: "License Verification",
-                description: "Automatically detects RN, BSN, NP, CRNA and 15+ license types from candidate profiles",
-                icon: "🔍",
+                title: "Automatic License Verification",
+                description: "Detects RN, BSN, NP, CRNA, and 15+ healthcare license types directly from candidate profiles. No manual checking.",
+                Icon: ShieldCheck,
               },
               {
-                title: "Credential Matching",
-                description: "AI scores each candidate against your specific requirements — BLS, ACLS, specialty experience, location",
-                icon: "✓",
+                title: "AI Credential Matching",
+                description: "Each candidate scored against your specific requirements — specialty experience, certifications, location match — with detailed reasoning.",
+                Icon: Sparkles,
               },
               {
-                title: "Smart Outreach",
-                description: "AI writes personalized emails using each candidate's actual credentials and experience",
-                icon: "✉️",
+                title: "Personalized Outreach at Scale",
+                description: "AI writes unique emails using each candidate's actual credentials and work history. Send via your Gmail with one click.",
+                Icon: Mail,
               },
             ].map((card, i) => (
               <AnimatedSection key={card.title} delay={i * 0.1}>
                 <div className="p-6 rounded-2xl bg-card border border-border/40 shadow-md h-full flex flex-col">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-xl mb-4">
-                    {card.icon}
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-4">
+                    <card.Icon className="w-6 h-6 text-primary" />
                   </div>
                   <h3 className="text-lg font-semibold text-foreground mb-2">{card.title}</h3>
                   <p className="text-muted-foreground text-sm leading-relaxed flex-1">{card.description}</p>
@@ -608,12 +606,13 @@ export default function Landing() {
               </svg>
             </Button>
             <Button
-              onClick={() => setIsFreeLeadSampleOpen(true)}
+              asChild
               variant="outline"
               size="lg"
               className="h-14 px-8 text-lg gap-2 bg-white/80 backdrop-blur-sm border-border/60 shadow-md hover:shadow-lg hover:bg-white hover:border-primary/30 transition-all duration-300">
-
-              👥 Get 5 Free Candidates
+              <a href="#how-it-works">
+                See How It Works
+              </a>
             </Button>
           </div>
           <p className="text-sm text-muted-foreground/60 mt-6">
@@ -652,8 +651,6 @@ export default function Landing() {
       {/* Contact Dialog */}
       <ContactDialog isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
       
-      {/* Free Lead Sample Modal */}
-      <FreeLeadSampleModal open={isFreeLeadSampleOpen} onOpenChange={setIsFreeLeadSampleOpen} />
     </div>);
 
 }
