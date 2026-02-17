@@ -41,8 +41,8 @@ export function OnboardingChecklist({
     setIsDismissed(true);
   };
 
-  // Don't show if dismissed or fully complete
-  if (isDismissed || progress.isComplete || progress.isLoading) {
+  // Don't show if dismissed, fully complete, or wizard was completed
+  if (isDismissed || progress.isComplete || progress.isLoading || progress.onboardingCompleted) {
     return null;
   }
 

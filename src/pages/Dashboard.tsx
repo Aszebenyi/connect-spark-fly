@@ -6,6 +6,7 @@ import { LeadDetailSheet } from '@/components/LeadDetailSheet';
 import { CreateCampaignDialog } from '@/components/CreateCampaignDialog';
 import { SettingsPage } from '@/components/SettingsPage';
 import { AddCandidateDialog } from '@/components/AddCandidateDialog';
+import { OnboardingWizard } from '@/components/OnboardingWizard';
 import { SEO } from '@/components/SEO';
 import { Loader2 } from 'lucide-react';
 import { DashboardTab } from '@/components/dashboard/DashboardTab';
@@ -27,6 +28,7 @@ import {
   deleteLead,
 } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscriptionRealtime } from '@/hooks/useSubscriptionRealtime';
 import { useBrandConfig } from '@/hooks/useBrandConfig';
@@ -46,6 +48,8 @@ export default function Index() {
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [findMoreCampaign, setFindMoreCampaign] = useState<Campaign | null>(null);
   const [showAddCandidate, setShowAddCandidate] = useState(false);
+  const [showOnboardingWizard, setShowOnboardingWizard] = useState(false);
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
   const { toast } = useToast();
   const { user, loading: authLoading, refreshSubscription } = useAuth();
   const navigate = useNavigate();
@@ -100,6 +104,34 @@ export default function Index() {
   };
 
   useEffect(() => { if (user) loadData(); }, [user]);
+
+  // Check if onboarding wizard should show (first login, no campaigns/leads)
+  useEffect(() => {
+    if (!user || onboardingChecked) return;
+    const checkOnboarding = async () => {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('onboarding_completed')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (profile?.onboarding_completed) {
+        setOnboardingChecked(true);
+        return;
+      }
+      // Check if user has any campaigns or leads
+      const [campaignsResult, leadsResult] = await Promise.all([
+        supabase.from('campaigns').select('id').limit(1),
+        supabase.from('leads').select('id').limit(1),
+      ]);
+      const hasCampaigns = (campaignsResult.data?.length ?? 0) > 0;
+      const hasLeads = (leadsResult.data?.length ?? 0) > 0;
+      if (!hasCampaigns && !hasLeads) {
+        setShowOnboardingWizard(true);
+      }
+      setOnboardingChecked(true);
+    };
+    checkOnboarding();
+  }, [user, onboardingChecked]);
 
   if (isOAuthPopup) return <OAuthCallback />;
 
@@ -266,6 +298,12 @@ export default function Index() {
       <LeadDetailSheet lead={selectedLead} open={!!selectedLead} onClose={() => setSelectedLead(null)} onLeadUpdated={handleLeadUpdated} />
       <CreateCampaignDialog open={showCreateCampaign} onOpenChange={setShowCreateCampaign} onCreated={handleCampaignCreated} />
       <AddCandidateDialog open={showAddCandidate} onOpenChange={setShowAddCandidate} onCreated={loadData} />
+      {showOnboardingWizard && (
+        <OnboardingWizard
+          onComplete={() => { setShowOnboardingWizard(false); loadData(); }}
+          onClose={() => setShowOnboardingWizard(false)}
+        />
+      )}
     </div>
   );
 }
