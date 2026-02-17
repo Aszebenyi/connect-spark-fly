@@ -7,7 +7,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { SEO } from "@/components/SEO";
-import { ThemeProvider } from "next-themes";
 import { Loader2 } from "lucide-react";
 
 // Lazy-loaded routes for code splitting
@@ -38,7 +37,6 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <ErrorBoundary>
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>
@@ -71,7 +69,6 @@ const App = () => (
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
-    </ThemeProvider>
   </ErrorBoundary>
 );
 

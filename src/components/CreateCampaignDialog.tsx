@@ -3,18 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import {
   Dialog,
   DialogContent,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { createCampaign, searchLeadsWithExa } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { useLeadSubscription } from '@/hooks/useLeadSubscription';
@@ -22,7 +14,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { ArrowRight, ArrowLeft, Sparkles, Target, Search, Check, Users, Zap, Eye, Loader2, Link, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { COUNTRIES, CountryCode, getCurrencySymbol, getLicenseLabel } from '@/lib/countries';
 
 interface CampaignData {
   id?: string;
@@ -104,34 +95,9 @@ export function CreateCampaignDialog({ open, onOpenChange, onCreated }: CreateCa
   const [isExtracting, setIsExtracting] = useState(false);
   const [autoFilledFields, setAutoFilledFields] = useState<Set<string>>(new Set());
   
-  // International fields
   const { user } = useAuth();
-  const [recruitCountries, setRecruitCountries] = useState<string[]>(['US']);
-  const [jobCountry, setJobCountry] = useState('US');
-  const [subdivision, setSubdivision] = useState('');
-  const [salaryMin, setSalaryMin] = useState('');
-  const [salaryMax, setSalaryMax] = useState('');
-  const [visaSponsorship, setVisaSponsorship] = useState(false);
   
   const { toast } = useToast();
-
-  // Load user's recruit_countries from profile
-  useEffect(() => {
-    if (!user) return;
-    supabase
-      .from('profiles')
-      .select('recruit_countries, base_country')
-      .eq('user_id', user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) {
-          const rc = (data as any).recruit_countries;
-          const bc = (data as any).base_country;
-          if (rc && rc.length > 0) setRecruitCountries(rc);
-          if (bc) setJobCountry(bc);
-        }
-      });
-  }, [user]);
 
   // Real-time lead subscription
   const { newLeadsCount, latestLead, isListening } = useLeadSubscription({
@@ -152,10 +118,6 @@ export function CreateCampaignDialog({ open, onOpenChange, onCreated }: CreateCa
     setJobPostingUrl('');
     setIsExtracting(false);
     setAutoFilledFields(new Set());
-    setSubdivision('');
-    setSalaryMin('');
-    setSalaryMax('');
-    setVisaSponsorship(false);
   }, []);
 
   const handleExtractJobPosting = async () => {
@@ -252,7 +214,6 @@ export function CreateCampaignDialog({ open, onOpenChange, onCreated }: CreateCa
     transitionTo('saving');
 
     try {
-      const country = COUNTRIES[jobCountry as CountryCode];
       const campaignResult = await createCampaign({
         name: name.trim(),
         goal: goal.trim(),
@@ -260,12 +221,7 @@ export function CreateCampaignDialog({ open, onOpenChange, onCreated }: CreateCa
         search_query: searchQuery.trim(),
         sent_count: 0,
         reply_count: 0,
-        job_country: jobCountry,
-        salary_min: salaryMin ? parseFloat(salaryMin) : null,
-        salary_max: salaryMax ? parseFloat(salaryMax) : null,
-        salary_currency: country?.currency || 'USD',
-        visa_sponsorship: visaSponsorship,
-      } as any);
+      });
 
       if (!campaignResult.success || !campaignResult.campaign?.id) {
         throw new Error(campaignResult.error || 'Failed to create campaign');
@@ -504,90 +460,6 @@ export function CreateCampaignDialog({ open, onOpenChange, onCreated }: CreateCa
                   className={cn("apple-input min-h-[120px] text-base resize-none", autoFilledFields.has('goal') && "border-success/40 bg-success/5")}
                   autoFocus
                 />
-                {/* Country-specific fields */}
-                <div className="border-t border-border/30 pt-4 space-y-4">
-                  <p className="text-xs text-muted-foreground/60 font-medium uppercase tracking-wider">
-                    Job Location
-                  </p>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-sm">Country</Label>
-                      <Select value={jobCountry} onValueChange={(v) => { setJobCountry(v); setSubdivision(''); }}>
-                        <SelectTrigger className="rounded-xl">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {recruitCountries.map(code => {
-                            const c = COUNTRIES[code as CountryCode];
-                            return c ? (
-                              <SelectItem key={code} value={code}>
-                                {c.flag} {c.name}
-                              </SelectItem>
-                            ) : null;
-                          })}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    {COUNTRIES[jobCountry as CountryCode]?.subdivisions && (
-                      <div className="space-y-2">
-                        <Label className="text-sm">{COUNTRIES[jobCountry as CountryCode]?.subdivisionLabel}</Label>
-                        <Select value={subdivision} onValueChange={setSubdivision}>
-                          <SelectTrigger className="rounded-xl">
-                            <SelectValue placeholder={`Select ${COUNTRIES[jobCountry as CountryCode]?.subdivisionLabel}`} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {COUNTRIES[jobCountry as CountryCode]?.subdivisions.map((s: string) => (
-                              <SelectItem key={s} value={s}>{s}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Salary Range */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-sm">Salary Min</Label>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground">{getCurrencySymbol(jobCountry)}</span>
-                        <Input
-                          type="number"
-                          value={salaryMin}
-                          onChange={(e) => setSalaryMin(e.target.value)}
-                          placeholder="60000"
-                          className="rounded-xl"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-sm">Salary Max</Label>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground">{getCurrencySymbol(jobCountry)}</span>
-                        <Input
-                          type="number"
-                          value={salaryMax}
-                          onChange={(e) => setSalaryMax(e.target.value)}
-                          placeholder="90000"
-                          className="rounded-xl"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Visa Sponsorship */}
-                  {['AE', 'AU', 'GB'].includes(jobCountry) && (
-                    <div className="flex items-center justify-between p-3 rounded-xl border border-border">
-                      <Label className="text-sm">Visa Sponsorship Available</Label>
-                      <Switch checked={visaSponsorship} onCheckedChange={setVisaSponsorship} />
-                    </div>
-                  )}
-
-                  {/* Required Credentials hint */}
-                  <p className="text-xs text-muted-foreground">
-                    {getLicenseLabel(jobCountry)} required · Example: {COUNTRIES[jobCountry as CountryCode]?.regulatory.example}
-                  </p>
-                </div>
 
                 <div className="pt-2">
                   <p className="text-xs text-muted-foreground/60 font-medium uppercase tracking-wider mb-3">
