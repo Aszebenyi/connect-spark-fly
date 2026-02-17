@@ -118,6 +118,15 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Verify the request carries a valid authorization token (anon key from cron or service role)
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const supabaseAdmin = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
     logInfo('Starting reply check run', { endpoint: 'check-gmail-replies' });
