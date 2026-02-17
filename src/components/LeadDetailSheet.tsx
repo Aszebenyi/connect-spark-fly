@@ -33,11 +33,15 @@ import {
   ChevronRight,
   AlertCircle,
   ChevronDown,
+  Eye,
+  MousePointerClick,
 } from 'lucide-react';
 import { enrichLeadWithLinkedIn, LinkedInProfile, getOutreachMessages, OutreachMessage } from '@/lib/api';
 import { toast } from 'sonner';
 import { useEmailConnection } from '@/hooks/useEmailConnection';
 import { generateOutreach, GeneratedOutreach } from '@/lib/api';
+import { supabase } from '@/integrations/supabase/client';
+
 
 interface LeadDetailSheetProps {
   lead: Lead | null;
@@ -102,21 +106,39 @@ export function LeadDetailSheet({ lead, open, onClose, onLeadUpdated }: LeadDeta
   const [emailHistory, setEmailHistory] = useState<OutreachMessage[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [expandedEmailId, setExpandedEmailId] = useState<string | null>(null);
+  const [emailLogMap, setEmailLogMap] = useState<Record<string, { opened_at: string | null; clicked_at: string | null }>>({});
 
   // Sync local state when lead changes or when sheet opens
   useEffect(() => {
     if (lead && open) {
       setLocalProfileData(lead.profile_data || null);
-      // Load email history
       setIsLoadingHistory(true);
-      getOutreachMessages(lead.id).then(result => {
-        if (result.success && result.messages) {
-          setEmailHistory(result.messages.slice(0, 10));
+      
+      // Load outreach messages and email_log open/click data in parallel
+      Promise.all([
+        getOutreachMessages(lead.id),
+        supabase
+          .from('email_log')
+          .select('subject, sent_at, opened_at, clicked_at, metadata')
+          .filter('metadata->>lead_id', 'eq', lead.id),
+      ]).then(([outreachResult, logResult]) => {
+        if (outreachResult.success && outreachResult.messages) {
+          setEmailHistory(outreachResult.messages.slice(0, 10));
+        }
+        // Build a map by subject+sent_at for matching
+        if (logResult.data) {
+          const map: Record<string, { opened_at: string | null; clicked_at: string | null }> = {};
+          for (const log of logResult.data) {
+            const key = `${log.subject}|${log.sent_at?.substring(0, 16)}`;
+            map[key] = { opened_at: log.opened_at, clicked_at: log.clicked_at };
+          }
+          setEmailLogMap(map);
         }
       }).finally(() => setIsLoadingHistory(false));
     } else {
       setEmailHistory([]);
       setExpandedEmailId(null);
+      setEmailLogMap({});
     }
   }, [lead?.id, open]);
 
@@ -605,7 +627,10 @@ export function LeadDetailSheet({ lead, open, onClose, onLeadUpdated }: LeadDeta
               ) : (
                 <div className="space-y-2 relative">
                   <div className="absolute left-5 top-4 bottom-4 w-px bg-border/50" />
-                  {emailHistory.map((msg) => (
+                  {emailHistory.map((msg) => {
+                    const logKey = `${msg.subject}|${msg.sent_at?.substring(0, 16)}`;
+                    const logData = emailLogMap[logKey];
+                    return (
                     <div key={msg.id} className="relative pl-8">
                       <div className="absolute left-3.5 top-3 w-3 h-3 rounded-full bg-primary/20 border-2 border-primary z-10" />
                       <ItemCard hover className="cursor-pointer" onClick={() => setExpandedEmailId(expandedEmailId === msg.id ? null : msg.id!)}>
@@ -613,7 +638,21 @@ export function LeadDetailSheet({ lead, open, onClose, onLeadUpdated }: LeadDeta
                           <span className="text-xs text-muted-foreground">
                             ✉️ {msg.sent_at ? new Date(msg.sent_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Draft'}
                           </span>
-                          <Badge variant="outline" className="text-[10px] capitalize">{msg.status || 'sent'}</Badge>
+                          <div className="flex items-center gap-1.5">
+                            {logData?.opened_at && (
+                              <span className="inline-flex items-center gap-1 text-[10px] text-emerald-500">
+                                <Eye className="w-3 h-3" />
+                                Opened
+                              </span>
+                            )}
+                            {logData?.clicked_at && (
+                              <span className="inline-flex items-center gap-1 text-[10px] text-blue-500">
+                                <MousePointerClick className="w-3 h-3" />
+                                Clicked
+                              </span>
+                            )}
+                            <Badge variant="outline" className="text-[10px] capitalize">{msg.status || 'sent'}</Badge>
+                          </div>
                         </div>
                         <p className="text-sm font-medium text-foreground truncate">{msg.subject || 'No subject'}</p>
                         {expandedEmailId === msg.id && (
@@ -621,6 +660,8 @@ export function LeadDetailSheet({ lead, open, onClose, onLeadUpdated }: LeadDeta
                         )}
                       </ItemCard>
                     </div>
+                    );
+                  })}
                   ))}
                 </div>
               )}
