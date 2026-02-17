@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
-import { COUNTRIES, CountryCode, getCountryFlag } from '@/lib/countries';
+import { getCountryFlag } from '@/lib/countries';
 import { Lead, Campaign, getOutreachMessages, OutreachMessage } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -689,7 +689,7 @@ export function LeadTable({
                     aria-label="Select all"
                   />
                 </th>
-                <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '20%' }}>
+                <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '22%' }}>
                   <button 
                     onClick={() => handleSort('name')}
                     className="flex items-center gap-2 hover:text-foreground transition-colors"
@@ -698,11 +698,10 @@ export function LeadTable({
                     <span className="text-[10px]">↕</span>
                   </button>
                 </th>
-                <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '15%' }}>Employer</th>
+                <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '14%' }}>Employer</th>
                 <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '10%' }}>Location</th>
-                <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '10%' }}>License</th>
-                <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '15%' }}>Certifications</th>
-                <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '8%' }}>
+                <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '16%' }}>Credentials</th>
+                <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '9%' }}>
                   <button 
                     onClick={() => handleSort('experience')}
                     className="flex items-center gap-2 hover:text-foreground transition-colors"
@@ -711,7 +710,6 @@ export function LeadTable({
                     <span className="text-[10px]">↕</span>
                   </button>
                 </th>
-                <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '10%' }}>Emp. Status</th>
                 <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '7%' }}>
                   <button 
                     onClick={() => handleSort('match_score')}
@@ -729,7 +727,7 @@ export function LeadTable({
             <tbody>
               {filteredLeads.length === 0 ? (
                 <tr>
-                  <td colSpan={12} className="p-0">
+                  <td colSpan={10} className="p-0">
                     {leads.length === 0 ? (
                       <EmptyState
                         icon={<Users className="w-8 h-8" />}
@@ -841,41 +839,33 @@ export function LeadTable({
                       <td className="p-3 align-middle">
                         {(() => {
                           const licenses = parseBadgeList(getProfileField(lead, 'licenses'));
-                          return licenses.length > 0 ? (
-                            <div className="flex flex-wrap gap-1.5">
-                              {licenses.map((lic) => (
-                                <Badge key={lic} variant="outline" className="text-xs font-semibold px-2.5 py-1 rounded-full border-primary/30 text-primary bg-primary/10">
-                                  <ShieldCheck className="w-3 h-3 mr-1" />
-                                  {lic}
-                                </Badge>
-                              ))}
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">-</span>
-                          );
-                        })()}
-                      </td>
-                      <td className="p-3 align-middle">
-                        {(() => {
                           const certs = parseBadgeList(getProfileField(lead, 'certifications'));
-                          if (certs.length === 0) return <span className="text-muted-foreground text-sm">-</span>;
-                          const visible = certs.slice(0, 3);
-                          const remaining = certs.length - 3;
+                          if (licenses.length === 0 && certs.length === 0) return <span className="text-muted-foreground text-sm">-</span>;
                           return (
-                            <div className="flex flex-wrap gap-1.5">
-                              {visible.map((cert) => (
-                                <Badge key={cert} variant="secondary" className="text-xs font-semibold px-2.5 py-1 rounded-full">
-                                  {cert}
-                                </Badge>
-                              ))}
-                              {remaining > 0 && (
-                                <Badge
-                                  variant="outline"
-                                  className="text-xs px-2.5 py-1 rounded-full cursor-default"
-                                  title={certs.join(', ')}
-                                >
-                                  +{remaining} more
-                                </Badge>
+                            <div className="space-y-1.5">
+                              {licenses.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                  {licenses.map((lic) => (
+                                    <Badge key={lic} variant="outline" className="text-xs font-semibold px-2 py-0.5 rounded-full border-primary/30 text-primary bg-primary/10">
+                                      <ShieldCheck className="w-3 h-3 mr-1" />
+                                      {lic}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                              {certs.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                  {certs.slice(0, 3).map((cert) => (
+                                    <Badge key={cert} variant="secondary" className="text-[10px] font-medium px-1.5 py-0.5 rounded-full">
+                                      {cert}
+                                    </Badge>
+                                  ))}
+                                  {certs.length > 3 && (
+                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 rounded-full" title={certs.join(', ')}>
+                                      +{certs.length - 3}
+                                    </Badge>
+                                  )}
+                                </div>
                               )}
                             </div>
                           );
@@ -883,19 +873,6 @@ export function LeadTable({
                       </td>
                       <td className="p-3 align-middle">
                         <span className="text-sm text-foreground">{getExperienceLabel(lead)}</span>
-                      </td>
-                      <td className="p-3 align-middle">
-                        {(() => {
-                          const emp = getEmploymentStatus(lead);
-                          return emp.status === 'employed' ? (
-                            <div>
-                              <Badge className="border bg-emerald-500/15 text-emerald-600 border-emerald-500/30 text-xs">Currently Employed</Badge>
-                              {emp.employer && <p className="text-xs text-muted-foreground mt-1 truncate max-w-[120px]">{emp.employer}</p>}
-                            </div>
-                          ) : (
-                            <Badge className="border bg-primary/15 text-primary border-primary/30 text-xs">Available</Badge>
-                          );
-                        })()}
                       </td>
                       <td className="p-3 align-middle">
                         {(() => {

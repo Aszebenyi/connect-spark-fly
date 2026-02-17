@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { SEO } from "@/components/SEO";
 import { Loader2 } from "lucide-react";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // Lazy-loaded routes for code splitting
 const Landing = lazy(() => import('./pages/Landing'));
@@ -18,7 +19,6 @@ const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const Terms = lazy(() => import('./pages/Terms'));
 const Privacy = lazy(() => import('./pages/Privacy'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
-const Explainer = lazy(() => import('./pages/Explainer'));
 const OpeningDetail = lazy(() => import('./pages/OpeningDetail'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
@@ -60,8 +60,11 @@ const App = () => (
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/privacy" element={<Privacy />} />
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/explainer" element={<Explainer />} />
+                <Route path="/admin" element={
+                  <ProtectedRoute>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                } />
                 <Route path="/opening/:id" element={<OpeningDetail />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />

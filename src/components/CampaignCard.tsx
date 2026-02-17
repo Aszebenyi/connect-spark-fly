@@ -53,7 +53,7 @@ export function CampaignCard({ campaign, onUpdate, onViewLeads, onFindMoreLeads,
     try {
       const result = await updateCampaign(campaign.id, { status: newStatus });
       if (result.success) {
-        toast.success(`Campaign ${newStatus}`);
+        toast.success(`Job opening ${newStatus === 'completed' ? 'completed' : newStatus === 'paused' ? 'paused' : 'updated'}`);
         onUpdate?.();
       } else {
         toast.error('Failed to update');
@@ -69,7 +69,7 @@ export function CampaignCard({ campaign, onUpdate, onViewLeads, onFindMoreLeads,
     try {
       const result = await deleteCampaign(campaign.id);
       if (result.success) {
-        toast.success('Campaign deleted');
+        toast.success('Job opening deleted');
         onUpdate?.();
       } else {
         toast.error('Failed to delete');
@@ -119,7 +119,7 @@ export function CampaignCard({ campaign, onUpdate, onViewLeads, onFindMoreLeads,
                 <DropdownMenuItem onClick={() => handleStatusChange('paused')}>Pause</DropdownMenuItem>
               )}
               <DropdownMenuItem onClick={() => handleStatusChange('completed')}>Mark Complete</DropdownMenuItem>
-              <DropdownMenuItem onClick={handleDelete} className="text-destructive focus:text-destructive">Delete</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleDelete} className="text-destructive focus:text-destructive">Delete Job Opening</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
