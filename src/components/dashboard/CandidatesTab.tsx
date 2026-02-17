@@ -17,6 +17,7 @@ interface CandidatesTabProps {
   onBulkDelete: (leadIds: string[]) => Promise<void>;
   onBulkAssign: (leadIds: string[], campaignId: string) => Promise<void>;
   onBulkRemove: (leadIds: string[], campaignId: string) => Promise<void>;
+  onAssignToCampaign: (leadId: string, campaignId: string) => Promise<void>;
   onCreateCampaign: () => void;
   onFindLeads: () => void;
   onShowAddCandidate: () => void;
@@ -37,6 +38,7 @@ export function CandidatesTab({
   onBulkDelete,
   onBulkAssign,
   onBulkRemove,
+  onAssignToCampaign,
   onCreateCampaign,
   onFindLeads,
   onShowAddCandidate,
@@ -100,6 +102,7 @@ export function CandidatesTab({
         onBulkDelete={onBulkDelete}
         onBulkAssign={onBulkAssign}
         onBulkRemove={onBulkRemove}
+        onAssignToCampaign={onAssignToCampaign}
         onCreateCampaign={onCreateCampaign}
         onFindLeads={onFindLeads}
         initialStatusFilter={statusFilterFromStats}

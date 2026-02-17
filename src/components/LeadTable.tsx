@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { CheckCircle2, Download, Users, Search, Sparkles, ShieldCheck, X, Trash2, Plus, Mail, MessageCircle, Calendar, CheckCircle, Eye } from 'lucide-react';
+import { CheckCircle2, Download, Users, Search, Sparkles, ShieldCheck, X, Trash2, Plus, Mail, MessageCircle, Calendar, CheckCircle, Eye, Archive, MoreHorizontal } from 'lucide-react';
 import { exportLeadsToCSV } from '@/lib/csv-export';
 import { EmailModal } from '@/components/EmailModal';
 import { BulkEmailModal } from '@/components/BulkEmailModal';
@@ -24,6 +24,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -55,6 +58,7 @@ interface LeadTableProps {
   onBulkRemove?: (leadIds: string[], campaignId: string) => void;
   onCreateCampaign?: () => void;
   onFindLeads?: () => void;
+  onAssignToCampaign?: (leadId: string, campaignId: string) => void;
   initialStatusFilter?: string | null;
   onClearStatusFilter?: () => void;
   activeCampaign?: Campaign | null;
@@ -64,6 +68,7 @@ const statusConfig: Record<string, { label: string; color: string }> = {
   new: { label: 'New', color: 'bg-muted text-muted-foreground border-border' },
   unqualified: { label: 'Unqualified', color: 'bg-muted text-muted-foreground border-border' },
   lost: { label: 'Lost', color: 'bg-muted text-muted-foreground border-border' },
+  archived: { label: 'Archived', color: 'bg-muted/50 text-muted-foreground/60 border-border/30' },
   contacted: { label: 'Contacted', color: 'bg-primary/15 text-primary border-primary/30' },
   interview_scheduled: { label: 'Interview', color: 'bg-primary/15 text-primary border-primary/30' },
   offer_sent: { label: 'Offer Sent', color: 'bg-primary/15 text-primary border-primary/30' },
@@ -97,24 +102,10 @@ function getMatchScoreBadgeClass(score: number): string {
   return 'bg-red-500/15 text-red-500 border-red-500/30';
 }
 
-function getEmployer(lead: Lead): string {
-  const pd = getProfileData(lead);
-  return lead.company || pd.company || pd.linkedin?.company || pd.linkedin?.latestCompany || '-';
-}
-
-function getEmploymentStatus(lead: Lead): { status: 'employed' | 'available'; employer: string | null } {
-  const pd = getProfileData(lead);
-  const employer = lead.company || pd.company || pd.linkedin?.company || pd.linkedin?.latestCompany || null;
-  const isCurrentlyEmployed = employer && employer !== '-';
-  return {
-    status: isCurrentlyEmployed ? 'employed' : 'available',
-    employer: isCurrentlyEmployed ? employer : null,
-  };
-}
-
 function getLocation(lead: Lead): string {
   const pd = getProfileData(lead);
-  return lead.location || pd.location || pd.linkedin?.location || '-';
+  const loc = lead.location || pd.location || pd.linkedin?.location || '-';
+  return loc.length > 20 ? loc.substring(0, 20) + '…' : loc;
 }
 
 function getExperienceYears(lead: Lead): number | null {
@@ -132,14 +123,6 @@ function getExperienceLabel(lead: Lead): string {
   const specialty = getProfileField(lead, 'specialty');
   const shortSpec = specialty?.split(',')[0]?.trim();
   return shortSpec ? `${yrs} yrs ${shortSpec}` : `${yrs} yrs`;
-}
-
-function getSpecialtySubtitle(lead: Lead): string | null {
-  const specialty = getProfileField(lead, 'specialty');
-  if (!specialty) return null;
-  const title = (lead.title || '').toLowerCase();
-  if (title.includes(specialty.toLowerCase())) return null;
-  return `${specialty} Specialty`;
 }
 
 // Email open tracking data type
@@ -162,6 +145,7 @@ export function LeadTable({
   onBulkRemove,
   onCreateCampaign,
   onFindLeads,
+  onAssignToCampaign,
   initialStatusFilter,
   onClearStatusFilter,
   activeCampaign,
@@ -170,8 +154,7 @@ export function LeadTable({
   const isMobile = useIsMobile();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>(initialStatusFilter || 'all');
-  const [sortField, setSortField] = useState<string>('match_score');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [sortPreset, setSortPreset] = useState<string>('match');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [emailModalLead, setEmailModalLead] = useState<Lead | null>(null);
   const [showBulkEmail, setShowBulkEmail] = useState(false);
@@ -220,7 +203,6 @@ export function LeadTable({
           const meta = log.metadata as any;
           const leadId = meta?.lead_id;
           if (leadId) {
-            // Keep the most recent open data per lead
             if (!opens[leadId] || (log.opened_at && (!opens[leadId].opened_at || log.opened_at > opens[leadId].opened_at!))) {
               opens[leadId] = { opened_at: log.opened_at, clicked_at: log.clicked_at };
             }
@@ -274,44 +256,32 @@ export function LeadTable({
         (lead.company || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
         (lead.email || '').toLowerCase().includes(searchQuery.toLowerCase());
       
-      const matchesStatus = statusFilter === 'all' || lead.status === statusFilter;
+      // Hide archived by default when viewing "all"
+      const matchesStatus = statusFilter === 'all' 
+        ? lead.status !== 'archived'
+        : lead.status === statusFilter;
       
       return matchesSearch && matchesStatus;
     })
     .sort((a, b) => {
-      if (sortField === 'match_score') {
+      if (sortPreset === 'match') {
         const aScore = getMatchScore(a) ?? -1;
         const bScore = getMatchScore(b) ?? -1;
-        return sortDirection === 'asc' ? aScore - bScore : bScore - aScore;
+        return bScore - aScore;
       }
-      if (sortField === 'experience') {
+      if (sortPreset === 'newest') {
+        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+      }
+      if (sortPreset === 'experience') {
         const aYrs = getExperienceYears(a) ?? -1;
         const bYrs = getExperienceYears(b) ?? -1;
-        return sortDirection === 'asc' ? aYrs - bYrs : bYrs - aYrs;
+        return bYrs - aYrs;
       }
-      if (sortField === 'createdAt') {
-        const aDate = new Date(a.created_at || 0).getTime();
-        const bDate = new Date(b.created_at || 0).getTime();
-        return sortDirection === 'asc' ? aDate - bDate : bDate - aDate;
+      if (sortPreset === 'name') {
+        return a.name.localeCompare(b.name);
       }
-      const aVal = (a as any)[sortField];
-      const bVal = (b as any)[sortField];
-      if (typeof aVal === 'number' && typeof bVal === 'number') {
-        return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
-      }
-      return sortDirection === 'asc' 
-        ? String(aVal || '').localeCompare(String(bVal || ''))
-        : String(bVal || '').localeCompare(String(aVal || ''));
-    }), [leads, campaignLeadIds, searchQuery, statusFilter, sortField, sortDirection]);
-
-  const handleSort = (field: string) => {
-    if (sortField === field) {
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('desc');
-    }
-  };
+      return 0;
+    }), [leads, campaignLeadIds, searchQuery, statusFilter, sortPreset]);
 
   const selectedCampaign = campaigns?.find(c => c.id === selectedCampaignId);
 
@@ -379,6 +349,13 @@ export function LeadTable({
     }
   };
 
+  const handleBulkArchive = () => {
+    if (onStatusChange) {
+      Array.from(selectedIds).forEach(id => onStatusChange(id, 'archived'));
+      clearSelection();
+    }
+  };
+
   // Email indicator with open tracking
   const renderEmailIndicator = (lead: Lead) => {
     const outreach = outreachCounts[lead.id];
@@ -418,7 +395,6 @@ export function LeadTable({
   const renderMobileCard = (lead: Lead, index: number) => {
     const status = statusConfig[lead.status] || statusConfig.new;
     const score = getMatchScore(lead);
-    const leadJobs = leadCampaignMap[lead.id] || [];
 
     return (
       <div
@@ -429,7 +405,6 @@ export function LeadTable({
         )}
         style={{ animationDelay: `${index * 0.03}s` }}
       >
-        {/* Row 1: Checkbox + Avatar + Name + Score */}
         <div className="flex items-center gap-3 mb-3">
           <div onClick={(e) => { e.stopPropagation(); toggleOne(lead.id, index); }}>
             <Checkbox
@@ -446,9 +421,7 @@ export function LeadTable({
               </AvatarFallback>
             </Avatar>
             {lead.profile_data?.linkedin && (
-              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-card flex items-center justify-center">
-                <CheckCircle2 className="w-2.5 h-2.5 text-white" />
-              </div>
+              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-card" />
             )}
           </div>
           <div className="flex-1 min-w-0" onClick={() => onLeadClick(lead)}>
@@ -456,6 +429,7 @@ export function LeadTable({
               <p className="font-semibold text-foreground truncate">{lead.name}</p>
               {renderEmailIndicator(lead)}
             </div>
+            <p className="text-sm text-muted-foreground truncate">{lead.title || 'No title'}</p>
           </div>
           {score != null && (
             <Badge className={cn('border font-semibold text-xs flex-shrink-0', getMatchScoreBadgeClass(score))}>
@@ -464,68 +438,11 @@ export function LeadTable({
           )}
         </div>
 
-        {/* Row 2: Title | Employer */}
-        <div className="text-sm text-muted-foreground mb-2 truncate" onClick={() => onLeadClick(lead)}>
-          {lead.title || 'No title'}
-          {getEmployer(lead) !== '-' && ` · ${getEmployer(lead)}`}
-        </div>
-
-        {/* Row 3: Location | Status */}
-        <div className="flex items-center justify-between mb-3" onClick={() => onLeadClick(lead)}>
+        <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground truncate">{getLocation(lead)}</span>
           <Badge className={cn('border font-medium text-xs', status.color)}>
             {status.label}
           </Badge>
-        </div>
-
-        {/* Row 4: Actions */}
-        <div className="flex items-center gap-2 pt-2 border-t border-border/50" onClick={(e) => e.stopPropagation()}>
-          {lead.email && (
-            <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-lg text-xs" onClick={() => setEmailModalLead(lead)}>
-              <Mail className="w-3.5 h-3.5" />
-              Email
-            </Button>
-          )}
-          {onStatusChange && (
-            <Select onValueChange={(val) => onStatusChange(lead.id, val)}>
-              <SelectTrigger className="h-8 w-auto min-w-[100px] rounded-lg text-xs">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(statusConfig).map(([key, config]) => (
-                  <SelectItem key={key} value={key} className="text-xs">{config.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-          <div className="ml-auto">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg">
-                  <div className="flex flex-col gap-0.5">
-                    <div className="w-1 h-1 rounded-full bg-current" />
-                    <div className="w-1 h-1 rounded-full bg-current" />
-                    <div className="w-1 h-1 rounded-full bg-current" />
-                  </div>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                {lead.linkedin_url && (
-                  <DropdownMenuItem onClick={() => window.open(lead.linkedin_url, '_blank')}>
-                    View LinkedIn
-                  </DropdownMenuItem>
-                )}
-                {onDelete && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-destructive" onClick={() => onDelete(lead.id)}>
-                      Delete
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
         </div>
       </div>
     );
@@ -591,6 +508,19 @@ export function LeadTable({
             </SelectContent>
           </Select>
 
+          {/* Sort Dropdown */}
+          <Select value={sortPreset} onValueChange={setSortPreset}>
+            <SelectTrigger className={cn("rounded-xl", isMobile ? "flex-1" : "w-[150px]")}>
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="match">Best Match</SelectItem>
+              <SelectItem value="newest">Newest</SelectItem>
+              <SelectItem value="experience">Experience</SelectItem>
+              <SelectItem value="name">Name A-Z</SelectItem>
+            </SelectContent>
+          </Select>
+
           {/* Export Button */}
           {!isMobile && (
             <Button
@@ -615,11 +545,6 @@ export function LeadTable({
               Job Opening
             </Badge>
             <span className="font-medium text-foreground">{selectedCampaign.name}</span>
-            {!isMobile && selectedCampaign.search_query && (
-              <span className="text-sm text-muted-foreground">
-                · "{selectedCampaign.search_query}"
-              </span>
-            )}
           </div>
           <Button 
             variant="ghost" 
@@ -677,7 +602,7 @@ export function LeadTable({
           )}
         </div>
       ) : (
-        /* Desktop Table */
+        /* Desktop Table - 8 columns */
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -689,45 +614,33 @@ export function LeadTable({
                     aria-label="Select all"
                   />
                 </th>
-                <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '22%' }}>
-                  <button 
-                    onClick={() => handleSort('name')}
-                    className="flex items-center gap-2 hover:text-foreground transition-colors"
-                  >
-                    Candidate
-                    <span className="text-[10px]">↕</span>
-                  </button>
+                <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '24%' }}>
+                  Candidate
                 </th>
-                <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '14%' }}>Employer</th>
-                <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '10%' }}>Location</th>
-                <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '16%' }}>Credentials</th>
-                <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '9%' }}>
-                  <button 
-                    onClick={() => handleSort('experience')}
-                    className="flex items-center gap-2 hover:text-foreground transition-colors"
-                  >
-                    Experience
-                    <span className="text-[10px]">↕</span>
-                  </button>
+                <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '18%' }}>
+                  Credentials
                 </th>
-                <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '7%' }}>
-                  <button 
-                    onClick={() => handleSort('match_score')}
-                    className="flex items-center gap-2 hover:text-foreground transition-colors"
-                  >
-                    Match
-                    <span className="text-[10px]">↕</span>
-                  </button>
+                <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '12%' }}>
+                  Location
                 </th>
-                <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '10%' }}>Job Opening</th>
-                <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '6%' }}>Status</th>
-                <th className="text-right p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '4%' }}>Actions</th>
+                <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '12%' }}>
+                  Experience
+                </th>
+                <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '8%' }}>
+                  Match
+                </th>
+                <th className="text-left p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '12%' }}>
+                  Status
+                </th>
+                <th className="text-right p-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '6%' }}>
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {filteredLeads.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="p-0">
+                  <td colSpan={8} className="p-0">
                     {leads.length === 0 ? (
                       <EmptyState
                         icon={<Users className="w-8 h-8" />}
@@ -773,7 +686,6 @@ export function LeadTable({
               ) : (
                 filteredLeads.map((lead, index) => {
                   const status = statusConfig[lead.status] || statusConfig.new;
-                  const leadJobs = leadCampaignMap[lead.id] || [];
                   return (
                     <tr 
                       key={lead.id} 
@@ -785,6 +697,7 @@ export function LeadTable({
                       style={{ animationDelay: `${index * 0.03}s` }}
                       onClick={() => onLeadClick(lead)}
                     >
+                      {/* 1. CHECKBOX */}
                       <td className="p-3 w-12 align-middle" onClick={(e) => { e.stopPropagation(); toggleOne(lead.id, index, e as unknown as React.MouseEvent); }}>
                         <Checkbox
                           checked={selectedIds.has(lead.id)}
@@ -792,57 +705,41 @@ export function LeadTable({
                           aria-label={`Select ${lead.name}`}
                         />
                       </td>
+
+                      {/* 2. CANDIDATE */}
                       <td className="p-3 align-middle">
                         <div className="flex items-center gap-3">
                           <div className="relative">
                             <Avatar className="w-10 h-10 border border-border">
-                              <AvatarImage 
-                                src={lead.profile_data?.linkedin?.profilePicture} 
-                                alt={lead.name} 
-                              />
+                              <AvatarImage src={lead.profile_data?.linkedin?.profilePicture} alt={lead.name} />
                               <AvatarFallback className="text-xs bg-muted text-muted-foreground">
                                 {lead.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
                             {lead.profile_data?.linkedin && (
-                              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-card flex items-center justify-center">
-                                <CheckCircle2 className="w-2.5 h-2.5 text-white" />
-                              </div>
+                              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-card" />
                             )}
                           </div>
-                          <div>
+                          <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
-                              <p className="font-semibold text-foreground">{lead.name}</p>
-                              {renderEmailIndicator(lead)}
+                              <p className="font-semibold text-foreground truncate">{lead.name}</p>
+                              {outreachCounts[lead.id] && <Mail className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />}
                             </div>
-                            <p className="text-sm text-muted-foreground mt-0.5">
+                            <p className="text-sm text-muted-foreground truncate mt-0.5">
                               {lead.title || 'No title'}
-                              {(() => {
-                                const spec = getSpecialtySubtitle(lead);
-                                return spec ? <span> · {spec}</span> : null;
-                              })()}
                             </p>
                           </div>
                         </div>
                       </td>
-                      <td className="p-3 align-middle">
-                        <p className="text-foreground">{getEmployer(lead)}</p>
-                      </td>
-                      <td className="p-3 align-middle">
-                        <div className="flex items-center gap-1">
-                          <p className="text-foreground text-sm">{getLocation(lead)}</p>
-                          {(lead as any).nationality && (
-                            <span className="text-sm">{getCountryFlag((lead as any).nationality)}</span>
-                          )}
-                        </div>
-                      </td>
+
+                      {/* 3. CREDENTIALS */}
                       <td className="p-3 align-middle">
                         {(() => {
                           const licenses = parseBadgeList(getProfileField(lead, 'licenses'));
                           const certs = parseBadgeList(getProfileField(lead, 'certifications'));
                           if (licenses.length === 0 && certs.length === 0) return <span className="text-muted-foreground text-sm">-</span>;
                           return (
-                            <div className="space-y-1.5">
+                            <div className="space-y-1">
                               {licenses.length > 0 && (
                                 <div className="flex flex-wrap gap-1">
                                   {licenses.map((lic) => (
@@ -854,26 +751,27 @@ export function LeadTable({
                                 </div>
                               )}
                               {certs.length > 0 && (
-                                <div className="flex flex-wrap gap-1">
-                                  {certs.slice(0, 3).map((cert) => (
-                                    <Badge key={cert} variant="secondary" className="text-[10px] font-medium px-1.5 py-0.5 rounded-full">
-                                      {cert}
-                                    </Badge>
-                                  ))}
-                                  {certs.length > 3 && (
-                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 rounded-full" title={certs.join(', ')}>
-                                      +{certs.length - 3}
-                                    </Badge>
-                                  )}
-                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                  {certs.slice(0, 4).join(' · ')}
+                                  {certs.length > 4 && ` +${certs.length - 4}`}
+                                </p>
                               )}
                             </div>
                           );
                         })()}
                       </td>
+
+                      {/* 4. LOCATION */}
+                      <td className="p-3 align-middle">
+                        <p className="text-foreground text-sm">{getLocation(lead)}</p>
+                      </td>
+
+                      {/* 5. EXPERIENCE */}
                       <td className="p-3 align-middle">
                         <span className="text-sm text-foreground">{getExperienceLabel(lead)}</span>
                       </td>
+
+                      {/* 6. MATCH */}
                       <td className="p-3 align-middle">
                         {(() => {
                           const score = getMatchScore(lead);
@@ -886,40 +784,40 @@ export function LeadTable({
                           );
                         })()}
                       </td>
+
+                      {/* 7. STATUS — clickable dropdown */}
                       <td className="p-3 align-middle" onClick={(e) => e.stopPropagation()}>
-                        {leadJobs.length > 0 ? (
-                          <div className="flex flex-wrap gap-1">
-                            {leadJobs.map(j => (
-                              <button
-                                key={j.id}
-                                onClick={() => onCampaignFilterChange?.(j.id)}
-                                className="text-xs font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
-                              >
-                                {j.name}
-                              </button>
-                            ))}
-                          </div>
+                        {onStatusChange ? (
+                          <Select value={lead.status || 'new'} onValueChange={(val) => onStatusChange(lead.id, val)}>
+                            <SelectTrigger className={cn('h-7 w-auto min-w-[100px] rounded-full border text-xs font-medium px-3', status.color)}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Object.entries(statusConfig).map(([key, config]) => (
+                                <SelectItem key={key} value={key} className="text-xs">{config.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         ) : (
-                          <span className="text-muted-foreground text-sm">Unassigned</span>
+                          <Badge className={cn('border font-medium', status.color)}>
+                            {status.label}
+                          </Badge>
                         )}
                       </td>
-                      <td className="p-3 align-middle">
-                        <Badge className={cn('border font-medium', status.color)}>
-                          {status.label}
-                        </Badge>
-                      </td>
+
+                      {/* 8. ACTIONS — three-dot menu */}
                       <td className="p-3 text-right align-middle">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                             <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" aria-label={`Actions for ${lead.name}`}>
-                              <div className="flex flex-col gap-0.5">
-                                <div className="w-1 h-1 rounded-full bg-current" />
-                                <div className="w-1 h-1 rounded-full bg-current" />
-                                <div className="w-1 h-1 rounded-full bg-current" />
-                              </div>
+                              <MoreHorizontal className="w-4 h-4" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="border-border/80 w-48">
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onLeadClick(lead); }}>
+                              <Eye className="w-4 h-4 mr-2" />
+                              View Profile
+                            </DropdownMenuItem>
                             {lead.email && (
                               <DropdownMenuItem onClick={(e) => {
                                 e.stopPropagation();
@@ -929,43 +827,49 @@ export function LeadTable({
                                 Send Email
                               </DropdownMenuItem>
                             )}
-                            {lead.linkedin_url && (
-                              <DropdownMenuItem onClick={(e) => {
-                                e.stopPropagation();
-                                window.open(lead.linkedin_url, '_blank');
-                              }}>
-                                View LinkedIn
-                              </DropdownMenuItem>
+                            
+                            {/* Assign to Job submenu */}
+                            {campaigns && campaigns.length > 0 && onAssignToCampaign && (
+                              <DropdownMenuSub>
+                                <DropdownMenuSubTrigger onClick={(e) => e.stopPropagation()}>
+                                  <Plus className="w-4 h-4 mr-2" />
+                                  Assign to Job
+                                </DropdownMenuSubTrigger>
+                                <DropdownMenuSubContent className="w-48">
+                                  {campaigns.map(c => (
+                                    <DropdownMenuItem key={c.id} onClick={(e) => {
+                                      e.stopPropagation();
+                                      onAssignToCampaign(lead.id, c.id!);
+                                    }}>
+                                      {c.name}
+                                    </DropdownMenuItem>
+                                  ))}
+                                  {onCreateCampaign && (
+                                    <>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem onClick={(e) => {
+                                        e.stopPropagation();
+                                        onCreateCampaign();
+                                      }}>
+                                        <Plus className="w-4 h-4 mr-2" />
+                                        Create New Job Opening
+                                      </DropdownMenuItem>
+                                    </>
+                                  )}
+                                </DropdownMenuSubContent>
+                              </DropdownMenuSub>
                             )}
+
                             {onStatusChange && (
                               <>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onStatusChange(lead.id, 'contacted'); }}>
-                                  <Mail className="w-4 h-4 mr-2 text-primary" />
-                                  Mark as Contacted
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onStatusChange(lead.id, 'replied'); }}>
-                                  <MessageCircle className="w-4 h-4 mr-2 text-success" />
-                                  Mark as Replied
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onStatusChange(lead.id, 'qualified'); }}>
-                                  <CheckCircle className="w-4 h-4 mr-2 text-success" />
-                                  Mark as Qualified
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onStatusChange(lead.id, 'interview_scheduled'); }}>
-                                  <Calendar className="w-4 h-4 mr-2 text-accent-foreground" />
-                                  Interview Scheduled
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onStatusChange(lead.id, 'offer_sent'); }}>
-                                  <ShieldCheck className="w-4 h-4 mr-2 text-primary" />
-                                  Offer Sent
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onStatusChange(lead.id, 'hired'); }}>
-                                  <CheckCircle2 className="w-4 h-4 mr-2 text-success" />
-                                  Hired
+                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onStatusChange(lead.id, 'archived'); }}>
+                                  <Archive className="w-4 h-4 mr-2" />
+                                  Archive
                                 </DropdownMenuItem>
                               </>
                             )}
+
                             {onDelete && (
                               <>
                                 <DropdownMenuSeparator />
@@ -976,6 +880,7 @@ export function LeadTable({
                                     onDelete(lead.id);
                                   }}
                                 >
+                                  <Trash2 className="w-4 h-4 mr-2" />
                                   Delete
                                 </DropdownMenuItem>
                               </>
@@ -1040,7 +945,7 @@ export function LeadTable({
             </DropdownMenu>
           )}
 
-          {/* Remove from Job Opening (only when filtered to specific job) */}
+          {/* Remove from Job Opening */}
           {onBulkRemove && selectedCampaignId && selectedCampaignId !== 'unassigned' && (
             <Button variant="outline" size="sm" className="gap-1.5 rounded-xl" onClick={handleBulkRemove}>
               Remove from Job
@@ -1052,6 +957,14 @@ export function LeadTable({
             <Mail className="w-3.5 h-3.5" />
             {isMobile ? `Email (${selectedIds.size})` : `Send Emails (${selectedIds.size})`}
           </Button>
+
+          {/* Archive */}
+          {onStatusChange && (
+            <Button variant="outline" size="sm" className="gap-1.5 rounded-xl" onClick={handleBulkArchive}>
+              <Archive className="w-3.5 h-3.5" />
+              Archive
+            </Button>
+          )}
 
           {/* Delete */}
           {onBulkDelete && (

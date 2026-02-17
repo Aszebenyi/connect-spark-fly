@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { GlowDot, AbstractBlob } from '@/components/ui/visual-elements';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,7 +14,7 @@ import { PricingPlans } from '@/components/PricingPlans';
 import { PLANS, PlanId } from '@/lib/plans';
 import { EmailConnectionCard } from '@/components/EmailConnectionCard';
 import { CompanyProfileTab } from '@/components/CompanyProfileTab';
-
+import { COUNTRIES, CountryCode, getCurrencySymbol } from '@/lib/countries';
 
 import { useEmailStats } from '@/hooks/useEmailStats';
 import { AlertCircle, ExternalLink, Loader2 } from 'lucide-react';
@@ -33,6 +35,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface SettingsSectionProps {
   title: string;
@@ -52,8 +61,6 @@ function SettingsSection({ title, description, children, className = '' }: Setti
     </div>
   );
 }
-
-
 
 const settingsTabs = [
   { key: 'account' as const, label: 'Account' },
@@ -81,6 +88,14 @@ export function SettingsPage() {
     email: user?.email || 'user@example.com',
     company: '',
   });
+
+  // Regional preferences
+  const [country, setCountry] = useState<string>('US');
+  
+  // Email signature
+  const [emailSignature, setEmailSignature] = useState('');
+  const [includeSignature, setIncludeSignature] = useState(true);
+  const [signatureLoaded, setSignatureLoaded] = useState(false);
   
   const [usageStats, setUsageStats] = useState({
     leadsCount: 0,
@@ -129,12 +144,13 @@ export function SettingsPage() {
   const creditsRemaining = Math.max(0, creditsLimit - creditsUsed);
   const creditsPercentage = Math.min((creditsUsed / creditsLimit) * 100, 100);
 
+  // Load profile, regional prefs, and signature
   useEffect(() => {
     if (!user) return;
     const loadProfile = async () => {
       const { data } = await supabase
         .from('profiles')
-        .select('full_name, company')
+        .select('full_name, company, base_country, currency, date_format, email_signature, include_signature')
         .eq('user_id', user.id)
         .maybeSingle();
       if (data) {
@@ -143,6 +159,24 @@ export function SettingsPage() {
           name: data.full_name || prev.name,
           company: data.company || '',
         }));
+        if (data.base_country) setCountry(data.base_country);
+        
+        // Email signature
+        if (data.email_signature != null) {
+          setEmailSignature(data.email_signature);
+        } else {
+          // Auto-generate default
+          const defaultSig = [
+            data.full_name || user.user_metadata?.full_name || '',
+            data.company || '',
+            user.email || '',
+          ].filter(Boolean).join('\n');
+          setEmailSignature(defaultSig);
+        }
+        setIncludeSignature(data.include_signature ?? true);
+        setSignatureLoaded(true);
+      } else {
+        setSignatureLoaded(true);
       }
     };
     loadProfile();
@@ -165,6 +199,42 @@ export function SettingsPage() {
       toast.success('Your profile has been updated successfully.');
     } catch {
       toast.error('Error saving profile');
+    }
+  };
+
+  const handleCountryChange = async (newCountry: string) => {
+    setCountry(newCountry);
+    if (!user) return;
+    const countryData = COUNTRIES[newCountry as CountryCode];
+    if (!countryData) return;
+    try {
+      await supabase
+        .from('profiles')
+        .upsert({
+          user_id: user.id,
+          base_country: newCountry,
+          currency: countryData.currency,
+          date_format: countryData.dateFormat,
+        }, { onConflict: 'user_id' });
+      toast.success('Regional preferences updated');
+    } catch {
+      toast.error('Failed to save regional preferences');
+    }
+  };
+
+  const handleSaveSignature = async () => {
+    if (!user) return;
+    try {
+      await supabase
+        .from('profiles')
+        .upsert({
+          user_id: user.id,
+          email_signature: emailSignature,
+          include_signature: includeSignature,
+        }, { onConflict: 'user_id' });
+      toast.success('Email signature saved');
+    } catch {
+      toast.error('Failed to save signature');
     }
   };
 
@@ -220,6 +290,8 @@ export function SettingsPage() {
       setDeletingAccount(false);
     }
   };
+
+  const selectedCountryData = COUNTRIES[country as CountryCode];
 
   return (
     <div className="animate-fade-in">
@@ -307,6 +379,35 @@ export function SettingsPage() {
                   Save Profile
                 </Button>
               </div>
+            </div>
+          </SettingsSection>
+
+          {/* Regional Preferences */}
+          <SettingsSection
+            title="Regional Preferences"
+            description="Set your country for currency and date formatting"
+          >
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="country">Country</Label>
+                <Select value={country} onValueChange={handleCountryChange}>
+                  <SelectTrigger className="rounded-xl w-full max-w-xs">
+                    <SelectValue placeholder="Select country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(COUNTRIES).map(([code, data]) => (
+                      <SelectItem key={code} value={code}>
+                        {data.flag} {data.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {selectedCountryData && (
+                <p className="text-sm text-muted-foreground">
+                  Currency: {selectedCountryData.currencySymbol} ({selectedCountryData.currency}) · Date format: {selectedCountryData.dateFormat}
+                </p>
+              )}
             </div>
           </SettingsSection>
 
@@ -504,6 +605,36 @@ export function SettingsPage() {
           >
             <EmailConnectionCard />
           </SettingsSection>
+
+          <SettingsSection
+            title="Email Signature"
+            description="Appended to all outreach emails"
+          >
+            <div className="space-y-4">
+              <Textarea
+                value={emailSignature}
+                onChange={(e) => setEmailSignature(e.target.value)}
+                rows={6}
+                placeholder={"John Smith | Senior Recruiter\nApex Healthcare Staffing\n(555) 123-4567"}
+                className="rounded-xl"
+              />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Switch
+                    checked={includeSignature}
+                    onCheckedChange={setIncludeSignature}
+                    id="include-signature"
+                  />
+                  <Label htmlFor="include-signature" className="text-sm text-muted-foreground cursor-pointer">
+                    Include signature in emails
+                  </Label>
+                </div>
+                <Button onClick={handleSaveSignature} className="apple-button">
+                  Save Signature
+                </Button>
+              </div>
+            </div>
+          </SettingsSection>
         </div>
       )}
 
@@ -513,7 +644,6 @@ export function SettingsPage() {
           <CompanyProfileTab />
         </div>
       )}
-
 
       {/* Pricing Modal */}
       <Dialog open={showPricing} onOpenChange={setShowPricing}>

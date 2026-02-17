@@ -195,6 +195,20 @@ export default function Index() {
     else toast({ title: 'Failed to remove candidates', variant: 'destructive' });
   };
 
+  const handleAssignToCampaign = async (leadId: string, campaignId: string) => {
+    const { error } = await supabase.from('lead_campaign_assignments').upsert(
+      { lead_id: leadId, campaign_id: campaignId },
+      { onConflict: 'lead_id,campaign_id' }
+    );
+    if (!error) {
+      await supabase.from('leads').update({ campaign_id: campaignId }).eq('id', leadId);
+      toast({ title: 'Candidate assigned to job opening' });
+      loadData();
+    } else {
+      toast({ title: 'Failed to assign candidate', variant: 'destructive' });
+    }
+  };
+
   const handleViewCampaignLeads = (campaign: Campaign) => { setSelectedCampaignId(campaign.id || null); setActiveTab('leads'); };
   const handleFindMoreLeads = (campaign: Campaign) => { setFindMoreCampaign(campaign); setActiveTab('finder'); };
 
@@ -265,6 +279,7 @@ export default function Index() {
             onBulkDelete={handleBulkDelete}
             onBulkAssign={handleBulkAssign}
             onBulkRemove={handleBulkRemove}
+            onAssignToCampaign={handleAssignToCampaign}
             onCreateCampaign={() => setShowCreateCampaign(true)}
             onFindLeads={() => setActiveTab('finder')}
             onShowAddCandidate={() => setShowAddCandidate(true)}
