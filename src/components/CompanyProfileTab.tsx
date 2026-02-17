@@ -3,19 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Save, Sparkles, Globe } from 'lucide-react';
-import { COUNTRIES, CountryCode, getCurrencySymbol } from '@/lib/countries';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Loader2, Save, Sparkles } from 'lucide-react';
 
 interface CompanyProfile {
   company_website: string;
@@ -38,7 +29,6 @@ const emptyProfile: CompanyProfile = {
 };
 
 export function CompanyProfileTab() {
-  
   const { user, session } = useAuth();
   const [profile, setProfile] = useState<CompanyProfile>(emptyProfile);
   const [loading, setLoading] = useState(true);
@@ -46,18 +36,8 @@ export function CompanyProfileTab() {
   const [extracting, setExtracting] = useState(false);
   const [hasExistingRecord, setHasExistingRecord] = useState(false);
 
-  // International fields
-  const [baseCountry, setBaseCountry] = useState<string>('US');
-  const [recruitCountries, setRecruitCountries] = useState<string[]>(['US']);
-  const [internationalRecruiting, setInternationalRecruiting] = useState(false);
-  const [dateFormat, setDateFormat] = useState('MM/DD/YYYY');
-  const [internationalLoading, setInternationalLoading] = useState(true);
-
   useEffect(() => {
-    if (user) {
-      fetchProfile();
-      loadInternationalSettings();
-    }
+    if (user) fetchProfile();
   }, [user]);
 
   const fetchProfile = async () => {
@@ -89,26 +69,6 @@ export function CompanyProfileTab() {
     }
   };
 
-  const loadInternationalSettings = async () => {
-    try {
-      const { data } = await supabase
-        .from('profiles')
-        .select('base_country, recruit_countries, international_recruiting, currency, date_format')
-        .eq('user_id', user!.id)
-        .maybeSingle();
-      if (data) {
-        setBaseCountry((data as any).base_country || 'US');
-        setRecruitCountries((data as any).recruit_countries || ['US']);
-        setInternationalRecruiting((data as any).international_recruiting || false);
-        setDateFormat((data as any).date_format || 'MM/DD/YYYY');
-      }
-    } catch (error) {
-      console.error('Error loading international settings:', error);
-    } finally {
-      setInternationalLoading(false);
-    }
-  };
-
   const handleSave = async () => {
     if (!profile.company_name.trim() || !profile.what_you_do.trim() || !profile.target_candidates.trim() || !profile.value_proposition.trim()) {
       toast.error('Please fill in Company Name, What You Do, Target Candidates, and Value Proposition.');
@@ -117,7 +77,6 @@ export function CompanyProfileTab() {
 
     setSaving(true);
     try {
-      // Save company profile
       if (hasExistingRecord) {
         const { error } = await supabase
           .from('user_company_profiles' as any)
@@ -149,21 +108,7 @@ export function CompanyProfileTab() {
         setHasExistingRecord(true);
       }
 
-      // Save international settings
-      const country = COUNTRIES[baseCountry as CountryCode];
-      const { error: intlError } = await supabase
-        .from('profiles')
-        .update({
-          base_country: baseCountry,
-          recruit_countries: recruitCountries,
-          international_recruiting: internationalRecruiting,
-          currency: country?.currency || 'USD',
-          date_format: dateFormat,
-        } as any)
-        .eq('user_id', user!.id);
-      if (intlError) throw intlError;
-
-      toast.success('Your company profile and regional settings have been updated.');
+      toast.success('Your company profile has been updated.');
     } catch (error) {
       console.error('Error saving company profile:', error);
       toast.error('Failed to save company profile.');
@@ -212,13 +157,7 @@ export function CompanyProfileTab() {
     setProfile(prev => ({ ...prev, [field]: value }));
   };
 
-  const toggleRecruitCountry = (code: string) => {
-    setRecruitCountries(prev =>
-      prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]
-    );
-  };
-
-  if (loading || internationalLoading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -227,217 +166,122 @@ export function CompanyProfileTab() {
   }
 
   return (
-    <div className="space-y-8">
-      {/* Regional Settings Section */}
-      <div className="space-y-6">
-        <div className="flex items-center gap-2">
-          <Globe className="w-5 h-5 text-primary" />
-          <h3 className="text-base font-semibold text-foreground">Regional Settings</h3>
-        </div>
-        <p className="text-sm text-muted-foreground -mt-4">
-          Configure your base country and recruitment regions
-        </p>
+    <div className="space-y-6">
+      <p className="text-sm text-muted-foreground">
+        Define your company identity so AI-generated outreach emails accurately represent your recruiting agency.
+      </p>
 
-        <div className="space-y-2">
-          <Label>Base Country</Label>
-          <Select value={baseCountry} onValueChange={setBaseCountry}>
-            <SelectTrigger className="w-full rounded-xl">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(COUNTRIES).map(([code, country]) => (
-                <SelectItem key={code} value={code}>
-                  {country.flag} {country.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-xs text-muted-foreground">
-            Determines your default currency, date format, and terminology
-          </p>
-        </div>
-
-        <div className="space-y-2">
-          <Label>I recruit for positions in:</Label>
-          <div className="grid grid-cols-2 gap-2">
-            {Object.entries(COUNTRIES).map(([code, country]) => (
-              <label
-                key={code}
-                className="flex items-center gap-3 p-3 border border-border rounded-xl cursor-pointer hover:bg-muted/30 transition-colors"
-              >
-                <input
-                  type="checkbox"
-                  checked={recruitCountries.includes(code)}
-                  onChange={() => toggleRecruitCountry(code)}
-                  className="rounded"
-                />
-                <span className="text-sm">
-                  {country.flag} {country.name}
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between p-4 rounded-xl border border-border">
-          <div>
-            <Label>International Candidate Sourcing</Label>
-            <p className="text-xs text-muted-foreground mt-1">
-              Show candidates from other countries (e.g., Filipino nurses, Indian doctors)
-            </p>
-          </div>
-          <Switch
-            checked={internationalRecruiting}
-            onCheckedChange={setInternationalRecruiting}
+      {/* Website URL + Extract */}
+      <div className="space-y-2">
+        <Label htmlFor="company_website">Your Company Website (Optional)</Label>
+        <div className="flex gap-2">
+          <Input
+            id="company_website"
+            value={profile.company_website}
+            onChange={(e) => updateField('company_website', e.target.value)}
+            placeholder="https://yourrecruitingagency.com"
+            className="apple-input flex-1"
           />
+          <Button
+            variant="outline"
+            onClick={handleExtractFromWebsite}
+            disabled={extracting || !profile.company_website.trim()}
+            className="gap-2 whitespace-nowrap"
+          >
+            {extracting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Sparkles className="w-4 h-4" />
+            )}
+            {extracting ? 'Extracting...' : 'Extract from Website'}
+          </Button>
         </div>
-
-        <div className="grid grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label>Salary Display Currency</Label>
-            <p className="text-sm text-foreground">
-              {getCurrencySymbol(baseCountry)} ({COUNTRIES[baseCountry as CountryCode]?.currency || 'USD'})
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Jobs in other countries show their local currency
-            </p>
-          </div>
-          <div className="space-y-2">
-            <Label>Date Format</Label>
-            <Select value={dateFormat} onValueChange={setDateFormat}>
-              <SelectTrigger className="w-full rounded-xl">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="MM/DD/YYYY">MM/DD/YYYY (US/Canada)</SelectItem>
-                <SelectItem value="DD/MM/YYYY">DD/MM/YYYY (UK/AU/UAE)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        <p className="text-xs text-muted-foreground">Enter your website to auto-fill your company details</p>
       </div>
 
-      {/* Divider */}
-      <div className="border-t border-border" />
+      {/* Company Name */}
+      <div className="space-y-2">
+        <Label htmlFor="company_name">
+          Company Name <span className="text-destructive">*</span>
+        </Label>
+        <Input
+          id="company_name"
+          value={profile.company_name}
+          onChange={(e) => updateField('company_name', e.target.value)}
+          placeholder="e.g., Apex Healthcare Staffing"
+          className="apple-input"
+        />
+      </div>
 
-      {/* Company Identity Section */}
-      <div className="space-y-6">
-        <p className="text-sm text-muted-foreground">
-          Define your company identity so AI-generated outreach emails accurately represent your recruiting agency.
-        </p>
+      {/* What You Do */}
+      <div className="space-y-2">
+        <Label htmlFor="what_you_do">
+          What You Do <span className="text-destructive">*</span>
+        </Label>
+        <Textarea
+          id="what_you_do"
+          value={profile.what_you_do}
+          onChange={(e) => updateField('what_you_do', e.target.value)}
+          placeholder="e.g., We place ICU nurses in travel contracts across California"
+          rows={4}
+          className="apple-input resize-none"
+        />
+      </div>
 
-        {/* Website URL + Extract */}
-        <div className="space-y-2">
-          <Label htmlFor="company_website">Your Company Website (Optional)</Label>
-          <div className="flex gap-2">
-            <Input
-              id="company_website"
-              value={profile.company_website}
-              onChange={(e) => updateField('company_website', e.target.value)}
-              placeholder="https://yourrecruitingagency.com"
-              className="apple-input flex-1"
-            />
-            <Button
-              variant="outline"
-              onClick={handleExtractFromWebsite}
-              disabled={extracting || !profile.company_website.trim()}
-              className="gap-2 whitespace-nowrap"
-            >
-              {extracting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Sparkles className="w-4 h-4" />
-              )}
-              {extracting ? 'Extracting...' : 'Extract from Website'}
-            </Button>
-          </div>
-          <p className="text-xs text-muted-foreground">Enter your website to auto-fill your company details</p>
-        </div>
+      {/* Target Candidates */}
+      <div className="space-y-2">
+        <Label htmlFor="target_candidates">
+          Target Candidates <span className="text-destructive">*</span>
+        </Label>
+        <Textarea
+          id="target_candidates"
+          value={profile.target_candidates}
+          onChange={(e) => updateField('target_candidates', e.target.value)}
+          placeholder="e.g., Experienced ICU nurses, travel nurses, critical care specialists"
+          rows={3}
+          className="apple-input resize-none"
+        />
+      </div>
 
-        {/* Company Name */}
-        <div className="space-y-2">
-          <Label htmlFor="company_name">
-            Company Name <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            id="company_name"
-            value={profile.company_name}
-            onChange={(e) => updateField('company_name', e.target.value)}
-            placeholder="e.g., Apex Healthcare Staffing"
-            className="apple-input"
-          />
-        </div>
+      {/* Value Proposition */}
+      <div className="space-y-2">
+        <Label htmlFor="value_proposition">
+          Your Value Proposition <span className="text-destructive">*</span>
+        </Label>
+        <Textarea
+          id="value_proposition"
+          value={profile.value_proposition}
+          onChange={(e) => updateField('value_proposition', e.target.value)}
+          placeholder="e.g., Higher pay, better locations, more support than other agencies"
+          rows={3}
+          className="apple-input resize-none"
+        />
+      </div>
 
-        {/* What You Do */}
-        <div className="space-y-2">
-          <Label htmlFor="what_you_do">
-            What You Do <span className="text-destructive">*</span>
-          </Label>
-          <Textarea
-            id="what_you_do"
-            value={profile.what_you_do}
-            onChange={(e) => updateField('what_you_do', e.target.value)}
-            placeholder="e.g., We place ICU nurses in travel contracts across California"
-            rows={4}
-            className="apple-input resize-none"
-          />
-        </div>
+      {/* Key Benefits */}
+      <div className="space-y-2">
+        <Label htmlFor="key_benefits">Key Benefits</Label>
+        <Textarea
+          id="key_benefits"
+          value={profile.key_benefits}
+          onChange={(e) => updateField('key_benefits', e.target.value)}
+          placeholder={"e.g., • Weekly pay\n• Housing stipends\n• 24/7 recruiter support"}
+          rows={6}
+          className="apple-input resize-none"
+        />
+      </div>
 
-        {/* Target Candidates */}
-        <div className="space-y-2">
-          <Label htmlFor="target_candidates">
-            Target Candidates <span className="text-destructive">*</span>
-          </Label>
-          <Textarea
-            id="target_candidates"
-            value={profile.target_candidates}
-            onChange={(e) => updateField('target_candidates', e.target.value)}
-            placeholder="e.g., Experienced ICU nurses, travel nurses, critical care specialists"
-            rows={3}
-            className="apple-input resize-none"
-          />
-        </div>
-
-        {/* Value Proposition */}
-        <div className="space-y-2">
-          <Label htmlFor="value_proposition">
-            Your Value Proposition <span className="text-destructive">*</span>
-          </Label>
-          <Textarea
-            id="value_proposition"
-            value={profile.value_proposition}
-            onChange={(e) => updateField('value_proposition', e.target.value)}
-            placeholder="e.g., Higher pay, better locations, more support than other agencies"
-            rows={3}
-            className="apple-input resize-none"
-          />
-        </div>
-
-        {/* Key Benefits */}
-        <div className="space-y-2">
-          <Label htmlFor="key_benefits">Key Benefits</Label>
-          <Textarea
-            id="key_benefits"
-            value={profile.key_benefits}
-            onChange={(e) => updateField('key_benefits', e.target.value)}
-            placeholder={"e.g., • Weekly pay\n• Housing stipends\n• 24/7 recruiter support"}
-            rows={6}
-            className="apple-input resize-none"
-          />
-        </div>
-
-        {/* Communication Tone */}
-        <div className="space-y-2">
-          <Label htmlFor="communication_tone">Communication Tone</Label>
-          <Textarea
-            id="communication_tone"
-            value={profile.communication_tone}
-            onChange={(e) => updateField('communication_tone', e.target.value)}
-            placeholder="e.g., Professional, supportive, urgent but not pushy"
-            rows={4}
-            className="apple-input resize-none"
-          />
-        </div>
+      {/* Communication Tone */}
+      <div className="space-y-2">
+        <Label htmlFor="communication_tone">Communication Tone</Label>
+        <Textarea
+          id="communication_tone"
+          value={profile.communication_tone}
+          onChange={(e) => updateField('communication_tone', e.target.value)}
+          placeholder="e.g., Professional, supportive, urgent but not pushy"
+          rows={4}
+          className="apple-input resize-none"
+        />
       </div>
 
       {/* Save Button */}

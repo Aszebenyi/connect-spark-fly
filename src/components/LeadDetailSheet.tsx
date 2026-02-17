@@ -407,9 +407,27 @@ export function LeadDetailSheet({ lead, open, onClose, onLeadUpdated }: LeadDeta
               </Avatar>
               
               <div className="flex-1 min-w-0 pt-1">
-                <h2 className="text-lg font-semibold text-foreground truncate tracking-tight">
-                  {linkedinData?.fullName || lead.name}
-                </h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-semibold text-foreground truncate tracking-tight">
+                    {linkedinData?.fullName || lead.name}
+                  </h2>
+                  {!isEnriched && linkedinUrl && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleEnrich}
+                      disabled={isEnriching}
+                      className="gap-1.5 text-xs text-primary hover:text-primary h-7 px-2 flex-shrink-0"
+                    >
+                      {isEnriching ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Sparkles className="w-3.5 h-3.5" />
+                      )}
+                      {isEnriching ? 'Enriching...' : 'Enrich LinkedIn'}
+                    </Button>
+                  )}
+                </div>
                 <p className="text-sm text-muted-foreground truncate mt-0.5">
                   {linkedinData?.headline || lead.title}
                 </p>
@@ -440,61 +458,61 @@ export function LeadDetailSheet({ lead, open, onClose, onLeadUpdated }: LeadDeta
         <div className="flex-1 overflow-y-auto">
           <div className="px-6 py-5 space-y-6">
             
-            {/* Enrichment CTA */}
-            {linkedinUrl && !isEnriched && (
-              <div className="rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 p-4">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <Sparkles className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">Enrich with LinkedIn</p>
-                      <p className="text-xs text-muted-foreground">Get full profile details</p>
+            {/* (enriched badge moved above) */}
+
+            {/* Match Data */}
+            {(() => {
+              const matchScore = profileData?.match_score;
+              const scoreColor = matchScore != null
+                ? matchScore >= 75 ? 'text-emerald-500' : matchScore >= 50 ? 'text-amber-500' : 'text-red-500'
+                : '';
+              const scoreBg = matchScore != null
+                ? matchScore >= 75 ? 'bg-emerald-500/10 border-emerald-500/20' : matchScore >= 50 ? 'bg-amber-500/10 border-amber-500/20' : 'bg-red-500/10 border-red-500/20'
+                : 'bg-muted/30 border-border/50';
+
+              return (
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Match Score */}
+                  <div className={`rounded-2xl border p-4 ${scoreBg}`}>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider">Match Score</p>
+                    <p className={`text-2xl font-bold mt-1 ${matchScore != null ? scoreColor : 'text-foreground'}`}>
+                      {matchScore != null ? `${matchScore}%` : '—'}
+                    </p>
+                  </div>
+
+                  {/* Match Indicators */}
+                  <div className="rounded-2xl bg-muted/30 border border-border/50 p-4">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Match Details</p>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {[
+                        { label: 'License', match: profileData?.license_match },
+                        { label: 'Certs', match: profileData?.cert_match },
+                        { label: 'Experience', match: profileData?.experience_match },
+                        { label: 'Location', match: profileData?.location_match },
+                      ].map(({ label, match }) => (
+                        <div key={label} className="flex items-center gap-1 text-xs">
+                          <span className={match === true ? 'text-emerald-500' : match === false ? 'text-red-400' : 'text-muted-foreground'}>
+                            {match === true ? '✓' : match === false ? '✗' : '—'}
+                          </span>
+                          <span className="text-muted-foreground truncate">{label}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                  <Button 
-                    size="sm" 
-                    onClick={handleEnrich}
-                    disabled={isEnriching}
-                    className="rounded-xl gap-2 px-4"
-                  >
-                    {isEnriching ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <ChevronRight className="w-4 h-4" />
-                    )}
-                  </Button>
                 </div>
+              );
+            })()}
+
+            {/* AI Analysis */}
+            {profileData?.scoring_notes && (
+              <div className="rounded-xl bg-primary/5 border border-primary/10 p-3">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-xs font-medium text-primary">AI Analysis</span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">{profileData.scoring_notes}</p>
               </div>
             )}
-
-            {/* Enriched badge */}
-            {isEnriched && (
-              <div className="flex items-center gap-2 text-sm">
-                <CheckCircle2 className="w-4 h-4 text-green-500" />
-                <span className="text-green-500 font-medium">LinkedIn Enriched</span>
-                {enrichedAt && (
-                  <span className="text-muted-foreground">· {new Date(enrichedAt).toLocaleDateString()}</span>
-                )}
-              </div>
-            )}
-
-            {/* Quick stats */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-2xl bg-muted/30 border border-border/50 p-4">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">Score</p>
-                <p className="text-2xl font-bold text-foreground mt-1">
-                  {lead.profile_data?.match_score ?? (lead.profile_data?.exa_score ? Math.round(lead.profile_data.exa_score * 100) : '—')}
-                </p>
-              </div>
-              <div className="rounded-2xl bg-muted/30 border border-border/50 p-4">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">Status</p>
-                <Badge variant="outline" className="mt-2 capitalize font-medium">
-                  {lead.status}
-                </Badge>
-              </div>
-            </div>
 
             {/* About */}
             {linkedinData?.summary && (
