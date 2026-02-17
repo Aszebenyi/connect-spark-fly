@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getCampaignById, updateCampaign, deleteCampaign, getLeads, getLeadAssignments, updateLeadStatus, deleteLead, deleteLeads, assignLeadsToCampaign, removeLeadsFromCampaign, getCampaigns, Campaign, Lead, LeadCampaignAssignment } from '@/lib/api';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { SEO } from '@/components/SEO';
 import { LeadTable } from '@/components/LeadTable';
 import { LeadDetailSheet } from '@/components/LeadDetailSheet';
@@ -56,7 +56,7 @@ export default function OpeningDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { toast } = useToast();
+  
 
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -157,23 +157,23 @@ export default function OpeningDetail() {
     const result = await updateLeadStatus(leadId, newStatus);
     if (result.success) {
       loadData();
-      toast({ title: 'Status updated' });
+      toast.success('Status updated');
       createLeadNote(leadId, `Status changed to ${newStatus}`, 'status_change');
     } else {
-      toast({ title: 'Failed to update status', variant: 'destructive' });
+      toast.error('Failed to update status');
     }
   };
 
   const handleDeleteLead = async (leadId: string) => {
     const result = await deleteLead(leadId);
-    if (result.success) { loadData(); toast({ title: 'Candidate deleted' }); }
-    else toast({ title: 'Failed to delete', variant: 'destructive' });
+    if (result.success) { loadData(); toast.success('Candidate deleted'); }
+    else toast.error('Failed to delete');
   };
 
   const handleBulkDelete = async (leadIds: string[]) => {
     const result = await deleteLeads(leadIds);
-    if (result.success) { loadData(); toast({ title: `${leadIds.length} deleted` }); }
-    else toast({ title: 'Failed to delete', variant: 'destructive' });
+    if (result.success) { loadData(); toast.success(`${leadIds.length} deleted`); }
+    else toast.error('Failed to delete');
   };
 
   const handleSaveSettings = async () => {
@@ -181,10 +181,10 @@ export default function OpeningDetail() {
     setIsSaving(true);
     const result = await updateCampaign(id, { name: editName, goal: editGoal, search_query: editQuery });
     if (result.success) {
-      toast({ title: 'Settings saved' });
+      toast.success('Settings saved');
       loadData();
     } else {
-      toast({ title: 'Failed to save', variant: 'destructive' });
+      toast.error('Failed to save');
     }
     setIsSaving(false);
   };
@@ -194,10 +194,10 @@ export default function OpeningDetail() {
     if (!window.confirm('Are you sure you want to delete this job opening? All associated data will be removed.')) return;
     const result = await deleteCampaign(id);
     if (result.success) {
-      toast({ title: 'Opening deleted' });
+      toast.success('Opening deleted');
       navigate('/dashboard');
     } else {
-      toast({ title: 'Failed to delete', variant: 'destructive' });
+      toast.error('Failed to delete');
     }
   };
 
@@ -285,7 +285,7 @@ export default function OpeningDetail() {
                 className="gap-2 rounded-lg"
                 onClick={async () => {
                   const result = await updateCampaign(id!, { status: 'completed' });
-                  if (result.success) { toast({ title: 'Marked as complete' }); loadData(); }
+                  if (result.success) { toast.success('Marked as complete'); loadData(); }
                 }}
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />

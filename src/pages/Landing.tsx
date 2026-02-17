@@ -315,7 +315,7 @@ export default function Landing() {
       </motion.nav>
       
       {/* Hero Section */}
-      <section ref={heroRef} className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
+      <section ref={heroRef} className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden" style={{ position: 'relative' }}>
         {/* Gradient background */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-cyan-50" />
         {/* Radial accent */}
