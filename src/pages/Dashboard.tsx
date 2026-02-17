@@ -310,7 +310,7 @@ export default function Index() {
         {activeTab === 'settings' && <SettingsPage />}
       </main>
 
-      <LeadDetailSheet lead={selectedLead} open={!!selectedLead} onClose={() => setSelectedLead(null)} onLeadUpdated={handleLeadUpdated} />
+      <LeadDetailSheet lead={selectedLead} open={!!selectedLead} onClose={() => setSelectedLead(null)} onLeadUpdated={handleLeadUpdated} campaigns={campaigns} onAssignToCampaign={handleAssignToCampaign} onStatusChange={handleStatusChange} />
       <CreateCampaignDialog open={showCreateCampaign} onOpenChange={setShowCreateCampaign} onCreated={handleCampaignCreated} />
       <AddCandidateDialog open={showAddCandidate} onOpenChange={setShowAddCandidate} onCreated={loadData} />
       {showOnboardingWizard && (
