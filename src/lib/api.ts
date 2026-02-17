@@ -538,16 +538,22 @@ export async function getStats(): Promise<{
   replied: number;
   qualified: number;
 }> {
-  const { data: leads } = await supabase.from('leads').select('status');
+  const { data, error } = await supabase.rpc('get_lead_stats');
   
-  const allLeads = leads || [];
-  
-  return {
-    totalLeads: allLeads.length,
-    contacted: allLeads.filter(l => l.status === 'contacted').length,
-    replied: allLeads.filter(l => l.status === 'replied').length,
-    qualified: allLeads.filter(l => l.status === 'qualified').length,
-  };
+  if (error) {
+    console.error('Get stats error:', error);
+    return { totalLeads: 0, contacted: 0, replied: 0, qualified: 0 };
+  }
+
+  const stats = { totalLeads: 0, contacted: 0, replied: 0, qualified: 0 };
+  for (const row of (data || [])) {
+    const count = Number(row.count);
+    stats.totalLeads += count;
+    if (row.status === 'contacted') stats.contacted = count;
+    if (row.status === 'replied') stats.replied = count;
+    if (row.status === 'qualified') stats.qualified = count;
+  }
+  return stats;
 }
 
 // Lead-Campaign Assignment functions (many-to-many)

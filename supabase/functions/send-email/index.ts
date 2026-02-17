@@ -1,4 +1,3 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkRateLimit, rateLimitResponse } from '../_shared/rate-limiter.ts';
 import { logError, logInfo } from '../_shared/logger.ts';
@@ -104,7 +103,7 @@ function createRawEmail(to: string, from: string, subject: string, body: string)
   return encodedEmail;
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
