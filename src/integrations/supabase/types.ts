@@ -930,6 +930,13 @@ export type Database = {
       }
     }
     Functions: {
+      get_lead_stats: {
+        Args: never
+        Returns: {
+          count: number
+          status: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
