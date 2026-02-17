@@ -533,6 +533,13 @@ Deno.serve(async (req) => {
     let skippedCount = 0;
     const savedLeadsForScoring: Array<{ id: string; name: string; title: string | null; certifications: string | null; licenses: string | null; specialty: string | null; location: string | null; text: string }> = [];
 
+    // Fetch user's do_not_contact list for filtering
+    const { data: dncList } = await supabase
+      .from('do_not_contact')
+      .select('email')
+      .eq('user_id', userId);
+    const dncEmails = new Set((dncList || []).map(d => d.email.toLowerCase()));
+
     for (const result of results) {
       // Stop if we've reached the credit limit
       if (savedCount >= availableCredits) {
@@ -542,6 +549,13 @@ Deno.serve(async (req) => {
 
       const parsed = parseLeadFromResult(result);
       if (!parsed) {
+        skippedCount++;
+        continue;
+      }
+
+      // Skip leads on the do_not_contact list
+      if (parsed.email && dncEmails.has(parsed.email.toLowerCase())) {
+        console.log('Skipping do_not_contact lead:', parsed.name, parsed.email);
         skippedCount++;
         continue;
       }

@@ -650,3 +650,21 @@ export async function deleteLeads(leadIds: string[]): Promise<{ success: boolean
 
   return { success: true };
 }
+
+// Do Not Contact functions (CAN-SPAM compliance)
+export async function addToDoNotContact(email: string): Promise<{ success: boolean; error?: string }> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const { error } = await supabase
+    .from('do_not_contact')
+    .insert({ email: email.toLowerCase(), user_id: user.id });
+
+  if (error) {
+    if (error.code === '23505') return { success: true }; // Already exists
+    console.error('Add to do_not_contact error:', error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}

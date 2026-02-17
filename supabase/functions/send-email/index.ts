@@ -42,7 +42,7 @@ async function refreshAccessToken(refreshToken: string): Promise<{ access_token:
   }
 }
 
-function wrapInHtmlTemplate(content: string): string {
+function wrapInHtmlTemplate(content: string, companyName?: string): string {
   // Convert plain text to HTML if needed (handles legacy plain text content)
   let htmlContent = content;
   
@@ -52,6 +52,8 @@ function wrapInHtmlTemplate(content: string): string {
     const paragraphs = content.split(/\n\n+/).filter(p => p.trim());
     htmlContent = paragraphs.map(p => `<p style="margin: 0 0 16px 0;">${p.replace(/\n/g, '<br>')}</p>`).join('');
   }
+
+  const senderCompany = companyName || 'our team';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -71,6 +73,22 @@ function wrapInHtmlTemplate(content: string): string {
               ${htmlContent}
             </td>
           </tr>
+          <tr>
+            <td style="padding: 0 48px 32px 48px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td style="border-top: 1px solid #e5e7eb; padding-top: 20px;">
+                    <p style="margin: 0 0 8px 0; font-size: 12px; line-height: 1.5; color: #6b7280;">
+                      You're receiving this because a recruiter at ${senderCompany} found your professional profile relevant to a healthcare opportunity.
+                    </p>
+                    <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #6b7280;">
+                      If you'd prefer not to be contacted, reply with "unsubscribe" and we'll remove you from future outreach.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
         </table>
       </td>
     </tr>
@@ -79,8 +97,8 @@ function wrapInHtmlTemplate(content: string): string {
 </html>`;
 }
 
-function createRawEmail(to: string, from: string, subject: string, body: string): string {
-  const htmlBody = wrapInHtmlTemplate(body);
+function createRawEmail(to: string, from: string, subject: string, body: string, companyName?: string): string {
+  const htmlBody = wrapInHtmlTemplate(body, companyName);
   
   const emailLines = [
     `To: ${to}`,
@@ -196,6 +214,30 @@ Deno.serve(async (req) => {
       return rateLimitResponse(rateLimit.resetAt, rateLimit.retryAfter!);
     }
 
+    // Check do_not_contact list
+    const { data: dncEntry } = await supabaseAdmin
+      .from("do_not_contact")
+      .select("id")
+      .eq("email", to.toLowerCase())
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (dncEntry) {
+      return new Response(
+        JSON.stringify({ error: "This contact has opted out of communications." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Fetch sender's company name for CAN-SPAM footer
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("company")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    const senderCompany = profile?.company || null;
+
     // Validate email body for dangerous HTML patterns
     const dangerousPatterns = [
       /<script[^>]*>[\s\S]*?<\/script>/gi,
@@ -271,7 +313,7 @@ Deno.serve(async (req) => {
     }
 
     // Create the email
-    const rawEmail = createRawEmail(to, connection.email, subject, emailBody);
+    const rawEmail = createRawEmail(to, connection.email, subject, emailBody, senderCompany);
 
     // Send via Gmail API
     const sendResponse = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
