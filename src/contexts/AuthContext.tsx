@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -31,10 +31,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<SubscriptionData | null>(null);
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+  const subscriptionFetchedAt = useRef<number>(0);
 
   const refreshSubscription = useCallback(async () => {
     if (!session) {
       setSubscription(null);
+      return;
+    }
+
+    // Skip if fetched less than 30 seconds ago
+    if (Date.now() - subscriptionFetchedAt.current < 30000) {
       return;
     }
 
@@ -46,9 +52,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
       });
 
+      subscriptionFetchedAt.current = Date.now();
+
       if (error) {
         console.error('Failed to check subscription:', error);
-        // Set default free subscription on error
         setSubscription({
           subscribed: false,
           plan_id: 'free',
@@ -68,55 +75,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [session?.access_token]);
 
+  // Refresh subscription when user returns to the tab (e.g. after checkout)
   useEffect(() => {
-    // Set up auth state listener FIRST
+    if (!session) return;
+
+    const handleFocus = () => {
+      subscriptionFetchedAt.current = 0; // Force refresh on tab focus
+      refreshSubscription();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [session, refreshSubscription]);
+
+  useEffect(() => {
     const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
 
-        // Defer subscription check to avoid deadlock
-        if (session?.user) {
+        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
           setTimeout(() => {
             refreshSubscription();
           }, 0);
-        } else {
+        } else if (!session?.user) {
           setSubscription(null);
         }
       }
     );
 
-    // THEN check for existing session
+    // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
-      
-      // Fetch subscription for existing session on initial load
-      if (session?.user) {
-        supabase.functions.invoke('check-subscription', {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        }).then(({ data, error }) => {
-          if (!error && data) {
-            setSubscription(data);
-          }
-        });
-      }
     });
 
     return () => authSubscription.unsubscribe();
   }, []);
-
-  // Refresh subscription periodically (every 60 seconds)
-  useEffect(() => {
-    if (!session) return;
-
-    const interval = setInterval(refreshSubscription, 60000);
-    return () => clearInterval(interval);
-  }, [session, refreshSubscription]);
 
   const signUp = async (email: string, password: string, fullName?: string) => {
     const redirectUrl = `${window.location.origin}/dashboard`;
