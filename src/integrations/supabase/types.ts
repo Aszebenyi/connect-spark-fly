@@ -710,6 +710,7 @@ export type Database = {
           full_name: string | null
           id: string
           international_recruiting: boolean | null
+          onboarding_completed: boolean | null
           recruit_countries: string[] | null
           updated_at: string
           user_id: string
@@ -725,6 +726,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           international_recruiting?: boolean | null
+          onboarding_completed?: boolean | null
           recruit_countries?: string[] | null
           updated_at?: string
           user_id: string
@@ -740,6 +742,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           international_recruiting?: boolean | null
+          onboarding_completed?: boolean | null
           recruit_countries?: string[] | null
           updated_at?: string
           user_id?: string

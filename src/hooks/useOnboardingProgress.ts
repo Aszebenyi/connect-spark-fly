@@ -8,6 +8,7 @@ export interface OnboardingProgress {
   hasCampaign: boolean;
   hasLeads: boolean;
   hasSentOutreach: boolean;
+  onboardingCompleted: boolean;
   isComplete: boolean;
   isLoading: boolean;
   completedCount: number;
@@ -22,6 +23,7 @@ export function useOnboardingProgress(): OnboardingProgress & { refresh: () => v
     hasCampaign: false,
     hasLeads: false,
     hasSentOutreach: false,
+    onboardingCompleted: false,
     isLoading: true,
   });
 
@@ -34,7 +36,7 @@ export function useOnboardingProgress(): OnboardingProgress & { refresh: () => v
     try {
       const [emailResult, profileResult, campaignsResult, leadsResult, outreachResult] = await Promise.all([
         supabase.from('email_connections').select('id').eq('is_active', true).limit(1),
-        supabase.from('profiles').select('company, base_country').eq('user_id', user.id).maybeSingle(),
+        supabase.from('profiles').select('company, base_country, onboarding_completed').eq('user_id', user.id).maybeSingle(),
         supabase.from('campaigns').select('id').limit(1),
         supabase.from('leads').select('id').limit(1),
         supabase.from('outreach_messages').select('id').limit(1),
@@ -48,6 +50,7 @@ export function useOnboardingProgress(): OnboardingProgress & { refresh: () => v
         hasCampaign: (campaignsResult.data?.length ?? 0) > 0,
         hasLeads: (leadsResult.data?.length ?? 0) > 0,
         hasSentOutreach: (outreachResult.data?.length ?? 0) > 0,
+        onboardingCompleted: !!profileData?.onboarding_completed,
         isLoading: false,
       });
     } catch (error) {
