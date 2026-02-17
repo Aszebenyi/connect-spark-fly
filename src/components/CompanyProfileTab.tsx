@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, Save, Sparkles, Globe } from 'lucide-react';
@@ -38,7 +38,7 @@ const emptyProfile: CompanyProfile = {
 };
 
 export function CompanyProfileTab() {
-  const { toast } = useToast();
+  
   const { user, session } = useAuth();
   const [profile, setProfile] = useState<CompanyProfile>(emptyProfile);
   const [loading, setLoading] = useState(true);
@@ -111,11 +111,7 @@ export function CompanyProfileTab() {
 
   const handleSave = async () => {
     if (!profile.company_name.trim() || !profile.what_you_do.trim() || !profile.target_candidates.trim() || !profile.value_proposition.trim()) {
-      toast({
-        title: 'Missing required fields',
-        description: 'Please fill in Company Name, What You Do, Target Candidates, and Value Proposition.',
-        variant: 'destructive',
-      });
+      toast.error('Please fill in Company Name, What You Do, Target Candidates, and Value Proposition.');
       return;
     }
 
@@ -167,17 +163,10 @@ export function CompanyProfileTab() {
         .eq('user_id', user!.id);
       if (intlError) throw intlError;
 
-      toast({
-        title: 'Saved',
-        description: 'Your company profile and regional settings have been updated.',
-      });
+      toast.success('Your company profile and regional settings have been updated.');
     } catch (error) {
       console.error('Error saving company profile:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to save company profile.',
-        variant: 'destructive',
-      });
+      toast.error('Failed to save company profile.');
     } finally {
       setSaving(false);
     }
@@ -185,11 +174,7 @@ export function CompanyProfileTab() {
 
   const handleExtractFromWebsite = async () => {
     if (!profile.company_website.trim()) {
-      toast({
-        title: 'No website URL',
-        description: 'Please enter your company website URL first.',
-        variant: 'destructive',
-      });
+      toast.error('Please enter your company website URL first.');
       return;
     }
 
@@ -214,17 +199,10 @@ export function CompanyProfileTab() {
         communication_tone: extracted.communication_tone || prev.communication_tone,
       }));
 
-      toast({
-        title: 'Fields populated',
-        description: 'Review the extracted information and edit as needed before saving.',
-      });
+      toast.success('Review the extracted information and edit as needed before saving.');
     } catch (error: any) {
       console.error('Extract error:', error);
-      toast({
-        title: 'Extraction failed',
-        description: error.message || 'Could not extract company information.',
-        variant: 'destructive',
-      });
+      toast.error(error.message || 'Could not extract company information.');
     } finally {
       setExtracting(false);
     }

@@ -4,7 +4,7 @@ import { Campaign, updateCampaign, deleteCampaign } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { useLeadSubscription } from '@/hooks/useLeadSubscription';
 import { Search, Users, MoreVertical, Loader2 } from 'lucide-react';
 import {
@@ -32,7 +32,7 @@ const statusConfig = {
 
 export function CampaignCard({ campaign, onUpdate, onViewLeads, onFindMoreLeads, className }: CampaignCardProps) {
   const [isUpdating, setIsUpdating] = useState(false);
-  const { toast } = useToast();
+  
   const navigate = useNavigate();
   
   const { newLeadsCount, latestLead } = useLeadSubscription({
@@ -53,10 +53,10 @@ export function CampaignCard({ campaign, onUpdate, onViewLeads, onFindMoreLeads,
     try {
       const result = await updateCampaign(campaign.id, { status: newStatus });
       if (result.success) {
-        toast({ title: `Campaign ${newStatus}` });
+        toast.success(`Campaign ${newStatus}`);
         onUpdate?.();
       } else {
-        toast({ title: 'Failed to update', variant: 'destructive' });
+        toast.error('Failed to update');
       }
     } finally {
       setIsUpdating(false);
@@ -69,10 +69,10 @@ export function CampaignCard({ campaign, onUpdate, onViewLeads, onFindMoreLeads,
     try {
       const result = await deleteCampaign(campaign.id);
       if (result.success) {
-        toast({ title: 'Campaign deleted' });
+        toast.success('Campaign deleted');
         onUpdate?.();
       } else {
-        toast({ title: 'Failed to delete', variant: 'destructive' });
+        toast.error('Failed to delete');
       }
     } finally {
       setIsUpdating(false);

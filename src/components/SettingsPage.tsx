@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { GlowDot, AbstractBlob } from '@/components/ui/visual-elements';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -65,7 +65,6 @@ const settingsTabs = [
 type SettingsTab = 'account' | 'billing' | 'integrations' | 'company';
 
 export function SettingsPage() {
-  const { toast } = useToast();
   const { user, subscription, subscriptionLoading, refreshSubscription, session, signOut } = useAuth();
   const navigate = useNavigate();
   
@@ -86,20 +85,23 @@ export function SettingsPage() {
   const [usageStats, setUsageStats] = useState({
     leadsCount: 0,
     campaignsCount: 0,
+    totalEmails: 0,
     isLoading: true,
   });
 
   useEffect(() => {
     async function fetchUsageStats() {
       try {
-        const [leadsResult, campaignsResult] = await Promise.all([
+        const [leadsResult, campaignsResult, messagesResult] = await Promise.all([
           supabase.from('leads').select('id', { count: 'exact', head: true }),
           supabase.from('campaigns').select('id', { count: 'exact', head: true }),
+          supabase.from('outreach_messages').select('id', { count: 'exact', head: true }),
         ]);
 
         setUsageStats({
           leadsCount: leadsResult.count || 0,
           campaignsCount: campaignsResult.count || 0,
+          totalEmails: messagesResult.count || 0,
           isLoading: false,
         });
       } catch (error) {
@@ -160,12 +162,9 @@ export function SettingsPage() {
           company: profile.company,
           email: user.email,
         }, { onConflict: 'user_id' });
-      toast({
-        title: 'Profile saved',
-        description: 'Your profile has been updated successfully.',
-      });
+      toast.success('Your profile has been updated successfully.');
     } catch {
-      toast({ title: 'Error saving profile', variant: 'destructive' });
+      toast.error('Error saving profile');
     }
   };
 
@@ -183,11 +182,7 @@ export function SettingsPage() {
         window.open(data.url, '_blank');
       }
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to open billing portal',
-        variant: 'destructive',
-      });
+      toast.error('Failed to open billing portal');
     } finally {
       setManagingBilling(false);
     }
@@ -197,16 +192,9 @@ export function SettingsPage() {
     try {
       const { error } = await supabase.from('leads').delete().neq('id', '00000000-0000-0000-0000-000000000000');
       if (error) throw error;
-      toast({
-        title: 'Data deleted',
-        description: 'All your leads have been permanently deleted.',
-      });
+      toast.success('All your leads have been permanently deleted.');
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete leads. Please try again.',
-        variant: 'destructive',
-      });
+      toast.error('Failed to delete leads. Please try again.');
     }
   };
 
@@ -221,20 +209,13 @@ export function SettingsPage() {
 
       if (error) throw error;
       
-      toast({
-        title: 'Account deleted',
-        description: 'Your account and all data have been permanently deleted.',
-      });
+      toast.success('Your account and all data have been permanently deleted.');
       
       await signOut();
       navigate('/');
     } catch (error) {
       console.error('Delete account error:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to delete account. Please try again.',
-        variant: 'destructive',
-      });
+      toast.error('Failed to delete account. Please try again.');
     } finally {
       setDeletingAccount(false);
     }
@@ -498,15 +479,15 @@ export function SettingsPage() {
                 </p>
               </div>
               <div className="p-4 rounded-xl bg-muted/50 border border-border">
-                <p className="text-sm text-muted-foreground">Emails Sent</p>
+                <p className="text-sm text-muted-foreground">Emails Today</p>
                 <p className="text-2xl font-bold text-foreground mt-1">
                   {emailStatsLoading ? '...' : emailStats?.emails_sent_today ?? 0}
                 </p>
               </div>
               <div className="p-4 rounded-xl bg-muted/50 border border-border">
-                <p className="text-sm text-muted-foreground">Open Rate</p>
+                <p className="text-sm text-muted-foreground">Total Emails</p>
                 <p className="text-2xl font-bold text-foreground mt-1">
-                  {emailStatsLoading ? '...' : `${emailStats?.account_age_days ?? 0} days`}
+                  {usageStats.isLoading ? '...' : usageStats.totalEmails}
                 </p>
               </div>
             </div>
