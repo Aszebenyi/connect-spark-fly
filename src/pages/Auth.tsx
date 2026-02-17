@@ -95,7 +95,7 @@ export default function Auth() {
     setFormError(null);
     
     try {
-      const { error } = await lovable.auth.signInWithOAuth("google", {
+      const { error } = await lovable.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
       });
       
