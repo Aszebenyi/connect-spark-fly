@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBrandConfig } from '@/hooks/useBrandConfig';
-import { lovable } from '@/integrations/lovable/index';
 import { Loader2, ArrowRight, Zap, Target, TrendingUp, Mail, Lock, User, Eye, EyeOff, Star, Shield, Sparkles } from 'lucide-react';
 import { InlineAlert, FieldError } from '@/components/ui/inline-alert';
 import { mapAuthError } from '@/hooks/useInlineError';
@@ -95,6 +94,7 @@ export default function Auth() {
     setFormError(null);
     
     try {
+      const { lovable } = await import('@/integrations/lovable/index');
       const { error } = await lovable.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
       });
